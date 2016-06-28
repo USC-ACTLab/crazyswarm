@@ -4,7 +4,8 @@ How to fly a large swarm of Crazyflies
 ## Setup
 
 ```
-git clone --recursive https://github.com/USC-ACTLab/crazyswarm2.git
+git clone https://github.com/USC-ACTLab/crazyswarm2.git
+./build.sh
 ```
 
 ## Firmware (NRF)

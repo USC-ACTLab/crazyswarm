@@ -1,0 +1,21 @@
+Note on timer clocks in STM32
+James Preiss, March 2016
+
+Each timer in the STM32 is driven by one of two Advanced Peripheral Bus (APB) clocks.
+The APB clocks are divided down from the system clock, but the valid range of divisors
+depends on the configured system clock speed. If the CPU is underclocked,
+it can be possible for the APB clocks to run as fast as the system clock (divisor of 1).
+However, if the CPU is running at full speed, a divisor of 1 is not possible. 
+The APB clocks must run slower than the system clock.
+Furthermore, APB1's maximum speed is slower than APB2's.
+
+In the Crazyflie, the STM32F405 is running at its maximum possible speed of 168MHz.
+The APBs both run at their maximum speeds: APB1 runs at /4 = 42MHz and APB2 runs at /2 = 84 MHz.
+
+You would think, then, that a timer on APB1 with a clock divider of 1 and prescaler of 1 would run at 42MHz.
+Surprisingly this is not true! The STM32 hardware has a "special case" behavior.
+When an APB clock divider is > 1, the input frequency to the timers on that APB is *doubled*.
+Therefore, our hypothetical timer will count at 84MHz - double the APB1 speed of 42MHz.
+
+I guess this behavior is designed to enable timers running at full CPU frequency.
+It is quite confusing though.

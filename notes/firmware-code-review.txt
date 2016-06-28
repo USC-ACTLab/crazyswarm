@@ -1,0 +1,26 @@
+IMU Bias Computation
+--------------------
+The Crazyflie firmware estimates IMU biases with a circular buffer of the past N IMU readings.
+It continually computes the variance of the gyroscope buffer to detect when the CF is moving.
+When the variance becomes low, the CF recognizes that it is stationary, and takes the mean
+of the circular buffer to get the bias value that it will use for the rest of the flight.
+As long as the variance is too high, the CF will remain in an uncalibrated state and refuse to fly.
+
+Experiments show that it takes a very large sample size to get a high-quality estimate of IMU biases.
+Recently (May 2016) Bitcraze increased the buffer size from 128 to 1024.
+However, for really high-quality results, an even larger sample is desired.
+This would require more time for initialization.
+More importantly, it would consume a lot of static memory.
+
+An online algorithm exists[1] to compute the variance of a stream with a constant amount of memory.
+This seems like it would be useful, but it can't throw away old values like a circular buffer.
+With a big sample, like 5 seconds' worth, we really don't want to discard an entire buffer
+because its variance was too high.
+
+So an ideal solution would be to use the online algorithm for small chunks, like 0.5 seconds' worth.
+Then we would keep these chunks in a circular buffer.
+It would save significant amount of static memory over the current implementation,
+but it would also be very complicated.
+Maybe not worth it.
+
+[1] https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm

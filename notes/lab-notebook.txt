@@ -1,0 +1,7 @@
+2016-06-15 - JAP
+----------------
+- Piecewise polynomial trajectories are working
+- Need to fix polynomial timestretching (TODO)
+- Need to tune controller better for position tracking
+- Investigate making a JTAG + power tether??
+- Organize code into github sub-repos (goal: one pull + make to set up) (TODO: research git features)

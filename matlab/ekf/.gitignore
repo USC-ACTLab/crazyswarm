@@ -1,0 +1,8 @@
+*.out
+ekf
+*.mexa64
+*~
+*.swp
+*.pdf
+*.mat
+*.csv

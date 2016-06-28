@@ -1,0 +1,8 @@
+[submodule "ros_ws/src/vicon_ros"]
+	path = ros_ws/src/vicon_ros
+	url = https://github.com/USC-ACTLab/vicon_ros.git
+	branch = master
+[submodule "ros_ws/src/object_tracker"]
+	path = ros_ws/src/object_tracker
+	url = https://github.com/USC-ACTLab/object_tracker.git
+	branch = master

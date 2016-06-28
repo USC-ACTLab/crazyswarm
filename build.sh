@@ -9,7 +9,7 @@ cd crazyflie-firmware
 make
 cd ..
 
-
-
-
-
+# ros
+cd ros_ws
+catkin_make
+cd ..

@@ -10,3 +10,19 @@
 	path = ros_ws/src/crazyflie_ros
 	url = https://github.com/USC-ACTLab/crazyflie_ros.git
 	branch = ekf_bringup_with_logging
+[submodule "crazyflie-firmware"]
+	path = crazyflie-firmware
+	url = https://github.com/USC-ACTLab/crazyflie-firmware.git
+	branch = crazyswarm_master
+[submodule "crazyflie2-nrf-firmware"]
+	path = crazyflie2-nrf-firmware
+	url = https://github.com/USC-ACTLab/crazyflie2-nrf-firmware.git
+	branch = master
+[submodule "crazyflie-lib-python"]
+	path = crazyflie-lib-python
+	url = https://github.com/bitcraze/crazyflie-lib-python.git
+	branch = master
+[submodule "crazyflie-clients-python"]
+	path = crazyflie-clients-python
+	url = https://github.com/bitcraze/crazyflie-clients-python.git
+	branch = develop

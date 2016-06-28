@@ -7,6 +7,15 @@ How to fly a large swarm of Crazyflies
 git clone --recursive https://github.com/USC-ACTLab/crazyswarm2.git
 ```
 
+## Firmware (NRF)
+
+```
+cd crazyflie2-nrf-firmware
+tools/build/download_deps
+make
+make cload
+```
+
 ## Kalman Filter
 Initial test - using [suhetao's EKF](https://github.com/suhetao/stm32f4_mpu9250)
 

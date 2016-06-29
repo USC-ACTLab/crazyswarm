@@ -1,4 +1,12 @@
-2016-06-15 - JAP
+2016-06-29 - JAP
+----------------
+- Polynomial timestretching fixed
+- Github sub-repos done
+- JTAG tether probably not possible - recommended length is like 8 inches
+- Met w/ advisors, moving forward with temporary setup in unfinished new building
+- Need to figure out a truss/support for Vicon in new space; tripods not so great
+
+2016-06-25 - JAP
 ----------------
 - Piecewise polynomial trajectories are working
 - Need to fix polynomial timestretching (TODO)

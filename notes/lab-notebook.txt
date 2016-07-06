@@ -1,3 +1,19 @@
+2016-07-05 - JAP
+----------------
+We had a support call with Vicon regarding the old system:
+- Got a temporary license for Tracker 3; it calibrates *much* faster than 2.2, with better results.
+- Identified that our calibration wand is not straight
+  - "Active" wand from new system gives ~5x reduction in image error
+- Identified that our cameras are out of focus. Markers appear blurry with grey halos.
+- Attempted to refocus cameras, but:
+  - net blocks us from inside and is difficult to remove
+  - wide ladder base + clutter make it impossible to get close to cameras from the outside
+  - lenses are focus- and aperture-locked with tiny set screws
+  - cables are bound to cage structure, making it difficult to take cameras down
+    for easier manipulation while still observing image feed
+- Failed to refocus any cameras successfully
+- Noticed that shiny USB connector, battery, and possibly motors sometimes appear as spurious markers
+
 2016-06-29 - JAP
 ----------------
 - Polynomial timestretching fixed

@@ -13,6 +13,7 @@ We had a support call with Vicon regarding the old system:
 - Got a temporary license for Tracker 3; it calibrates *much* faster than 2.2, with better results.
 - Identified that our calibration wand is not straight
   - "Active" wand from new system gives ~5x reduction in image error
+  - Feet on active wand do not have enough travel to successfully level the device on our floor
 - Identified that our cameras are out of focus. Markers appear blurry with grey halos.
 - Attempted to refocus cameras, but:
   - net blocks us from inside and is difficult to remove

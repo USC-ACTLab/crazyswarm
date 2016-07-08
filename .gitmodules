@@ -26,3 +26,7 @@
 	path = crazyflie-clients-python
 	url = https://github.com/bitcraze/crazyflie-clients-python.git
 	branch = develop
+[submodule "crazyradio-firmware"]
+	path = crazyradio-firmware
+	url = https://github.com/whoenig/crazyradio-firmware.git
+	branch = noAckMode

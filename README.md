@@ -17,6 +17,18 @@ make
 make cload
 ```
 
+## Crazyradio
+
+```
+cd crazyradio-firmware/firmware
+make CRPA=1
+python ../usbtools/launchBootloader.py
+python ../usbtools/nrfbootload.py flash bin/cradio.bin
+
+```
+
+Unplug and replug radio.
+
 ## Kalman Filter
 Initial test - using [suhetao's EKF](https://github.com/suhetao/stm32f4_mpu9250)
 

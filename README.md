@@ -12,7 +12,8 @@ repo | description
 **crazyflie-firmware**        | Our fork of the software that runs onboard the Crazyflie on the main CPU. Extensively modified with new controller, EKF, spline trajectories, etc.
 **crazyflie-lib-python**      | A dependency of **crazyflie-clients-python**.
 **crazyflie2-nrf-firmware**   | Our fork of the onboard software that controls the Crazyflie's radio. Modified to support broadcast communication to swarms.
-**ros_ws/src/crazyflie_ros**  | The main ROS stack dealing with sending commands and recieving telemetry from the Crazyflie in ROS.
+**crazyradio-firmware**       | (Public) fork of the Crazyradio firmware. Modified to support broadcasts.
+**ros_ws/src/crazyflie_ros**  | The main ROS stack dealing with sending commands and receiving telemetry from the Crazyflie in ROS.
 **ros_ws/src/object_tracker** | Our custom object tracker that, unlike Vicon's object tracker, doesn't require unique marker configurations per vehicle.
 **ros_ws/src/vicon_ros**      | A ROS interface to the normal Vicon object tracking (that requires unique marker configurations).
 
@@ -54,17 +55,18 @@ python ../usbtools/nrfbootload.py flash bin/cradio.bin
 
 Unplug and replug radio.
 
-### Data Collection
+## Debugging
 
-Use https://github.com/whoenig/crazyflie-firmware/tree/cs_datacollection as firmware.
-To collect data using SEGGER Real-Time Transfers (RRT), run
+### Firmware
+
+Use SEGGER Real-Time Transfers (RRT):
 
 ```
-./JLinkExe -if swd -device STM32F405RG -speed 2000
+./JLinkExe -if swd -device STM32F405RG -speed 4000
 ```
 
-and type `connect`. In a second terminal, from the scripts folder, execute `python3 RTT.py`.
+and type `connect`. In a second terminal:
 
-## Radio Bandwidth
-
-## Vicon
+```
+./JLinkRTTClient
+```

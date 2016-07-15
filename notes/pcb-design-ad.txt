@@ -1,0 +1,24 @@
+The USC RESL and ACT robotics research labs seek a student to design and build 
+a system for charging over 100 small lithium-polymer batteries simultaneously.
+This system will support our research with large swarms of micro-quadcopters.
+
+The system is envisioned as a collection of identical PCB's drawing power
+from a central DC power supply. The system will use off-the-shelf charging 
+IC's, with an indicator LED for each battery, and appropriate connectors.
+
+The candidate will be responsible for:
+- Selecting parts and creating a bill of materials
+- Designing the PCB in a CAD program
+- Working directly with a PCB manufacturer
+- Engineering the power distribution system to safely transmit 
+  significant total DC current to the PCBs
+- Final assembly and testing
+- Assisting with design and fabrication of physical structure
+
+This position requires a significant degree of autonomy.
+The candidate must be able to complete the tasks listed above with only 
+high-level guidance from the supervisor. Candidates who have successfully 
+designed and manufactured a PCB in the past are preferred. 
+
+Please send resume, brief cover letter, and sample of PCB layout work
+to japreiss@usc.edu.

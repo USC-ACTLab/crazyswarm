@@ -1,2 +1,4 @@
 ros_ws/build/
 ros_ws/devel/
+.DS_Store
+firm

@@ -1,3 +1,20 @@
+2016-07-14.2 - JAP
+------------------
+TODO list
+- tune xy controller
+- create "flash all" script
+- create "reboot all" script
+- more automated method to compute ctr of mass from marker config (worth it??)
+- test ellipse trajectory
+- test larger swarm
+- compute layout for hovering 49 (42?)
+- think about how we want to do real-time control
+- think about how to do large-swarm position initialization
+- increase object tracker robustness to outliers
+- compute x-staggered positions to render text from a side view
+- create "avoid human" planner/controller
+- create "conductor wand" planner/controller
+
 2016-07-14 - JAP
 ----------------
 Hypothesized that latency in the object tracker might be introducing 

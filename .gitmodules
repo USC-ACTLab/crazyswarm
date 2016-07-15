@@ -30,3 +30,7 @@
 	path = crazyradio-firmware
 	url = https://github.com/whoenig/crazyradio-firmware.git
 	branch = noAckMode
+[submodule "ros_ws/src/vicon_ros_rviz"]
+	path = ros_ws/src/vicon_ros_rviz
+	url = https://github.com/USC-ACTLab/vicon_ros_rviz.git
+	branch = master

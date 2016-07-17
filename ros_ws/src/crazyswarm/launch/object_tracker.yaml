@@ -1,0 +1,53 @@
+hostName: vicon
+numMarkerConfigurations: 2
+markerConfigurations:
+  "0":
+    numPoints: 4
+    offset: [0.0, -0.01, -0.04]
+    points:
+      "0": [0.0177184,0.0139654,0.0557585]
+      "1": [-0.0262914,0.0509139,0.0402475]
+      "2": [-0.0328889,-0.02757,0.0390601]
+      "3": [0.0431307,-0.0331216,0.0388839]
+
+  "1":
+    numPoints: 6
+    offset: [0.0, -0.01, -0.01]
+    points:
+      "0": [0.0475664,0.0440101,0.0066103]
+      "1": [0.0479611,-0.0333709,0.00626755]
+      "2": [0.0186841,0.0113895,0.020396]
+      "3": [-0.0136136,0.0296063,0.0112455]
+      "4": [-0.0292848,0.0437507,0.00688335]
+      "5": [-0.028405,-0.0334036,0.00734073]
+numDynamicsConfigurations: 1
+dynamicsConfigurations:
+  "0":
+    maxXVelocity: 2.0
+    maxYVelocity: 2.0
+    maxZVelocity: 2.0
+    maxPitchRate: 20.0
+    maxRollRate: 20.0
+    maxYawRate: 5.0
+    maxRoll: 1.4
+    maxPitch: 1.4
+numObjects: 3
+objects:
+  "0":
+    name: cf01/cf01
+    markerConfiguration: 0
+    dynamicsConfiguration: 0
+    initialPosition: [0, 1.0, 0]
+    initialYaw: 0
+  "1":
+    name: cf02/cf02
+    markerConfiguration: 0
+    dynamicsConfiguration: 0
+    initialPosition: [0, 0.0, 0]
+    initialYaw: 0
+  "2":
+    name: cf03/cf03
+    markerConfiguration: 0
+    dynamicsConfiguration: 0
+    initialPosition: [0, -1.0, 0]
+    initialYaw: 0

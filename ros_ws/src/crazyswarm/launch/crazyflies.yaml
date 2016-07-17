@@ -1,0 +1,7 @@
+crazyflies:
+  - id: "01"
+    initialPosition: [0.0, 1.0, 0.0]
+  # - id: "02"
+  #   initialPosition: [0.0, 0.0, 0.0]
+  # - id: "03"
+  #   initialPosition: [0.0, -1.0, 0.0]

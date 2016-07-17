@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <rosparam command="load" file="$(find crazyswarm)/launch/crazyflies.yaml" />
+
+
+  <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen">
+    <rosparam>
+      broadcast_uri: "radio://0/100/2M/FFE7E7E7E7"
+      world_frame: "/world"
+      poses_topic: "/object_tracker/poses"
+      genericLogTopics: ["log1"]
+      genericLogTopicFrequencies: [10]
+      genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "stabilizer.y", "ctrltarget.y"]
+      firmwareParams:
+        flightmode:
+          posCtrl: 1
+        ctrlMel:
+          kp_xy: 0.6 # p for position
+          pd_xy: 0.5 # d for position
+          ki_xy: 0.05
+          i_range_xy: 2.0
+          kR_xy: 25000 # p for attitude
+          kw_xy: 12000 # d for attitude
+          kR_z: 25000 # p for yaw
+          kw_z: 12000  # d for yaw
+          ki_m_z: 500     # yaw
+          kd_omega_rp: 0 # roll and pitch angular velocity d gain
+          i_range_m_z: 1500
+          kp_z: 0.8
+          kd_z: 0.5
+          ki_z: 0.1
+          i_range_z: 0.05
+          mass: 0.032
+          massThrust: 132000
+        ring:
+          effect: 6
+          headlightEnable: 0
+    </rosparam>
+  </node>
+
+  <group ns="cf01">
+    <node name="setParams" pkg="crazyflie_manager" type="enablePosCtrl.py" output="screen" />
+  </group>
+
+  <group ns="cf02">
+    <node name="setParams" pkg="crazyflie_manager" type="enablePosCtrl.py" output="screen" />
+  </group>
+
+  <group ns="cf03">
+    <node name="setParams" pkg="crazyflie_manager" type="enablePosCtrl.py" output="screen" />
+  </group>
+
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen">
+    <param name="dev" value="$(arg joy_dev)" />
+  </node>
+
+  <node pkg="crazyflie_manager" type="crazyflie_manager" name="crazyflie_manager" output="screen">
+    <param name="num_cfs" value="1" />
+    <param name="cf01/csv_file" value="$(find crazyflie_demo)/scripts/figure8_smooth.csv" />
+    <param name="cf01/x_offset" value="0.0" />
+    <param name="cf01/y_offset" value="0.0" />
+    <param name="cf01/z_offset" value="1.0" />
+    <param name="cf01/timescale" value="0.8" />
+    <param name="cf02/csv_file" value="$(find crazyflie_demo)/scripts/figure8_smooth.csv" />
+    <param name="cf02/x_offset" value="0.0" />
+    <param name="cf02/y_offset" value="0.0" />
+    <param name="cf02/z_offset" value="1.0" />
+    <param name="cf02/timescale" value="0.8" />
+    <param name="cf03/csv_file" value="$(find crazyflie_demo)/scripts/figure8_smooth.csv" />
+    <param name="cf03/x_offset" value="0.0" />
+    <param name="cf03/y_offset" value="0.0" />
+    <param name="cf03/z_offset" value="1.0" />
+    <param name="cf03/timescale" value="0.8" />
+  </node>
+
+
+  <node name="vicon" pkg="vicon_ros" type="vicon_node" output="screen">
+    <param name="hostName" value="vicon" />
+    <param name="enableLatencyTopic" value="true" />
+    <param name="enablePointCloudTopic" value="true" />
+    <param name="enableTfBroadcast" value="true" />
+  </node>
+
+  <node name="object_tracker" pkg="object_tracker" type="object_tracker_node" output="screen">
+    <rosparam command="load" file="$(find crazyswarm)/launch/object_tracker.yaml" />
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
+
+  <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
+
+</launch>

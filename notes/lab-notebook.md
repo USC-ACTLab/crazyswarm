@@ -1,19 +1,25 @@
-2016-07-14.2 - JAP
-------------------
-TODO list
-- tune xy controller
-- create "flash all" script
-- create "reboot all" script
-- more automated method to compute ctr of mass from marker config (worth it??)
-- test ellipse trajectory
-- test larger swarm
-- compute layout for hovering 49 (42?)
-- think about how we want to do real-time control
-- think about how to do large-swarm position initialization
-- increase object tracker robustness to outliers
-- compute x-staggered positions to render text from a side view
-- create "avoid human" planner/controller
-- create "conductor wand" planner/controller
+2016-07-17 - JAP
+----------------
+- Tested robust initialization for ICP, it works
+- Flew figure 8 with 3 CFs in tight formation, worked
+- Tried 9 CFs in tight formation, failed badly
+- 5 in looser formation sometimes works, sometimes crashes
+- Identified object tracker taking a lot of CPU time
+- Profiled object tracker, most of time is in SVD alignment
+- Tried Levenberg-Marquardt aligner, but it failed on takeoff
+- Simulated delay and low packet rate in transmission, it makes ctrl worse but not crash
+- Added red->green indicator of packet rate health on LED ring
+- Implemented + tested unified simple config file
+
+2016-07-15 - JAP
+----------------
+- Tuned controller - much higher attitude gains, higher xy gains
+- increased d/p ratio in xy _finally_ solves overshoot in fig-8
+- Set all camera apertures to 4.0 and increased threshold
+- Added onboard shifting for fig-8 traj
+- Tried to fly 3 synchronized figure-8s but were besieged by
+  CFs dropping out of the sky due to comm timeouts, dropped vicon packets, etc.
+- ROS issues
 
 2016-07-14 - JAP
 ----------------

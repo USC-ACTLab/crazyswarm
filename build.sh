@@ -27,5 +27,5 @@ cd $ROOT
 
 # ros
 cd ros_ws
-catkin_make
+catkin_make -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cd $ROOT

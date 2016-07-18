@@ -18,7 +18,7 @@
           posCtrl: 1
         ctrlMel:
           kp_xy: 0.6 # p for position
-          pd_xy: 0.5 # d for position
+          kd_xy: 0.5 # d for position
           ki_xy: 0.05
           i_range_xy: 2.0
           kR_xy: 25000 # p for attitude
@@ -30,50 +30,26 @@
           i_range_m_z: 1500
           kp_z: 0.8
           kd_z: 0.5
-          ki_z: 0.1
-          i_range_z: 0.05
+          ki_z: 0.05
+          i_range_z: 0.4
           mass: 0.032
           massThrust: 132000
         ring:
-          effect: 6
+          effect: 14 # 6: double spinner, 7: solid color
+          solidBlue: 20 # if set to solid color
+          solidGreen: 0 # if set to solid color
+          solidRed: 0 # if set to solid color
           headlightEnable: 0
     </rosparam>
   </node>
-
-  <group ns="cf01">
-    <node name="setParams" pkg="crazyflie_manager" type="enablePosCtrl.py" output="screen" />
-  </group>
-
-  <group ns="cf02">
-    <node name="setParams" pkg="crazyflie_manager" type="enablePosCtrl.py" output="screen" />
-  </group>
-
-  <group ns="cf03">
-    <node name="setParams" pkg="crazyflie_manager" type="enablePosCtrl.py" output="screen" />
-  </group>
-
 
   <node name="joy" pkg="joy" type="joy_node" output="screen">
     <param name="dev" value="$(arg joy_dev)" />
   </node>
 
   <node pkg="crazyflie_manager" type="crazyflie_manager" name="crazyflie_manager" output="screen">
-    <param name="num_cfs" value="1" />
-    <param name="cf01/csv_file" value="$(find crazyflie_demo)/scripts/figure8_smooth.csv" />
-    <param name="cf01/x_offset" value="0.0" />
-    <param name="cf01/y_offset" value="0.0" />
-    <param name="cf01/z_offset" value="1.0" />
-    <param name="cf01/timescale" value="0.8" />
-    <param name="cf02/csv_file" value="$(find crazyflie_demo)/scripts/figure8_smooth.csv" />
-    <param name="cf02/x_offset" value="0.0" />
-    <param name="cf02/y_offset" value="0.0" />
-    <param name="cf02/z_offset" value="1.0" />
-    <param name="cf02/timescale" value="0.8" />
-    <param name="cf03/csv_file" value="$(find crazyflie_demo)/scripts/figure8_smooth.csv" />
-    <param name="cf03/x_offset" value="0.0" />
-    <param name="cf03/y_offset" value="0.0" />
-    <param name="cf03/z_offset" value="1.0" />
-    <param name="cf03/timescale" value="0.8" />
+    <param name="csv_file" value="$(find crazyswarm)/launch/figure8_smooth.csv" />
+    <param name="timescale" value="0.8" />
   </node>
 
 

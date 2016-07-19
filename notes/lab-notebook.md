@@ -1,3 +1,24 @@
+2016-07-18 - JAP
+----------------
+- Found that object tracker was not being compiled with optimization - fixed, is fast now
+- #3 has some mechanical problem, even in manual flight
+- added LED ring blink to indicate low battery
+- profiled, found that EKF takes about 800 uSec on vicon packets
+- compiled fw with -O3 instead of -Os, reduces to around 600 uSec
+- detailed profiling shows that kalman gain and covariance update are slowest
+- probably SGEMM is biggest offender
+- #2 misses more packets than everyone else
+- starting to have weird firmware issue where it gets stuck at "imu calibration" slow blink
+
+- determined that 7 CFs is "magic number" for one radio - 
+  they can fly fine, but add an 8th and suddenly vicon packets rate becomes jittery
+- tried removing address discrimination from firmware - 
+  so we only send one packet - STILL everything goes bad after adding the 8th!
+- so now the only difference between 7 and 8 is one more object for the object tracker to track
+- added timing code in several places, see large jitter in delta-t of tracker->server msgs
+- experiments seem to eliminate everything besides ROS messaging as source of jitter
+- plan to write a monolithic node, vicon sdk -> radio usb driver in one process
+
 2016-07-17 - JAP
 ----------------
 - Tested robust initialization for ICP, it works

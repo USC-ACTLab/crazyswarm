@@ -12,7 +12,9 @@
       poses_topic: "/object_tracker/poses"
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
-      genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "stabilizer.y", "ctrltarget.y"]
+      # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
+      # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
+      genericLogTopic_log1_Variables: ["vicon.dt"]
       firmwareParams:
         flightmode:
           posCtrl: 1
@@ -67,5 +69,7 @@
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
   <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
-
+<!--
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf01/log1/values[0]"/>
+ -->
 </launch>

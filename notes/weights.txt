@@ -1,0 +1,13 @@
+
+
+* Batteries:
+ * tenergy 380mAh: 11g
+ * Crazyflie: 7.2g
+ * turnigy: 7g
+ * Crazyfire: 7g
+* 7.9mm Marker: 0.4g
+* CF (no bat, ne led ring): 21g
+* led-ring: 3g
+
+Hence:
+* typical config: 33g with standard battery, led ring, and 4 markers

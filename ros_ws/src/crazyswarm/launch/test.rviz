@@ -5,8 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /Status1
-        - /Grid1
       Splitter Ratio: 0.5
     Tree Height: 281
   - Class: rviz/Selection
@@ -54,11 +52,11 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        cf01/cf01:
+        cf01:
           Value: true
-        cf02/cf02:
+        cf02:
           Value: true
-        cf03/cf03:
+        cf04:
           Value: true
         world:
           Value: true
@@ -69,11 +67,11 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          cf01/cf01:
+          cf01:
             {}
-          cf02/cf02:
+          cf02:
             {}
-          cf03/cf03:
+          cf04:
             {}
       Update Interval: 0
       Value: true
@@ -102,7 +100,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.02
       Style: Spheres
-      Topic: /vicon/pointCloud
+      Topic: /pointCloud
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -130,22 +128,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.62242
+      Distance: 4.26121
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 0.6631
+        Y: 1.57939
+        Z: -0.368343
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.875398
+      Pitch: 0.695398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.15858
+      Yaw: 3.13358
     Saved: ~
 Window Geometry:
   Displays:

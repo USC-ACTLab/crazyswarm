@@ -44,3 +44,9 @@ class Trajectory:
             duration = poly.duration.to_sec()
             poly.duration = rospy.Duration.from_sec(duration * timescale)
 
+    def totalDuration(self):
+        sum = 0.0
+        for poly in self.polygons:
+            sum += poly.duration.to_sec()
+        return sum
+

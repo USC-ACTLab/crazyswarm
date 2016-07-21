@@ -12,9 +12,10 @@ if __name__ == "__main__":
 
     traj = Trajectory()
     traj.load("../launch/figure8_smooth.csv")
+    traj.stretch(0.8)
     allcfs.crazyflies["05"].uploadTrajectory(traj)
 
     allcfs.startTrajectory()
-    time.sleep(10)
+    time.sleep(traj.totalDuration())
 
     allcfs.land()

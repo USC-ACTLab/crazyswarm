@@ -22,11 +22,11 @@ class Trajectory:
                 poly.duration = rospy.Duration.from_sec(float(row[0]))
                 for i in range(1, 9):
                     poly.poly_x.append(float(row[i]))
-                for i in range(10, 17):
+                for i in range(9, 17):
                     poly.poly_y.append(float(row[i]))
-                for i in range(18, 25):
+                for i in range(17, 25):
                     poly.poly_z.append(float(row[i]))
-                for i in range(26, 33):
+                for i in range(25, 33):
                     poly.poly_yaw.append(float(row[i]))
                 self.polygons.append(poly)
 
@@ -43,3 +43,4 @@ class Trajectory:
                 scale *= recip
             duration = poly.duration.to_sec()
             poly.duration = rospy.Duration.from_sec(duration * timescale)
+

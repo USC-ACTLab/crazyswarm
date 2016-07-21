@@ -9,12 +9,11 @@
     <rosparam>
       broadcast_uri: "radio://0/100/2M/FFE7E7E7E7"
       world_frame: "/world"
-      poses_topic: "/object_tracker/poses"
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
-      genericLogTopic_log1_Variables: ["vicon.dt"]
+      genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.y", "ctrltarget.y", "vicon.y"]
       firmwareParams:
         flightmode:
           posCtrl: 1
@@ -42,6 +41,31 @@
           solidGreen: 0 # if set to solid color
           solidRed: 0 # if set to solid color
           headlightEnable: 0
+      # tracking
+      host_name: "vicon"
+      use_vicon_tracker: false # set to false to use custom object tracking instead
+      numMarkerConfigurations: 1
+      markerConfigurations:
+        "0":
+          numPoints: 4
+          offset: [0.0, -0.01, -0.04]
+          points:
+            "0": [0.0177184,0.0139654,0.0557585]
+            "1": [-0.0262914,0.0509139,0.0402475]
+            "2": [-0.0328889,-0.02757,0.0390601]
+            "3": [0.0431307,-0.0331216,0.0388839]
+      numDynamicsConfigurations: 1
+      dynamicsConfigurations:
+        "0":
+          maxXVelocity: 2.0
+          maxYVelocity: 2.0
+          maxZVelocity: 2.0
+          maxPitchRate: 20.0
+          maxRollRate: 20.0
+          maxYawRate: 5.0
+          maxRoll: 1.4
+          maxPitch: 1.4
+          maxFitnessScore: 0.004
     </rosparam>
   </node>
 
@@ -55,7 +79,7 @@
   </node>
 
 
-  <node name="vicon" pkg="vicon_ros" type="vicon_node" output="screen">
+<!--   <node name="vicon" pkg="vicon_ros" type="vicon_node" output="screen">
     <param name="hostName" value="vicon" />
     <param name="enableLatencyTopic" value="true" />
     <param name="enablePointCloudTopic" value="true" />
@@ -64,12 +88,15 @@
 
   <node name="object_tracker" pkg="object_tracker" type="object_tracker_node" output="screen">
     <rosparam command="load" file="$(find crazyswarm)/launch/object_tracker.yaml" />
-  </node>
+  </node> -->
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
   <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
-<!--
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf01/log1/values[0]"/>
- -->
+
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf06/log1/values[0] /cf06/log1/values[1] /cf06/log1/values[2]"/>
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
+
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/pose/pose/position/x /pose/pose/position/y"/> -->
+
 </launch>

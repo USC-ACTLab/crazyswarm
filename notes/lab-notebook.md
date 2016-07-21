@@ -1,5 +1,20 @@
 2016-07-18 - JAP
 ----------------
+- ellipse was getting corrupted vicon measurements over the air:
+  problem was either single2half or struct packing, dont know which
+- tested ellipse traj, it works at slow periods but fails badly on fast ones
+- ramping up period does not work for ellipse startup due to math
+- noted that Vicon tracker gives plenty of axis flips!!
+- online planner to hover works
+
+2016-07-19 - JAP
+----------------
+- tested integrated binary, eliminates message timing jitter in tracker->server messages
+- ellipse has some very strange flaws
+- talked with Ying about ideas for tuning controller
+
+2016-07-18 - JAP
+----------------
 - Found that object tracker was not being compiled with optimization - fixed, is fast now
 - #3 has some mechanical problem, even in manual flight
 - added LED ring blink to indicate low battery

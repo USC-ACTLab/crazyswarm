@@ -4,7 +4,10 @@ import sys
 import yaml
 import rospy
 from std_srvs.srv import Empty
-from crazyflie_driver.srv import UploadTrajectory
+from crazyflie_driver.srv import *
+
+def arrayToGeometryPoint(a):
+    return geometry_msgs.msg.Point(a[0], a[1], a[2])
 
 
 class Crazyflie:
@@ -12,11 +15,20 @@ class Crazyflie:
         self.id = id
         rospy.wait_for_service("/cf" + id + "/upload_trajectory");
         self.uploadTrajectoryService = rospy.ServiceProxy("/cf" + id + "/upload_trajectory", UploadTrajectory)
+        rospy.wait_for_service("/cf" + id + "/set_ellipse");
+        self.setEllipseService = rospy.ServiceProxy("/cf" + id + "/set_ellipse", SetEllipse)
 
     def uploadTrajectory(self, trajectory):
         # request = UploadTrajectory()
         # request.polygons = trajectory.polygons
         self.uploadTrajectoryService(trajectory.polygons)
+
+    def setEllipse(self, center, major, minor, period):
+        self.setEllipseService(
+            arrayToGeometryPoint(center),
+            arrayToGeometryPoint(major),
+            arrayToGeometryPoint(minor),
+            rospy.Duration.from_sec(period))
 
 class CrazyflieServer:
     def __init__(self):
@@ -29,8 +41,8 @@ class CrazyflieServer:
         self.landService = rospy.ServiceProxy("/land", Empty)
         rospy.wait_for_service("/start_trajectory");
         self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", Empty)
-        rospy.wait_for_service("/ellipse")
-        self.ellipseService = rospy.ServiceProxy("/ellipse", Empty)
+        rospy.wait_for_service("/start_ellipse")
+        self.ellipseService = rospy.ServiceProxy("/start_ellipse", Empty)
 
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
@@ -52,7 +64,7 @@ class CrazyflieServer:
     def startTrajectory(self):
         self.startTrajectoryService()
 
-    def ellipse(self):
+    def startEllipse(self):
         self.ellipseService()
 
 

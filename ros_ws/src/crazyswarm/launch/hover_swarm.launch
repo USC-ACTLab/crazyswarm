@@ -13,7 +13,8 @@
       genericLogTopicFrequencies: [10]
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
-      genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.y", "ctrltarget.y", "vicon.y"]
+      # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
+      genericLogTopic_log1_Variables: ["stabilizer.roll", "vicon.roll"]
       firmwareParams:
         flightmode:
           posCtrl: 1
@@ -65,7 +66,7 @@
           maxYawRate: 5.0
           maxRoll: 1.4
           maxPitch: 1.4
-          maxFitnessScore: 0.004
+          maxFitnessScore: 0.001
     </rosparam>
   </node>
 
@@ -94,9 +95,13 @@
 
   <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
 
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf06/log1/values[0] /cf06/log1/values[1] /cf06/log1/values[2]"/>
+<!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf05/log1/values[0] /cf05/log1/values[1] /cf05/log1/values[2]"/>
   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
 
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/pose/pose/position/x /pose/pose/position/y"/> -->
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/pose/pose/position/x /pose/pose/position/y"/> -->
+
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf05/log1/values[0] /cf05/log1/values[1]"/> -->
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf05/log1/values[3] /cf05/log1/values[4] /cf05/log1/values[5]"/> -->
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/cf05/log1/values[4] /cf05/log1/values[5]"/> -->
 
 </launch>

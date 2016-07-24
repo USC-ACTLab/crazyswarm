@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     traj = Trajectory()
     traj.load("../launch/figure8_smooth.csv")
-    traj.stretch(0.8)
+    traj.stretch(1.0)
 
     for id, cf in allcfs.crazyflies.iteritems():
         cf.uploadTrajectory(traj)

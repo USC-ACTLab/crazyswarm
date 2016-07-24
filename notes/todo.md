@@ -1,8 +1,9 @@
 TODO near
 =========
-- figure out if single2half is really broken
-- quaternion compression - use int16
-- ellipse upload - use int16
+- remote power off
+- remote power on
+- object tracker reject shared marker correspondence
+  and/or maximum distance from initial position
 - planning into a trajectory
   + should it go into a moving target or fixed start point?
 - test for post-CRTP packet dropping in firmware queues

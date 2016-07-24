@@ -1,4 +1,16 @@
-2016-07-18 - JAP
+2016-07-21 - JAP
+----------------
+- tested quaternion compression to 32bits, good
+- 2 cfs/packet works
+- python bindings looking cool
+- improved object tracker initialization
+- factored out our (not all) crtp packet defs into file shared btw firm & server
+- took a video of figure-8 with 4x2 0.5m grid configuration but control is wobbly
+- "slow blink" issue is getting worse and needs to be fixed badly
+  (it stays in the 2sec red LED period, so its IMU never becomes calibrated)
+- can takeoff to different heights
+
+2016-07-20 - JAP
 ----------------
 - ellipse was getting corrupted vicon measurements over the air:
   problem was either single2half or struct packing, dont know which

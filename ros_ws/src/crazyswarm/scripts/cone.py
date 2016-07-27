@@ -9,11 +9,33 @@ import numpy as np
 from crazyflie import *
 from trajectory import *
 
+import rospy
+from sensor_msgs.msg import Joy
+
 class Object:
     pass
 
+lastButtonState = 0
+buttonWasPressed = False
+
+def joyChanged(data):
+    global buttonWasPressed
+    global lastButtonState
+    if not buttonWasPressed and data.buttons[5] == 1 and lastButtonState == 0:
+        buttonWasPressed = True
+    lastButtonState = data.buttons[5]
+
+def waitUntilButtonPressed():
+    global buttonWasPressed
+    while not rospy.is_shutdown() and not buttonWasPressed:
+        time.sleep(0.01)
+    buttonWasPressed = False
+
 def main():
     allcfs = CrazyflieServer()
+
+    rospy.Subscriber("/joy", Joy, joyChanged)
+
     cfs = allcfs.crazyflies
 
     MAX_CFS = 6
@@ -53,7 +75,8 @@ def main():
 
     time.sleep(max_dur + 0.5)
 
-    raw_input("press return to enter formation...")
+    print("press button to enter formation...")
+    waitUntilButtonPressed()
     print("moving to formation")
     # highest CFs first
     for i in reversed(range(n_cfs)):
@@ -65,18 +88,20 @@ def main():
 
         ex.home = ex.center + ex.radius * MAJ_AXIS
         move_dist = np.linalg.norm(ex.home - ex.takeoff_pos)
-        move_dur = 2 * move_dist
+        move_dur = 1 + 1 * move_dist
         max_dur = max(max_dur, move_dur)
 
         print("\thovering to {0} in {1} sec".format(ex.home, move_dur))
         cf.hover(ex.home, 0, move_dur)
         time.sleep(move_dur);
 
-    raw_input("press return to start ellipse...")
+    print("press button to start ellipse...")
+    waitUntilButtonPressed()
     print("starting ellipse")
     allcfs.startEllipse()
 
-    raw_input("press return to stop...")
+    print("press button to stop...")
+    waitUntilButtonPressed()
     print("stopping")
     max_dur = 0
     for i in reversed(range(n_cfs)):
@@ -95,7 +120,8 @@ def main():
 
     time.sleep(max_dur + 1)
 
-    raw_input("press return to land...")
+    print("press button to land...")
+    waitUntilButtonPressed()
     print("landing")
     allcfs.land(targetHeight = 0.05, duration = 5)
 

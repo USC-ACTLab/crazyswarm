@@ -3,6 +3,7 @@
 import sys
 import yaml
 import rospy
+import numpy as np
 from std_srvs.srv import Empty
 from crazyflie_driver.srv import *
 from tf import TransformListener
@@ -14,7 +15,7 @@ def arrayToGeometryPoint(a):
 class Crazyflie:
     def __init__(self, id, initialPosition, tf):
         self.id = id
-        self.initialPosition = initialPosition
+        self.initialPosition = np.array(initialPosition)
         rospy.wait_for_service("/cf" + id + "/upload_trajectory");
         self.uploadTrajectoryService = rospy.ServiceProxy("/cf" + id + "/upload_trajectory", UploadTrajectory)
         rospy.wait_for_service("/cf" + id + "/set_ellipse");
@@ -55,7 +56,7 @@ class Crazyflie:
         # if self.tf.frameExists("/cf" + self.id) and self.tf.frameExists("/world"):
             # t = self.tf.getLatestCommonTime("/cf" + self.id, "/world")
             # position, quaternion = self.tf.lookupTransform("/cf" + self.id, "/world", t)
-        return position
+        return np.array(position)
 
 class CrazyflieServer:
     def __init__(self):

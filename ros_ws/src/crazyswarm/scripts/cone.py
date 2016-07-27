@@ -55,7 +55,7 @@ def main():
 
     raw_input("press return to enter formation...")
     print("moving to formation")
-    max_dur = 0
+    # highest CFs first
     for i in reversed(range(n_cfs)):
         cf = cfs[i]
         ex = extra[i]
@@ -70,8 +70,7 @@ def main():
 
         print("\thovering to {0} in {1} sec".format(ex.home, move_dur))
         cf.hover(ex.home, 0, move_dur)
-
-    time.sleep(max_dur + 0.5)
+        time.sleep(move_dur);
 
     raw_input("press return to start ellipse...")
     print("starting ellipse")

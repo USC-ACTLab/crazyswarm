@@ -46,7 +46,7 @@ class Crazyflie:
         self.landService(targetHeight, rospy.Duration.from_sec(duration))
 
     def hover(self, goal, yaw, duration):
-	gp = arrayToGeometryPoint(goal)
+        gp = arrayToGeometryPoint(goal)
         self.hoverService(gp, yaw, rospy.Duration.from_sec(duration))
 
     def position(self):

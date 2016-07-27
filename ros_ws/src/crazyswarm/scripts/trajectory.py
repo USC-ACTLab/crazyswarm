@@ -1,6 +1,8 @@
-import rospy
 import csv
+import rospy
+
 from crazyflie_driver.msg import QuadcopterTrajectoryPoly
+import snap
 
 # TODO: remove ros dependency and use numpy instead; convert in crazyflie.py to ros datatype
 
@@ -43,6 +45,55 @@ class Trajectory:
                 for i in range(25, 33):
                     poly.poly_yaw.append(float(row[i]))
                 self.polygons.append(poly)
+
+    '''
+    Waypoints must be provided in the form:
+        [[ x0, dx0, d2x0, ... ]
+         [ x1, dx1, d2x0, ... ]
+         [ x2, dx2, d2x2, ... ]
+         [ ...            ... ]]
+    Omitted derivatives will be left free.
+    '''
+    def optimize_waypoints(self, x_waypts, y_waypts, z_waypts, yaw_waypts, duration):
+        print("x:", x_waypts)
+        print("y:", y_waypts)
+        print("z:", z_waypts)
+        print("yaw:", yaw_waypts)
+        x   = snap.Trajectory1D(x_waypts)
+        y   = snap.Trajectory1D(y_waypts)
+        z   = snap.Trajectory1D(z_waypts, 3)
+        yaw = snap.Trajectory1D(yaw_waypts, 3)
+
+        npts = len(x_waypts)
+        for wp in [y_waypts, z_waypts, yaw_waypts]:
+            assert(len(wp) == npts)
+
+        time_per_piece_guess = duration / float(npts - 1)
+
+        path = snap.QrPath(x, y, z, yaw, time_per_piece_guess)
+        # max radians - think it's not used unless we do whole-duration optimization
+        path.tilt = 0.25
+        T = path.optimize()
+        assert(abs(sum(T) - duration) < 0.001)
+
+        # TODO this should all be encapsulated within snap.py
+        for p in [x, y, z, yaw]:
+            p.cost(T)
+            p.T = T
+            p.p = p.p.reshape((-1, p.order + 1))
+
+        for i in range(npts - 1):
+            poly = QuadcopterTrajectoryPoly()
+            poly.duration = rospy.Duration.from_sec(T[i])
+            poly.poly_x = x.p[i,:]
+            poly.poly_y = y.p[i,:]
+            poly.poly_z = z.p[i,:]
+            poly.poly_yaw = yaw.p[i,:]
+            self.polygons.append(poly)
+
+        # TEMP for plotting - should write function to evaluate "our" polynomials
+        time = numpy.linspace(0, sum(T), 1000)
+        self.plotdata = [[p(t) for t in time] for p in [x, y, z, yaw]]
 
     def stretch(self, timescale):
         # e.g. if s==2 the new polynomial will be stretched to take 2x longer

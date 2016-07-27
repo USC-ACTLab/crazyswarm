@@ -50,7 +50,6 @@ cd crazyradio-firmware/firmware
 make CRPA=1
 python ../usbtools/launchBootloader.py
 python ../usbtools/nrfbootload.py flash bin/cradio.bin
-
 ```
 
 Unplug and replug radio.

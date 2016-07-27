@@ -12,8 +12,9 @@ def arrayToGeometryPoint(a):
 
 
 class Crazyflie:
-    def __init__(self, id, tf):
+    def __init__(self, id, initialPosition, tf):
         self.id = id
+        self.initialPosition = initialPosition
         rospy.wait_for_service("/cf" + id + "/upload_trajectory");
         self.uploadTrajectoryService = rospy.ServiceProxy("/cf" + id + "/upload_trajectory", UploadTrajectory)
         rospy.wait_for_service("/cf" + id + "/set_ellipse");
@@ -45,7 +46,8 @@ class Crazyflie:
         self.landService(targetHeight, rospy.Duration.from_sec(duration))
 
     def hover(self, goal, yaw, duration):
-        self.hoverService(arrayToGeometryPoint(goal), yaw, rospy.Duration.from_sec(duration))
+	gp = arrayToGeometryPoint(goal)
+        self.hoverService(gp, yaw, rospy.Duration.from_sec(duration))
 
     def position(self):
         self.tf.waitForTransform("/world", "/cf" + self.id, rospy.Time(0), rospy.Duration(10))
@@ -68,6 +70,8 @@ class CrazyflieServer:
         self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", Empty)
         rospy.wait_for_service("/start_ellipse")
         self.ellipseService = rospy.ServiceProxy("/start_ellipse", Empty)
+        rospy.wait_for_service("/start_canned_trajectory")
+        self.startCannedTrajectoryService = rospy.ServiceProxy("/start_canned_trajectory", StartCannedTrajectory)
 
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
@@ -77,7 +81,8 @@ class CrazyflieServer:
         self.crazyflies = []
         for crazyflie in cfg["crazyflies"]:
             id = crazyflie["id"]
-            self.crazyflies.append(Crazyflie(id, self.tf))
+            initialPosition = crazyflie["initialPosition"]
+            self.crazyflies.append(Crazyflie(id, initialPosition, self.tf))
 
     def emergency(self):
         self.emergencyService()
@@ -94,6 +99,8 @@ class CrazyflieServer:
     def startEllipse(self):
         self.ellipseService()
 
+    def startCannedTrajectory(self, trajectory, timescale):
+        self.startCannedTrajectoryService(trajectory, timescale)
 
 
 

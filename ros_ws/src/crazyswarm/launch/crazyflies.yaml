@@ -1,17 +1,56 @@
 crazyflies:
-  - id: "07"
-    initialPosition: [0.0, 1.0, 0.0]
+  # 1st row
+  - id: "0E"
+    channel: 100
+    initialPosition: [1.0, 1.0, 0.0]
+  - id: "0F"
+    channel: 100
+    initialPosition: [1.0, 0.5, 0.0]
+  - id: "10"
+    channel: 100
+    initialPosition: [1.0, 0.0, 0.0]
+  - id: "11"
+    channel: 100
+    initialPosition: [1.0, -0.5, 0.0]
+
+  # 2nd row
+  # - id: "0A"
+  #   channel: 100
+  #   initialPosition: [0.5, 1.0, 0.0]
+  - id: "0B"
+    channel: 100
+    initialPosition: [0.5, 1.0, 0.0]
+  #- id: "0C"
+  #  channel: 100
+  #  initialPosition: [0.5, 0.0, 0.0]
+  - id: "0D"
+    channel: 100
+    initialPosition: [0.5, -0.5, 0.0]
+
+  # # 3rd row
+  # - id: "07"
+  #   channel: 100
+  #   initialPosition: [0.0, 1.0, 0.0]
   - id: "02"
-    initialPosition: [0.0, 0.5, 0.0]
-  - id: "04"
-    initialPosition: [0.0, 0.0, 0.0]
+    channel: 100
+    initialPosition: [0.0, 1.0, 0.0]
+  #- id: "04"
+  #  channel: 100
+  #  initialPosition: [0.0, 0.0, 0.0]
   - id: "05"
+    channel: 100
     initialPosition: [0.0, -0.5, 0.0]
+
+  # # # 4th row
   - id: "06"
+    channel: 100
     initialPosition: [-0.5, 1.0, 0.0]
   - id: "08"
+    channel: 100
     initialPosition: [-0.5, 0.5, 0.0]
   - id: "09"
+    channel: 100
     initialPosition: [-0.5, 0.0, 0.0]
   - id: "01"
+    channel: 100
     initialPosition: [-0.5, -0.5, 0.0]

@@ -4,6 +4,20 @@ from crazyflie_driver.msg import QuadcopterTrajectoryPoly
 
 # TODO: remove ros dependency and use numpy instead; convert in crazyflie.py to ros datatype
 
+def polyval(poly, t):
+    x = 0.0
+    i = len(poly) - 1
+    while i >= 0:
+        x = x * t + poly[i]
+        i = i - 1
+    return x
+
+def polyval_xyz(poly4d, t):
+    x = polyval(poly4d.poly_x, t)
+    y = polyval(poly4d.poly_y, t)
+    z = polyval(poly4d.poly_z, t)
+    return [x, y, z]
+
 class Trajectory:
     def __init__(self):
         self.polygons = [] # array of type QuadcopterTrajectoryPoly
@@ -50,3 +64,12 @@ class Trajectory:
             sum += poly.duration.to_sec()
         return sum
 
+    def evaluate(self, t):
+        time = 0
+        for polygon in self.polygons:
+            if t < time + polygon.duration.to_sec():
+                time_in_piece = t - time
+                return polyval_xyz(polygon, time_in_piece)
+            time += polygon.duration.to_sec()
+        # if we get here, the trajectory has ended
+        return polyval_xyz(self.polygons[-1], self.polygons[-1].duration.to_sec())

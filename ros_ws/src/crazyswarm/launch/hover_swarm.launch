@@ -7,14 +7,15 @@
 
   <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen">
     <rosparam>
-      broadcast_uri: "radio://0/100/2M/FFE7E7E7E7"
+      broadcast_address: "FFE7E7E7E7"
+      #broadcast_uri: "radio://0/100/2M/FFE7E7E7E7"
       world_frame: "/world"
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
-      genericLogTopic_log1_Variables: ["stabilizer.roll", "vicon.roll"]
+      genericLogTopic_log1_Variables: ["stabilizer.x", "vicon.x", "ctrltarget.x"]
       firmwareParams:
         flightmode:
           posCtrl: 1
@@ -45,6 +46,7 @@
       # tracking
       host_name: "vicon"
       use_vicon_tracker: false # set to false to use custom object tracking instead
+      save_point_clouds: /home/whoenig/pointCloud.ot
       numMarkerConfigurations: 1
       markerConfigurations:
         "0":
@@ -60,10 +62,10 @@
         "0":
           maxXVelocity: 2.0
           maxYVelocity: 2.0
-          maxZVelocity: 2.0
+          maxZVelocity: 3.0
           maxPitchRate: 20.0
           maxRollRate: 20.0
-          maxYawRate: 5.0
+          maxYawRate: 10.0
           maxRoll: 1.4
           maxPitch: 1.4
           maxFitnessScore: 0.001
@@ -95,8 +97,9 @@
 
   <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
 
-<!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf05/log1/values[0] /cf05/log1/values[1] /cf05/log1/values[2]"/>
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
+<!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf0A/log1/values[0] /cf0A/log1/values[1] /cf0A/log1/values[2]"/> -->
+
+<!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
 
   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/pose/pose/position/x /pose/pose/position/y"/> -->
 

@@ -73,6 +73,8 @@ class CrazyflieServer:
         self.ellipseService = rospy.ServiceProxy("/start_ellipse", Empty)
         rospy.wait_for_service("/start_canned_trajectory")
         self.startCannedTrajectoryService = rospy.ServiceProxy("/start_canned_trajectory", StartCannedTrajectory)
+        rospy.wait_for_service("/go_home");
+        self.goHomeService = rospy.ServiceProxy("/go_home", Empty)
 
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
@@ -103,6 +105,5 @@ class CrazyflieServer:
     def startCannedTrajectory(self, trajectory, timescale):
         self.startCannedTrajectoryService(trajectory, timescale)
 
-
-
-
+    def goHome(self):
+        self.goHomeService()

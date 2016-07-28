@@ -31,18 +31,22 @@ def waitUntilButtonPressed():
         time.sleep(0.01)
     buttonWasPressed = False
 
+def normalize(v):
+    return v / np.linalg.norm(v)
+
 MAJ_AXIS = np.array([ 0, 1, 0])
 MIN_AXIS = np.array([-1, 0, 0])
+VERT_MIN = 0.5
 VERT_STEP = 0.3
 RAD_STEP = 0.3
-MIN_RAD = 0.4
+RAD_MIN = 0.3
 PERIOD = 15
 
 # setup so they go from (low, small-radius) to (high, big-radius)
 def setup(cfs, extra, axis_scale):
     for i, (cf, ex) in enumerate(zip(cfs, extra)):
-        ex.z = (i + 1) * VERT_STEP
-        ex.radius = MIN_RAD + i * RAD_STEP
+        ex.z = VERT_MIN + i * VERT_STEP
+        ex.radius = RAD_MIN + i * RAD_STEP
         ex.center = np.array([0, 0, ex.z])
         ex.takeoff_pos = cf.initialPosition + ex.center
         ex.home = ex.center + axis_scale * ex.radius * MAJ_AXIS
@@ -73,6 +77,16 @@ def formation_simultaneous(cfs, extra):
     time.sleep(max_dur + 0.5)
 
 def stop(cfs, extra):
+
+    def wrong_side(cf, ex):
+        p = normalize(cf.position() - ex.center)
+        a = normalize(ex.home - ex.center)
+        return np.dot(p, a) < 0.05
+
+    while any(wrong_side(cf, ex) for cf, ex in zip(cfs, extra)):
+        print("unaligned stop, please try again...")
+        waitUntilButtonPressed()
+
     print("stopping")
     max_dur = 0
     for cf, ex in zip(cfs, extra):
@@ -89,7 +103,7 @@ def main():
     rospy.Subscriber("/joy", Joy, joyChanged)
 
     cfs = allcfs.crazyflies
-    MAX_CFS = 6
+    MAX_CFS = 12
     n_cfs = min(len(cfs), MAX_CFS)
     assert(n_cfs & 0x1 == 0)
     cfs = cfs[0:n_cfs]
@@ -97,7 +111,7 @@ def main():
 
     # sort by dot product with major axis
     init_formation_center = sum(cf.initialPosition for cf in cfs) / n_cfs
-    dotmaj = lambda p : np.dot(p - init_formation_center, MAJ_AXIS)
+    dotmaj = lambda cf : -np.dot(cf.initialPosition - init_formation_center, MAJ_AXIS)
     cfs = sorted(cfs, key=dotmaj)
     extra = [Object() for cf in cfs]
 
@@ -122,7 +136,7 @@ def main():
     print("press button to land...")
     waitUntilButtonPressed()
     print("landing")
-    allcfs.land(targetHeight = 0.05, duration = 5)
+    allcfs.land(targetHeight = 0.04, duration = 3)
 
 
 if __name__ == "__main__":

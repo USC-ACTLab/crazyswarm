@@ -1,0 +1,37 @@
+ID,Channel,Notes
+"01",100,
+"02",100,"Antenna issue (lots of packet drops)"
+"03",100,"Broken (???)"
+"04",100,"?"
+"05",100,
+"06",100,
+"07",100,
+"08",100,
+"09",100,
+"0A",100,
+"0B",100,
+"0C",100,"?"
+"0D",100,
+"0E",100,
+"0F",100,
+"10",100,
+"11",100,
+"12",100,"no markers"
+"13",100,"no markers"
+"14",100,"no markers"
+"15",100,"no markers"
+"16",?,"only 1 motor works"
+"17",100,"no markers"
+"18",100,"no markers"
+"19",100,"no markers"
+"1A",100,"no markers"
+"1B",100,"no markers"
+"1C",100,"no markers"
+"1D",100,"no markers"
+"1E",100,"no markers"
+"1F",?,"Dead (issue during nrf flashing?)"
+"20",100,"no markers"
+"21",100,"no markers"
+"22",100,"Dead (issue during nrf flashing?)"
+"23",100,"Dead (issue during nrf flashing?)"
+

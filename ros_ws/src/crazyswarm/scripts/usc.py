@@ -12,9 +12,9 @@ DZ = 0.3 #m
 OX = 1
 OY = 1
 OZ = 0.5
-DURATION = 4.0
-SLEEP = 2.0
-TRIALS = 5
+DURATION = 3.0
+SLEEP = 1.0
+TRIALS = 100
 
 wantToExit = False
 

@@ -40,7 +40,7 @@ VERT_MIN = 0.5
 VERT_STEP = 0.3
 RAD_STEP = 0.3
 RAD_MIN = 0.3
-PERIOD = 15
+PERIOD = 10
 
 # setup so they go from (low, small-radius) to (high, big-radius)
 def setup(cfs, extra, axis_scale):
@@ -81,7 +81,7 @@ def stop(cfs, extra):
     def wrong_side(cf, ex):
         p = normalize(cf.position() - ex.center)
         a = normalize(ex.home - ex.center)
-        return np.dot(p, a) < 0.05
+        return np.dot(p, a) < 0.15
 
     while any(wrong_side(cf, ex) for cf, ex in zip(cfs, extra)):
         print("unaligned stop, please try again...")
@@ -103,7 +103,7 @@ def main():
     rospy.Subscriber("/joy", Joy, joyChanged)
 
     cfs = allcfs.crazyflies
-    MAX_CFS = 12
+    MAX_CFS = 10
     n_cfs = min(len(cfs), MAX_CFS)
     assert(n_cfs & 0x1 == 0)
     cfs = cfs[0:n_cfs]
@@ -136,7 +136,7 @@ def main():
     print("press button to land...")
     waitUntilButtonPressed()
     print("landing")
-    allcfs.land(targetHeight = 0.04, duration = 3)
+    allcfs.land(targetHeight = 0.04, duration = 4)
 
 
 if __name__ == "__main__":

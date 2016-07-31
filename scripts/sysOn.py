@@ -7,5 +7,6 @@ with open("../ros_ws/src/crazyswarm/launch/crazyflies.yaml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile)
 
 for crazyflie in cfg["crazyflies"]:
-    uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], crazyflie["id"])
+    id = "{0:02X}".format(crazyflie["id"])
+    uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
     subprocess.call(["rosrun crazyflie_tools reboot --uri " + uri+ " --mode syson"], shell=True)

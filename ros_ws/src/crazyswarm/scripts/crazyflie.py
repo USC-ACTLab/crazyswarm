@@ -83,7 +83,7 @@ class CrazyflieServer:
 
         self.crazyflies = []
         for crazyflie in cfg["crazyflies"]:
-            id = crazyflie["id"]
+            id = str(crazyflie["id"])
             initialPosition = crazyflie["initialPosition"]
             self.crazyflies.append(Crazyflie(id, initialPosition, self.tf))
 

@@ -26,6 +26,8 @@ class Crazyflie:
         self.landService = rospy.ServiceProxy("/cf" + id + "/land", Land)
         rospy.wait_for_service("/cf" + id + "/hover")
         self.hoverService = rospy.ServiceProxy("/cf" + id + "/hover", Hover)
+        rospy.wait_for_service("/cf" + id + "/avoid_target")
+        self.avoidTargetService = rospy.ServiceProxy("/cf" + id + "/avoid_target", AvoidTarget)
         self.tf = tf
 
     def uploadTrajectory(self, trajectory):
@@ -49,6 +51,10 @@ class Crazyflie:
     def hover(self, goal, yaw, duration):
         gp = arrayToGeometryPoint(goal)
         self.hoverService(gp, yaw, rospy.Duration.from_sec(duration))
+
+    def avoidTarget(self, home, maxDisplacement, maxSpeed):
+        home = arrayToGeometryPoint(home)
+        self.avoidTargetService(home, maxDisplacement, maxSpeed)
 
     def position(self):
         self.tf.waitForTransform("/world", "/cf" + self.id, rospy.Time(0), rospy.Duration(10))

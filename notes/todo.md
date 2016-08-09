@@ -1,13 +1,5 @@
 TODO near
 =========
-- remote power off
-- remote power on
-- object tracker reject shared marker correspondence
-  and/or maximum distance from initial position
-- planning into a trajectory
-  + should it go into a moving target or fixed start point?
-- test for post-CRTP packet dropping in firmware queues
-- test larger swarm
 - think about how we want to do real-time control
 - think about how to do large-swarm position initialization
 - characterize full system latency

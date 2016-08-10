@@ -9,6 +9,11 @@ git submodule init
 git submodule update
 cd $ROOT
 
+cd ros_ws/src/crazyflie_ros/
+git submodule init
+git submodule update
+cd $ROOT
+
 cd ros_ws/src/object_tracker/
 git submodule init
 git submodule update
@@ -22,6 +27,8 @@ cd $ROOT
 
 # build stm firmware
 cd crazyflie-firmware
+git submodule init
+git submodule update
 make
 cd $ROOT
 

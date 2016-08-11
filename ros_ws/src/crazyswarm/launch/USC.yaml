@@ -1,0 +1,154 @@
+crazyflies:
+  # - id: 1
+  #   channel: 100
+  #   initialPosition: [1.5, 1.5, 0.0]
+  # - id: 2
+  #   channel: 110
+  #   initialPosition: [1.5, 1.0, 0.0]
+  # - id: 3
+  #   channel: 120
+  #   initialPosition: [1.5, 0.5, 0.0]
+  # - id: 4
+  #   channel: 100
+  #   initialPosition: [1.5, 0.0, 0.0]
+  # - id: 5
+  #   channel: 110
+  #   initialPosition: [1.5, -0.5, 0.0]
+  # - id: 6
+  #   channel: 120
+  #   initialPosition: [1.5, -1.0, 0.0]
+  # - id: 7
+  #   channel: 100
+  #   initialPosition: [1.5, -1.5, 0.0]
+
+  # - id: 8
+  #   channel: 110
+  #   initialPosition: [1.0, 1.5, 0.0]
+  - id: 9
+    channel: 120
+    initialPosition: [1.0, 1.0, 0.0]
+  # - id: 10
+  #   channel: 100
+  #   initialPosition: [1.0, 0.5, 0.0]
+  # - id: 11
+  #   channel: 110
+  #   initialPosition: [1.0, 0.0, 0.0]
+  - id: 12
+    channel: 120
+    initialPosition: [1.0, -0.5, 0.0]
+  # - id: 13
+  #   channel: 100
+  #   initialPosition: [1.0, -1.0, 0.0]
+  # - id: 14
+  #   channel: 110
+  #   initialPosition: [1.0, -1.5, 0.0]
+
+  # - id: 15
+  #   channel: 120
+  #   initialPosition: [0.5, 1.5, 0.0]
+  - id: 16
+    channel: 100
+    initialPosition: [0.5, 1.0, 0.0]
+  # - id: 17
+  #   channel: 110
+  #   initialPosition: [0.5, 0.5, 0.0]
+  # - id: 18
+  #   channel: 120
+  #   initialPosition: [0.5, 0.0, 0.0]
+  - id: 19
+    channel: 100
+    initialPosition: [0.5, -0.5, 0.0]
+  # - id: 20
+  #   channel: 110
+  #   initialPosition: [0.5, -1.0, 0.0]
+  # - id: 21
+  #   channel: 120
+  #   initialPosition: [0.5, -1.5, 0.0]
+
+  # - id: 22
+  #   channel: 100
+  #   initialPosition: [0.0, 1.5, 0.0]
+  - id: 23
+    channel: 110
+    initialPosition: [0.0, 1.0, 0.0]
+  # - id: 24
+  #   channel: 120
+  #   initialPosition: [0.0, 0.5, 0.0]
+  # - id: 25
+  #   channel: 100
+  #   initialPosition: [0.0, 0.0, 0.0]
+  - id: 26
+    channel: 110
+    initialPosition: [0.0, -0.5, 0.0]
+  # - id: 27
+  #   channel: 120
+  #   initialPosition: [0.0, -1.0, 0.0]
+  # - id: 28
+  #   channel: 100
+  #   initialPosition: [0.0, -1.5, 0.0]
+
+  # - id: 29
+  #   channel: 110
+  #   initialPosition: [-0.5, 1.5, 0.0]
+  - id: 30
+    channel: 120
+    initialPosition: [-0.5, 1.0, 0.0]
+  - id: 31
+    channel: 100
+    initialPosition: [-0.5, 0.5, 0.0]
+  - id: 32
+    channel: 110
+    initialPosition: [-0.5, 0.0, 0.0]
+  - id: 33
+    channel: 120
+    initialPosition: [-0.5, -0.5, 0.0]
+  # - id: 34
+  #   channel: 100
+  #   initialPosition: [-0.5, -1.0, 0.0]
+  # - id: 35
+  #   channel: 110
+  #   initialPosition: [-0.5, -1.5, 0.0]
+
+  # - id: 36
+  #   channel: 120
+  #   initialPosition: [-1.0, 1.5, 0.0]
+  # - id: 37
+  #   channel: 100
+  #   initialPosition: [-1.0, 1.0, 0.0]
+  # - id: 38
+  #   channel: 110
+  #   initialPosition: [-1.0, 0.5, 0.0]
+  # - id: 39
+  #   channel: 120
+  #   initialPosition: [-1.0, 0.0, 0.0]
+  # - id: 40
+  #   channel: 100
+  #   initialPosition: [-1.0, -0.5, 0.0]
+  # - id: 41
+  #   channel: 110
+  #   initialPosition: [-1.0, -1.0, 0.0]
+  # - id: 42
+  #   channel: 120
+  #   initialPosition: [-1.0, -1.5, 0.0]
+
+  # - id: 43
+  #   channel: 100
+  #   initialPosition: [-1.5, 1.5, 0.0]
+  # - id: 44
+  #   channel: 110
+  #   initialPosition: [-1.5, 1.0, 0.0]
+  # - id: 45
+  #   channel: 120
+  #   initialPosition: [-1.5, 0.5, 0.0]
+  # - id: 46
+  #   channel: 100
+  #   initialPosition: [-1.5, 0.0, 0.0]
+  # - id: 47
+  #   channel: 110
+  #   initialPosition: [-1.5, -0.5, 0.0]
+  # - id: 48
+  #   channel: 120
+  #   initialPosition: [-1.5, -1.0, 0.0]
+  # - id: 49
+  #   channel: 100
+  #   initialPosition: [-1.5, -1.5, 0.0]

@@ -10,6 +10,8 @@ from crazyflie import *
 import rospy
 import joystick
 
+PERIOD = 20
+
 def main():
 
 	pyramid_steps = [
@@ -20,41 +22,69 @@ def main():
 	]
 
 	heights = [0.7, 1.4, 2.1, 2.5]
+	#heights = [0.7, 1.4, 2.1]
 
-	s = set()
-	for step in pyramid_steps:
-		for i in step:
-			s.add(i)
+	# sanity checks
+	# s = set()
+	# for step in pyramid_steps:
+	# 	for i in step:
+	# 		s.add(i)
 
-	assert(len(s) == 49)
-	for i in range(1, 50):
-		assert(i in s)
+	# assert(len(s) == 49)
+	# for i in range(1, 50):
+	# 	assert(i in s)
 
-
+	# connect to the server
 	allcfs = CrazyflieServer()
 	cfs = allcfs.crazyflies
 
+	# setup ellipse upfront
+	for step, height in zip(pyramid_steps, heights):
+		for i in step:
+			cf = allcfs.crazyfliesById[i]
+			major = cf.initialPosition
+			minor = [-major[1], major[0], 0]
+			cf.setEllipse(
+				center = np.array([0, 0, height]),
+				major  = major,
+				minor  = minor,
+				period = PERIOD)
+
+	# takeoff sequence
 	joy = joystick.Joystick()
 
-	print(pyramid_steps)
-	print(heights)
-
-	print("checkpoint")
 	for step, height in reversed(zip(pyramid_steps, heights)):
 		print("press button to continue...")
 		joy.waitUntilButtonPressed()
+		# takeoff
 		for i in step:
-			cf = cfs[i - 1]
-			assert(int(cf.id) == i)
-			cf.takeoff(height, 3.0)
-		time.sleep(3.2)
+			cf = allcfs.crazyfliesById[i]
+			cf.takeoff(height, 1.0 + height)
+		time.sleep(1.2 + height)
+		# go to ideal position
 		for i in step:
-			cf = cfs[i - 1]
+			cf = allcfs.crazyfliesById[i]
 			cf.hover(cf.initialPosition + np.array([0, 0, height]), 0, 1.0)
 
-	print("press button to land...")
+	print("press button to start rotation...")
 	joy.waitUntilButtonPressed()
-	allcfs.land(0.04, 3.5)
+	allcfs.startEllipse()
+
+	print("press button to stop...")
+	joy.waitUntilButtonPressed()
+	for step, height in zip(pyramid_steps, heights):
+		for i in step:
+			cf = allcfs.crazyfliesById[i]
+			cf.hover(cf.initialPosition + np.array([0, 0, height]), 0, 2.0)
+	time.sleep(2.5)
+
+	for step, height in zip(pyramid_steps, heights):
+		print("press button to land...")
+		joy.waitUntilButtonPressed()
+		for i in step:
+			cf = allcfs.crazyfliesById[i]
+			cf.land(0.06, 1.0 + height)
+		time.sleep(1.2 + height)
 
 if __name__ == "__main__":
 	main()

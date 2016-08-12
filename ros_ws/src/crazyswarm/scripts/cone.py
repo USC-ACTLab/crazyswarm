@@ -38,12 +38,12 @@ def main():
 
     cfs = allcfs.crazyflies
 
-    MAX_CFS = 6
+    MAX_CFS = 1
     n_cfs = min(len(cfs), MAX_CFS)
 
-    VERT_STEP = 0.3
+    VERT_STEP = 1.0
     RAD_STEP = 0.3
-    MIN_RAD = 0.4
+    MIN_RAD = 2.0
     PERIOD = 15
 
     MAJ_AXIS = np.array([ 0, 1, 0])

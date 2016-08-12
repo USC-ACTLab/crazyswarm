@@ -15,19 +15,20 @@ def arrayToGeometryPoint(a):
 class Crazyflie:
     def __init__(self, id, initialPosition, tf):
         self.id = id
+        prefix = "/cf" + str(id)
         self.initialPosition = np.array(initialPosition)
-        rospy.wait_for_service("/cf" + id + "/upload_trajectory");
-        self.uploadTrajectoryService = rospy.ServiceProxy("/cf" + id + "/upload_trajectory", UploadTrajectory)
-        rospy.wait_for_service("/cf" + id + "/set_ellipse");
-        self.setEllipseService = rospy.ServiceProxy("/cf" + id + "/set_ellipse", SetEllipse)
-        rospy.wait_for_service("/cf" + id + "/takeoff")
-        self.takeoffService = rospy.ServiceProxy("/cf" + id + "/takeoff", Takeoff)
-        rospy.wait_for_service("/cf" + id + "/land")
-        self.landService = rospy.ServiceProxy("/cf" + id + "/land", Land)
-        rospy.wait_for_service("/cf" + id + "/hover")
-        self.hoverService = rospy.ServiceProxy("/cf" + id + "/hover", Hover)
-        rospy.wait_for_service("/cf" + id + "/avoid_target")
-        self.avoidTargetService = rospy.ServiceProxy("/cf" + id + "/avoid_target", AvoidTarget)
+        rospy.wait_for_service(prefix + "/upload_trajectory");
+        self.uploadTrajectoryService = rospy.ServiceProxy(prefix + "/upload_trajectory", UploadTrajectory)
+        rospy.wait_for_service(prefix + "/set_ellipse");
+        self.setEllipseService = rospy.ServiceProxy(prefix + "/set_ellipse", SetEllipse)
+        rospy.wait_for_service(prefix + "/takeoff")
+        self.takeoffService = rospy.ServiceProxy(prefix + "/takeoff", Takeoff)
+        rospy.wait_for_service(prefix + "/land")
+        self.landService = rospy.ServiceProxy(prefix + "/land", Land)
+        rospy.wait_for_service(prefix + "/hover")
+        self.hoverService = rospy.ServiceProxy(prefix + "/hover", Hover)
+        rospy.wait_for_service(prefix + "/avoid_target")
+        self.avoidTargetService = rospy.ServiceProxy(prefix + "/avoid_target", AvoidTarget)
         self.tf = tf
 
     def uploadTrajectory(self, trajectory):
@@ -57,8 +58,8 @@ class Crazyflie:
         self.avoidTargetService(home, maxDisplacement, maxSpeed)
 
     def position(self):
-        self.tf.waitForTransform("/world", "/cf" + self.id, rospy.Time(0), rospy.Duration(10))
-        position, quaternion = self.tf.lookupTransform("/world", "/cf" + self.id, rospy.Time(0))
+        self.tf.waitForTransform("/world", "/cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
+        position, quaternion = self.tf.lookupTransform("/world", "/cf" + str(self.id), rospy.Time(0))
         # if self.tf.frameExists("/cf" + self.id) and self.tf.frameExists("/world"):
             # t = self.tf.getLatestCommonTime("/cf" + self.id, "/world")
             # position, quaternion = self.tf.lookupTransform("/cf" + self.id, "/world", t)
@@ -88,10 +89,13 @@ class CrazyflieServer:
         self.tf = TransformListener()
 
         self.crazyflies = []
+        self.crazyfliesById = dict()
         for crazyflie in cfg["crazyflies"]:
-            id = str(crazyflie["id"])
+            id = int(crazyflie["id"])
             initialPosition = crazyflie["initialPosition"]
-            self.crazyflies.append(Crazyflie(id, initialPosition, self.tf))
+            cf = Crazyflie(id, initialPosition, self.tf)
+            self.crazyflies.append(cf)
+            self.crazyfliesById[id] = cf
 
     def emergency(self):
         self.emergencyService()

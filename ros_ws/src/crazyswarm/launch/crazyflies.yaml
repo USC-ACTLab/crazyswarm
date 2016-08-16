@@ -12,6 +12,7 @@ crazyflies:
   #   channel: 100
   #   initialPosition: [1.0, -0.5, 0.0]
 
+
   # - id: 5
   #   channel: 110
   #   initialPosition: [0.5, 1.0, 0.0]
@@ -24,6 +25,7 @@ crazyflies:
   # - id: 8
   #   channel: 100
   #   initialPosition: [0.5, -0.5, 0.0]
+
 
   # - id: 9
   #   channel: 110
@@ -38,6 +40,7 @@ crazyflies:
   #   channel: 100
   #   initialPosition: [0.0, -0.5, 0.0]
 
+
   # - id: 13
   #   channel: 110
   #   initialPosition: [-0.5, 1.0, 0.0]
@@ -51,6 +54,7 @@ crazyflies:
   #   channel: 100
   #   initialPosition: [-0.5, -0.5, 0.0]
 
+
   # - id: 17
   #   channel: 110
   #   initialPosition: [-1.0, 1.0, 0.0]
@@ -63,6 +67,7 @@ crazyflies:
   # - id: 20
   #   channel: 100
   #   initialPosition: [-1.0, -0.5, 0.0]
+
 
   # - id: 21
   #   channel: 110
@@ -117,6 +122,7 @@ crazyflies:
   #   channel: 100
   #   initialPosition: [-1.0, 1.5, 0.0]
 
+
   # - id: 39
   #   channel: 110
   #   initialPosition: [-1.5, 1.5, 0.0]
@@ -136,6 +142,7 @@ crazyflies:
   #   channel: 100
   #   initialPosition: [-1.5, -1.0, 0.0]
 
+
   # - id: 31
   #   channel: 110
   #   initialPosition: [1.5, -1.5, 0.0]
@@ -148,6 +155,6 @@ crazyflies:
   # - id: 47
   #   channel: 110
   #   initialPosition: [0.0, -1.5, 0.0]
-  - id: 49
-    channel: 110
-    initialPosition: [-0.5, -1.5, 0.0]
+  # - id: 49
+  #   channel: 110
+  #   initialPosition: [-0.5, -1.5, 0.0]

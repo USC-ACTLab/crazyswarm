@@ -1,8 +1,11 @@
 ros_ws/build/
 ros_ws/devel/
+ros_ws/src/crazyswarm/launch/test.rviz
 .DS_Store
-firm
-client
 *.pyc
 *~
 *.mexa64
+# james's symlinks :)
+cfs.yaml
+firm
+client

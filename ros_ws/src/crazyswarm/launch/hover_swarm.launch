@@ -24,12 +24,12 @@
           kd_xy: 0.5 # d for position
           ki_xy: 0.05
           i_range_xy: 2.0
-          kR_xy: 25000 # p for attitude
-          kw_xy: 12000 # d for attitude
-          kR_z: 25000 # p for yaw
+          kR_xy: 70000 # p for attitude
+          kw_xy: 20000 # d for attitude
+          kR_z: 60000 # p for yaw
           kw_z: 12000  # d for yaw
           ki_m_z: 500     # yaw
-          kd_omega_rp: 0 # roll and pitch angular velocity d gain
+          kd_omega_rp: 100 # roll and pitch angular velocity d gain
           i_range_m_z: 1500
           kp_z: 0.8
           kd_z: 0.5
@@ -46,7 +46,8 @@
       # tracking
       host_name: "vicon"
       use_vicon_tracker: false # set to false to use custom object tracking instead
-      save_point_clouds: /home/whoenig/pointCloud.ot
+      save_point_clouds: ~/pointCloud.ot
+      interactive_object: active-wand
       numMarkerConfigurations: 1
       markerConfigurations:
         "0":

@@ -4,3 +4,5 @@ ros_ws/devel/
 firm
 client
 *.pyc
+*~
+*.mexa64

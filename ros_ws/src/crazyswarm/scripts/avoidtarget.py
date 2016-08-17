@@ -29,7 +29,7 @@ def main():
 
         # ensure we fill up the full range of heights
         MIN_HEIGHT = 0.4
-        MAX_HEIGHT = 2.0
+        MAX_HEIGHT = 1.8
         scale = (MAX_HEIGHT - MIN_HEIGHT) / (highest - lowest)
 
         for i in range(len(rand_heights)):

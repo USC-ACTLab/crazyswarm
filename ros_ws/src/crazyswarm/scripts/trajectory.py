@@ -109,6 +109,21 @@ class Trajectory:
             duration = poly.duration.to_sec()
             poly.duration = rospy.Duration.from_sec(duration * timescale)
 
+    def scale(self, x, y, z, yaw):
+        for poly in self.polygons:
+            for i in range(0, 8):
+                poly.poly_x[i] *= x
+                poly.poly_y[i] *= y
+                poly.poly_z[i] *= z
+                poly.poly_yaw[i] *= yaw
+
+    def shift(self, pos, yaw):
+        for poly in self.polygons:
+            poly.poly_x[0] += pos[0]
+            poly.poly_y[0] += pos[1]
+            poly.poly_z[0] += pos[2]
+            poly.poly_yaw[0] += yaw
+
     def totalDuration(self):
         sum = 0.0
         for poly in self.polygons:

@@ -1,6 +1,5 @@
 ros_ws/build/
 ros_ws/devel/
-ros_ws/src/crazyswarm/launch/test.rviz
 .DS_Store
 *.pyc
 *~
@@ -9,3 +8,4 @@ ros_ws/src/crazyswarm/launch/test.rviz
 cfs.yaml
 firm
 client
+launch

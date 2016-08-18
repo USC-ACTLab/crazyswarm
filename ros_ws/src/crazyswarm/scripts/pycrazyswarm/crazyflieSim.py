@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import os
 import yaml
 import math
 
@@ -9,6 +10,11 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 from trajectory import *
+
+import cfsim.cffirmware as cfswig
+
+def arr2vec(a):
+    return cfswig.mkvec(a[0], a[1], a[2])
 
 class TimeHelper:
     def __init__(self):
@@ -50,18 +56,18 @@ class TimeHelper:
         self.observers.append(observer)
 
 
-class Ellipse:
-    def __init__(self, center, major, minor, period):
-        self.center = np.array(center)
-        self.major = np.array(major)
-        self.minor = np.array(minor)
-        self.period = period
+# class Ellipse:
+#     def __init__(self, center, major, minor, period):
+#         self.center = np.array(center)
+#         self.major = np.array(major)
+#         self.minor = np.array(minor)
+#         self.period = period
 
-    def evaluate(self, t):
-        s = 2 * math.pi / self.period;
-        cos_t = math.cos(s * t)
-        sin_t = math.sin(s * t)
-        return cos_t * self.major + sin_t * self.minor + self.center
+#     def evaluate(self, t):
+#         s = 2 * math.pi / self.period;
+#         cos_t = math.cos(s * t)
+#         sin_t = math.sin(s * t)
+#         return cos_t * self.major + sin_t * self.minor + self.center
 
 class Crazyflie:
     def __init__(self, id, pos, timeHelper):
@@ -69,73 +75,86 @@ class Crazyflie:
         self.pos = pos
         self.initialPosition = np.array(pos)
         self.timeHelper = timeHelper
-        self.traj = None
-        self.startt = 0
-        self.mode = 0 # 0 - traj, 1 - ellipse
 
-    def uploadTrajectory(self, trajectory):
-        self.traj = trajectory
+        MASS = 0.032
+        self.planner = cfswig.planner()
+        cfswig.plan_init(self.planner, MASS)
+        self.planner.home = arr2vec(self.initialPosition) # TODO...
+
+    # def uploadTrajectory(self, trajectory):
+    #     self.traj = trajectory
 
     def setEllipse(self, center, major, minor, period):
-        self.ellipse = Ellipse(center, major, minor, period)
+        e = self.planner.ellipse
+        e.center = arr2vec(center)
+        e.major = arr2vec(major)
+        e.minor = arr2vec(minor)
+        e.period = period
 
     def takeoff(self, targetHeight, duration):
-        self.traj = Trajectory()
-        self.traj.load("takeoff.csv")
-        pos = self.position()
-        delta_z = targetHeight - pos[2]
-        self.traj.stretch(duration / self.traj.totalDuration())
-        self.traj.scale(1, 1, delta_z, 1)
-        self.traj.shift(pos, 0)
-        self.home = [pos[0], pos[1], targetHeight]
-        self.startt = self.timeHelper.time()
-        self.mode = 0
+        t = self.timeHelper.time()
+        pos = self._vposition(t)
+        cfswig.plan_takeoff(self.planner,
+            self._vposition(t), self.yaw(t), targetHeight, duration, t)
 
     def land(self, targetHeight, duration):
-        self.traj = Trajectory()
-        self.traj.load("takeoff.csv")
-        pos = self.position()
-        delta_z = targetHeight - pos[2]
-        self.traj.stretch(duration / self.traj.totalDuration())
-        self.traj.scale(1, 1, delta_z, 1)
-        self.traj.shift(pos, 0)
-        self.startt = self.timeHelper.time()
-        self.mode = 0
+        t = self.timeHelper.time()
+        cfswig.plan_land(self.planner,
+            self._vposition(t), self.yaw(t), targetHeight, duration, t)
 
     def hover(self, goal, yaw, duration):
-        self.pos = np.array(goal)
-        self.mode = 2
+        t = self.timeHelper.time()
+        cfswig.plan_hover(self.planner, arr2vec(goal), yaw, duration, t)
+
+    def avoidTarget(self, home, maxDisplacement, maxSpeed):
+        t = self.timeHelper.time()
+        cfswig.plan_start_avoid_target(self.planner,
+            arr2vec(home), maxDisplacement, maxSpeed, t)
 
     def startTrajectory(self):
-        self.startt = self.timeHelper.time()
-        self.mode = 0
+        t = self.timeHelper.time()
+        cfswig.plan_start_poly(self.planner, self._vposition(t), t)
 
     def startEllipse(self):
-        self.startt = self.timeHelper.time()
-        self.mode = 1
+        t = self.timeHelper.time()
+        cfswig.plan_start_ellipse(self.planner, t)
 
-    def startCannedTrajectory(self, trajectory, timescale):
-        self.traj = Trajectory()
-        if trajectory == 1:
-            self.traj.load("figure8.csv")
-        pos = self.position()
-        self.traj.stretch(timescale)
-        self.traj.shift(pos, 0)
-        self.startt = self.timeHelper.time()
-        self.mode = 0
+    # def startCannedTrajectory(self, trajectory, timescale):
+    #     self.traj = Trajectory()
+    #     if trajectory == 1:
+    #         self.traj.load(os.path.join(os.path.dirname(__file__), "figure8.csv"))
+    #     pos = self.position()
+    #     self.traj.stretch(timescale)
+    #     self.traj.shift(pos, 0)
+    #     self.startt = self.timeHelper.time()
+    #     self.mode = 0
 
     def goHome(self):
-        # TODO
-        pass
+        t = self.timeHelper.time()
+        for cf in self.crazyflies:
+            cf.goHome(t)
 
     def position(self):
         return self.pos
 
+    def yaw(self, t):
+        ev = cfswig.plan_current_goal(self.planner, t)
+        return ev.yaw
+
+# "private" methods
+
+    def _vposition(self, t):
+        # TODO this should be implemented in C
+        if self.planner.state == cfswig.TRAJECTORY_STATE_IDLE:
+            return self.planner.home
+        else:
+            ev = cfswig.plan_current_goal(self.planner, t)
+            # not totally sure why, but if we don't do this, we don't actually return by value
+            return cfswig.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
+
     def _update(self, t):
-        if self.mode == 0 and self.traj is not None:
-            self.pos = self.traj.evaluate(t - self.startt)
-        elif self.mode == 1:
-            self.pos = self.ellipse.evaluate(t - self.startt)
+        pos = self._vposition(t)
+        self.pos = np.array([pos.x, pos.y, pos.z])
 
 class CrazyflieServer:
     def __init__(self, timeHelper):

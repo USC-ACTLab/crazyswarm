@@ -4,12 +4,23 @@ import sys
 import yaml
 import rospy
 import numpy as np
+import time
 from std_srvs.srv import Empty
 from crazyflie_driver.srv import *
 from tf import TransformListener
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
+
+class TimeHelper:
+    def __init__(self):
+        pass
+
+    def time(self):
+        return time.time()
+
+    def sleep(self, duration):
+        time.sleep(duration)
 
 
 class Crazyflie:

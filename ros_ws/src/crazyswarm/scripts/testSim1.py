@@ -2,15 +2,17 @@
 
 import numpy as np
 
-from crazyflieSim import *
+from pycrazyswarm import *
 
 if __name__ == "__main__":
-    timeHelper = TimeHelper()
-    allcfs = CrazyflieServer(timeHelper)
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    allcfs = swarm.allcfs
 
     allcfs.takeoff(targetHeight=2.0, duration=2.0)
     timeHelper.sleep(4.0)
-    allcfs.startCannedTrajectory(1, 1.0)
+    allcfs.crazyflies[0].hover([2.0, 2.0, 1.0], 0, 2)
+    # allcfs.startCannedTrajectory(1, 1.0)
     timeHelper.sleep(10)
     allcfs.land(targetHeight = 0.04, duration=2.0)
     timeHelper.sleep(10)

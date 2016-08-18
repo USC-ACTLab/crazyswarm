@@ -1,21 +1,16 @@
 #!/usr/bin/env python
 
-import sys
-import os
 import yaml
-import math
-
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
-from trajectory import *
+import cfsim.cffirmware as firm
 
-import cfsim.cffirmware as cfswig
-
-def arr2vec(a):
-    return cfswig.mkvec(a[0], a[1], a[2])
-
+# main class of simulation.
+# crazyflies keep reference to this object to ask what time it is.
+# also does the plotting.
+#
 class TimeHelper:
     def __init__(self):
         self.fig = plt.figure()
@@ -33,13 +28,18 @@ class TimeHelper:
     def time(self):
         return self.t
 
+    def step(self, duration):
+        self.t += duration
+
+    # should be called "animate" or something
+    # but called "sleep" for source-compatibility with real-robot scripts
     def sleep(self, duration):
-        for t in np.arange(0, duration, 0.1):
+        dt = 0.1
+        for t in np.arange(self.t, self.t + duration, dt):
             xs = []
             ys = []
             zs = []
             for cf in self.crazyflies:
-                cf._update(self.t + t)
                 x, y, z = cf.position()
                 xs.append(x)
                 ys.append(y)
@@ -49,41 +49,61 @@ class TimeHelper:
                 self.ax.collections.remove(self.oldPlot)
             self.oldPlot = self.ax.scatter(xs, ys, zs)
             plt.pause(0.001)
-            print(t)
-        self.t += duration
+            print(self.t)
+            self.step(dt)
+
 
     def addObserver(self, observer):
         self.observers.append(observer)
 
 
-# class Ellipse:
-#     def __init__(self, center, major, minor, period):
-#         self.center = np.array(center)
-#         self.major = np.array(major)
-#         self.minor = np.array(minor)
-#         self.period = period
+# helper func to convert python/numpy arrays to firmware 3d vector type.
+def arr2vec(a):
+    return firm.mkvec(a[0], a[1], a[2])
 
-#     def evaluate(self, t):
-#         s = 2 * math.pi / self.period;
-#         cos_t = math.cos(s * t)
-#         sin_t = math.sin(s * t)
-#         return cos_t * self.major + sin_t * self.minor + self.center
 
 class Crazyflie:
-    def __init__(self, id, pos, timeHelper):
+
+    def __init__(self, id, initialPosition, timeHelper):
         self.id = id
-        self.pos = pos
-        self.initialPosition = np.array(pos)
-        self.timeHelper = timeHelper
+        self.initialPosition = np.array(initialPosition)
+        self.time = lambda: timeHelper.time()
 
         MASS = 0.032
-        self.planner = cfswig.planner()
-        cfswig.plan_init(self.planner, MASS)
-        self.planner.home = arr2vec(self.initialPosition) # TODO...
+        self.planner = firm.planner()
+        firm.plan_init(self.planner, MASS)
+        self.planner.home = arr2vec(initialPosition)
 
+    # online-planning trajectories
+    def takeoff(self, targetHeight, duration):
+        firm.plan_takeoff(self.planner,
+            self._vposition(), self.yaw(), targetHeight, duration, self.time())
+
+    def land(self, targetHeight, duration):
+        firm.plan_land(self.planner,
+            self._vposition(), self.yaw(), targetHeight, duration, self.time())
+
+    def hover(self, goal, yaw, duration):
+        firm.plan_hover(self.planner, arr2vec(goal), yaw, duration, self.time())
+
+    def goHome(self):
+        # TODO
+        pass
+
+    # polynomial trajectories
+    # TODO: port trajectory object
     # def uploadTrajectory(self, trajectory):
-    #     self.traj = trajectory
+        # # request = UploadTrajectory()
+        # # request.polygons = trajectory.polygons
+        # self.uploadTrajectoryService(trajectory.polygons)
 
+    def startTrajectory(self):
+        firm.plan_start_poly(self.planner, self._vposition(), self.time())
+
+    # TODO: polynomial dictionary exposed from C
+    # def startCannedTrajectory(self, trajectory, timescale):
+
+    # ellipse trajectories
     def setEllipse(self, center, major, minor, period):
         e = self.planner.ellipse
         e.center = arr2vec(center)
@@ -91,82 +111,49 @@ class Crazyflie:
         e.minor = arr2vec(minor)
         e.period = period
 
-    def takeoff(self, targetHeight, duration):
-        t = self.timeHelper.time()
-        pos = self._vposition(t)
-        cfswig.plan_takeoff(self.planner,
-            self._vposition(t), self.yaw(t), targetHeight, duration, t)
-
-    def land(self, targetHeight, duration):
-        t = self.timeHelper.time()
-        cfswig.plan_land(self.planner,
-            self._vposition(t), self.yaw(t), targetHeight, duration, t)
-
-    def hover(self, goal, yaw, duration):
-        t = self.timeHelper.time()
-        cfswig.plan_hover(self.planner, arr2vec(goal), yaw, duration, t)
-
-    def avoidTarget(self, home, maxDisplacement, maxSpeed):
-        t = self.timeHelper.time()
-        cfswig.plan_start_avoid_target(self.planner,
-            arr2vec(home), maxDisplacement, maxSpeed, t)
-
-    def startTrajectory(self):
-        t = self.timeHelper.time()
-        cfswig.plan_start_poly(self.planner, self._vposition(t), t)
-
     def startEllipse(self):
-        t = self.timeHelper.time()
-        cfswig.plan_start_ellipse(self.planner, t)
+        firm.plan_start_ellipse(self.planner, self.time())
 
-    # def startCannedTrajectory(self, trajectory, timescale):
-    #     self.traj = Trajectory()
-    #     if trajectory == 1:
-    #         self.traj.load(os.path.join(os.path.dirname(__file__), "figure8.csv"))
-    #     pos = self.position()
-    #     self.traj.stretch(timescale)
-    #     self.traj.shift(pos, 0)
-    #     self.startt = self.timeHelper.time()
-    #     self.mode = 0
+    # interactive trajectories
+    def avoidTarget(self, home, maxDisplacement, maxSpeed):
+        firm.plan_start_avoid_target(self.planner,
+            arr2vec(home), maxDisplacement, maxSpeed, self.time())
 
-    def goHome(self):
-        t = self.timeHelper.time()
-        for cf in self.crazyflies:
-            cf.goHome(t)
+    def updateTarget(self, target):
+        firm.plan_update_avoid_target(self.planner, arr2vec(target), self.time())
 
+    # query state
     def position(self):
-        return self.pos
+        pos = self._vposition()
+        return np.array([pos.x, pos.y, pos.z])
 
-    def yaw(self, t):
-        ev = cfswig.plan_current_goal(self.planner, t)
+    def yaw(self):
+        ev = firm.plan_current_goal(self.planner, self.time())
         return ev.yaw
 
-# "private" methods
 
-    def _vposition(self, t):
+    # "private" methods
+    def _vposition(self):
         # TODO this should be implemented in C
-        if self.planner.state == cfswig.TRAJECTORY_STATE_IDLE:
+        if self.planner.state == firm.TRAJECTORY_STATE_IDLE:
             return self.planner.home
         else:
-            ev = cfswig.plan_current_goal(self.planner, t)
+            ev = firm.plan_current_goal(self.planner, self.time())
             # not totally sure why, but if we don't do this, we don't actually return by value
-            return cfswig.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
+            return firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
 
-    def _update(self, t):
-        pos = self._vposition(t)
-        self.pos = np.array([pos.x, pos.y, pos.z])
 
 class CrazyflieServer:
     def __init__(self, timeHelper):
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
 
-        self.crazyflies = []
-        for crazyflie in cfg["crazyflies"]:
-            id = crazyflie["id"]
-            pos = crazyflie["initialPosition"]
-            self.crazyflies.append(Crazyflie(id, pos, timeHelper))
+        def yaml2cf(cfnode):
+            id = str(cfnode["id"])
+            pos = cfnode["initialPosition"]
+            return Crazyflie(id, pos, timeHelper)
 
+        self.crazyflies = [yaml2cf(cfnode) for cfnode in cfg["crazyflies"]]
         self.timeHelper = timeHelper
         self.timeHelper.crazyflies = self.crazyflies
 

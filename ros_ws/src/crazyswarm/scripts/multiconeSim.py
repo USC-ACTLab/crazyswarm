@@ -5,7 +5,7 @@ from __future__ import print_function
 from math import *
 import numpy as np
 
-from crazyflieSim import *
+from cfsim import *
 
 class Object:
     pass

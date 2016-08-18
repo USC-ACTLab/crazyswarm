@@ -2,21 +2,18 @@
 
 from __future__ import print_function
 
-import time
-
-from crazyflie import *
-import joystick
+from pycrazyswarm import *
 
 def main():
-    server = CrazyflieServer()
-    cfs = server.crazyflies
-    joy = joystick.Joystick()
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    allcfs = swarm.allcfs
 
-    for cf in cfs:
+    for cf in allcfs.crazyflies:
         print(cf.id)
         cf.takeoff(1.0, 2.5)
-        print("press button to contine")
-        joy.waitUntilButtonPressed()
+        print("press button to continue")
+        swarm.input.waitUntilButtonPressed()
         cf.land(0.04, 2.5)
 
 

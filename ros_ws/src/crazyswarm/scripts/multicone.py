@@ -2,34 +2,13 @@
 
 from __future__ import print_function
 
-import time
 from math import *
 import numpy as np
 
-from crazyflie import *
-from trajectory import *
-
-import rospy
-from sensor_msgs.msg import Joy
+from pycrazyswarm import *
 
 class Object:
     pass
-
-lastButtonState = 0
-buttonWasPressed = False
-
-def joyChanged(data):
-    global buttonWasPressed
-    global lastButtonState
-    if not buttonWasPressed and data.buttons[5] == 1 and lastButtonState == 0:
-        buttonWasPressed = True
-    lastButtonState = data.buttons[5]
-
-def waitUntilButtonPressed():
-    global buttonWasPressed
-    while not rospy.is_shutdown() and not buttonWasPressed:
-        time.sleep(0.01)
-    buttonWasPressed = False
 
 def normalize(v):
     return v / np.linalg.norm(v)
@@ -41,6 +20,9 @@ VERT_STEP = 0.3
 RAD_STEP = 0.3
 RAD_MIN = 0.3
 PERIOD = 10
+
+timeHelper = None
+swarm = None
 
 # setup so they go from (low, small-radius) to (high, big-radius)
 def setup(cfs, extra, axis_scale):
@@ -64,7 +46,7 @@ def takeoff(cfs, extra):
         takeoff_dur = 2 + 1 * ex.z
         max_dur = max(max_dur, takeoff_dur)
         cf.takeoff(targetHeight = ex.z, duration = takeoff_dur)
-    time.sleep(max_dur + 0.5)
+    timeHelper.sleep(max_dur + 0.5)
 
 def formation_simultaneous(cfs, extra):
     print("moving to formation")
@@ -74,7 +56,7 @@ def formation_simultaneous(cfs, extra):
         move_dur = 1 + 1 * move_dist
         max_dur = max(max_dur, move_dur)
         cf.hover(ex.home, 0, move_dur)
-    time.sleep(max_dur + 0.5)
+    timeHelper.sleep(max_dur + 0.5)
 
 def stop(cfs, extra):
 
@@ -85,7 +67,7 @@ def stop(cfs, extra):
 
     while any(wrong_side(cf, ex) for cf, ex in zip(cfs, extra)):
         print("unaligned stop, please try again...")
-        waitUntilButtonPressed()
+        swarm.input.waitUntilButtonPressed()
 
     print("stopping")
     max_dur = 0
@@ -95,12 +77,14 @@ def stop(cfs, extra):
         dur = 1 + 2 * dist
         max_dur = max(max_dur, dur)
         cf.hover(ex.takeoff_pos, 0, dur)
-    time.sleep(max_dur + 0.5)
+    timeHelper.sleep(max_dur + 0.5)
 
 def main():
-    allcfs = CrazyflieServer()
-
-    rospy.Subscriber("/joy", Joy, joyChanged)
+    global timeHelper
+    global swarm
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    allcfs = swarm.allcfs
 
     cfs = allcfs.crazyflies
     MAX_CFS = 10
@@ -121,22 +105,23 @@ def main():
     takeoff(cfs, extra)
 
     print("press button to enter formation...")
-    waitUntilButtonPressed()
+    swarm.input.waitUntilButtonPressed()
     formation_simultaneous(cfs, extra)
 
     print("press button to start ellipse...")
-    waitUntilButtonPressed()
+    swarm.input.waitUntilButtonPressed()
     print("starting ellipse")
     allcfs.startEllipse()
 
     print("press button to stop...")
-    waitUntilButtonPressed()
+    swarm.input.waitUntilButtonPressed()
     stop(cfs, extra)
 
     print("press button to land...")
-    waitUntilButtonPressed()
+    swarm.input.waitUntilButtonPressed()
     print("landing")
     allcfs.land(targetHeight = 0.04, duration = 4)
+    timeHelper.sleep(4.0 + 0.5)
 
 
 if __name__ == "__main__":

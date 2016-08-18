@@ -1,3 +1,3 @@
 from .crazyswarm import *
 
-__all__ = ["Crazyswarm"]
+__all__ = ["Crazyswarm", "piecewise"]

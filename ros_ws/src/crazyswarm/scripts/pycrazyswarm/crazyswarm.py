@@ -1,7 +1,5 @@
 import argparse
 
-import crazyflie
-import crazyflieSim
 import genericJoystick
 
 class Crazyswarm:
@@ -11,9 +9,11 @@ class Crazyswarm:
         args = parser.parse_args()
 
         if args.sim:
+            import crazyflieSim
             self.timeHelper = crazyflieSim.TimeHelper()
             self.allcfs = crazyflieSim.CrazyflieServer(self.timeHelper)
         else:
+            import crazyflie
             self.timeHelper = crazyflie.TimeHelper()
             self.allcfs = crazyflie.CrazyflieServer()
         self.input = genericJoystick.Joystick(self.timeHelper)

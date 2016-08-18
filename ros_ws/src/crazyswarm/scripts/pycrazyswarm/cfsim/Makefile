@@ -10,7 +10,6 @@ swig:
 		cffirmware_wrap.c \
 		-lm -lpython2.7 \
 		-o _cffirmware.so
-	rm cffirmware_wrap.c
 
 clean:
 	rm -f cffirmware.py cffirmware.pyc _cffirmware.so __init__.pyc

@@ -103,11 +103,9 @@ class Crazyflie:
         pass
 
     # polynomial trajectories
-    # TODO: port trajectory object
-    # def uploadTrajectory(self, trajectory):
-        # # request = UploadTrajectory()
-        # # request.polygons = trajectory.polygons
-        # self.uploadTrajectoryService(trajectory.polygons)
+    # input can be generated from piecewise.loadcsv().
+    def uploadTrajectory(self, trajectory):
+        firm.plan_set_ppback(self.planner, trajectory)
 
     def startTrajectory(self, group = 0):
         if self._isGroup(group):

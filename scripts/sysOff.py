@@ -2,6 +2,9 @@
 
 import yaml
 import subprocess
+import os
+
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 with open("../ros_ws/src/crazyswarm/launch/crazyflies.yaml", 'r') as ymlfile:
     cfg = yaml.load(ymlfile)

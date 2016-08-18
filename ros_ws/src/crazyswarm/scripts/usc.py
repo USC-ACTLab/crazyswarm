@@ -10,10 +10,10 @@ DY = 0.4 #m
 DX = 0.3 #m
 DZ = 0.3 #m
 OX = 1
-OY = 1
+OY = 0.66
 OZ = 0.5
-DURATION = 3.0
-SLEEP = 1.0
+DURATION = 1.4
+SLEEP = 0.5
 TRIALS = 100
 
 wantToExit = False

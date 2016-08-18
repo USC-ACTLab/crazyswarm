@@ -2,6 +2,7 @@ import argparse
 
 import crazyflie
 import crazyflieSim
+import genericJoystick
 
 class Crazyswarm:
     def __init__(self):
@@ -15,3 +16,4 @@ class Crazyswarm:
         else:
             self.timeHelper = crazyflie.TimeHelper()
             self.allcfs = crazyflie.CrazyflieServer()
+        self.input = genericJoystick.Joystick(self.timeHelper)

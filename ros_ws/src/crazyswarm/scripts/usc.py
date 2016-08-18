@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-import time
+# import time
 import os
+import numpy as np
 
-from crazyflie import *
-from sensor_msgs.msg import Joy
+from pycrazyswarm import *
+# from crazyflie import *
+# from sensor_msgs.msg import Joy
 
 DY = 0.4 #m
 DX = 0.3 #m
@@ -16,7 +18,7 @@ DURATION = 1.4
 SLEEP = 0.5
 TRIALS = 100
 
-wantToExit = False
+# wantToExit = False
 
 def hover(cf, pos, duration):
     cf.hover(
@@ -24,32 +26,39 @@ def hover(cf, pos, duration):
         + np.array([OX, OY, OZ])
         , 0, duration)
 
-def joyChanged(data):
-    global wantToExit
-    if data.buttons[5] == 1:
-        wantToExit = True
+# def joyChanged(data):
+#     global wantToExit
+#     if data.buttons[5] == 1:
+#         wantToExit = True
 
 
 def sleep(duration):
-    start = time.time()
+    start = timeHelper.time()
     while True:
-        now = time.time()
+        now = timeHelper.time()
         elapsed = now - start
         if elapsed > duration:
             break
-        if wantToExit:
+        if swarm.input.checkIfButtonIsPressed():
             for cf in allcfs.crazyflies:
                 cf.hover(np.array(cf.initialPosition) + np.array([0, 0, 1]), 0, 3.0)
-            time.sleep(4.0)
+            timeHelper.sleep(4.0)
             allcfs.land(targetHeight = 0.04, duration = 2.0)
-            time.sleep(2.0)
+            timeHelper.sleep(2.0)
             os._exit(0)
-        time.sleep(0.01)
+        timeHelper.sleep(0.01)
 
 if __name__ == "__main__":
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    allcfs = swarm.allcfs
 
-    allcfs = CrazyflieServer()
-    rospy.Subscriber("/joy", Joy, joyChanged)
+    # print("wait")
+    # swarm.input.waitUntilButtonPressed()
+
+
+    # allcfs = CrazyflieServer()
+    # rospy.Subscriber("/joy", Joy, joyChanged)
 
     allcfs.takeoff(targetHeight=1.0, duration=2.0)
     sleep(2.0)

@@ -9,6 +9,9 @@ if __name__ == "__main__":
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
+    print("wait")
+    swarm.input.waitUntilButtonPressed()
+
     allcfs.takeoff(targetHeight=2.0, duration=2.0)
     timeHelper.sleep(4.0)
     allcfs.crazyflies[0].hover([2.0, 2.0, 1.0], 0, 2)

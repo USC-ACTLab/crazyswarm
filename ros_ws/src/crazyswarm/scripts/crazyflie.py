@@ -29,6 +29,8 @@ class Crazyflie:
         self.hoverService = rospy.ServiceProxy(prefix + "/hover", Hover)
         rospy.wait_for_service(prefix + "/avoid_target")
         self.avoidTargetService = rospy.ServiceProxy(prefix + "/avoid_target", AvoidTarget)
+        rospy.wait_for_service(prefix + "/set_group")
+        self.setGroupService = rospy.ServiceProxy(prefix + "/set_group", SetGroup)
         self.tf = tf
 
     def uploadTrajectory(self, trajectory):
@@ -44,10 +46,10 @@ class Crazyflie:
             rospy.Duration.from_sec(period))
 
     def takeoff(self, targetHeight, duration):
-        self.takeoffService(targetHeight, rospy.Duration.from_sec(duration))
+        self.takeoffService(0, targetHeight, rospy.Duration.from_sec(duration))
 
     def land(self, targetHeight, duration):
-        self.landService(targetHeight, rospy.Duration.from_sec(duration))
+        self.landService(0, targetHeight, rospy.Duration.from_sec(duration))
 
     def hover(self, goal, yaw, duration):
         gp = arrayToGeometryPoint(goal)
@@ -56,6 +58,9 @@ class Crazyflie:
     def avoidTarget(self, home, maxDisplacement, maxSpeed):
         home = arrayToGeometryPoint(home)
         self.avoidTargetService(home, maxDisplacement, maxSpeed)
+
+    def setGroup(self, group):
+        self.setGroupService(group)
 
     def position(self):
         self.tf.waitForTransform("/world", "/cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
@@ -100,20 +105,20 @@ class CrazyflieServer:
     def emergency(self):
         self.emergencyService()
 
-    def takeoff(self, targetHeight, duration):
-        self.takeoffService(targetHeight, rospy.Duration.from_sec(duration))
+    def takeoff(self, targetHeight, duration, group = 0):
+        self.takeoffService(group, targetHeight, rospy.Duration.from_sec(duration))
 
-    def land(self, targetHeight, duration):
-        self.landService(targetHeight, rospy.Duration.from_sec(duration))
+    def land(self, targetHeight, duration, group = 0):
+        self.landService(group, targetHeight, rospy.Duration.from_sec(duration))
 
-    def startTrajectory(self):
-        self.startTrajectoryService()
+    def startTrajectory(self, group = 0):
+        self.startTrajectoryService(group)
 
-    def startEllipse(self):
-        self.ellipseService()
+    def startEllipse(self, group = 0):
+        self.ellipseService(group)
 
-    def startCannedTrajectory(self, trajectory, timescale):
-        self.startCannedTrajectoryService(trajectory, timescale)
+    def startCannedTrajectory(self, trajectory, timescale, group = 0):
+        self.startCannedTrajectoryService(group, trajectory, timescale)
 
-    def goHome(self):
-        self.goHomeService()
+    def goHome(self, group = 0):
+        self.goHomeService(group)

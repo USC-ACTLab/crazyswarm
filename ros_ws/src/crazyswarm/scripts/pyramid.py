@@ -38,7 +38,8 @@ def main():
 	allcfs = CrazyflieServer()
 	cfs = allcfs.crazyflies
 
-	# setup ellipse upfront
+	# setup ellipse upfront & assign groups
+	group = 1
 	for step, height in zip(pyramid_steps, heights):
 		for i in step:
 			cf = allcfs.crazyfliesById[i]
@@ -49,22 +50,24 @@ def main():
 				major  = major,
 				minor  = minor,
 				period = PERIOD)
+			cf.setGroup(group)
+		group += 1
 
 	# takeoff sequence
 	joy = joystick.Joystick()
 
+	group = 1
 	for step, height in reversed(zip(pyramid_steps, heights)):
 		print("press button to continue...")
 		joy.waitUntilButtonPressed()
 		# takeoff
-		for i in step:
-			cf = allcfs.crazyfliesById[i]
-			cf.takeoff(height, 1.0 + height)
+		allcfs.takeoff(height, 1.0 + height, group = group)
 		time.sleep(1.2 + height)
 		# go to ideal position
 		for i in step:
 			cf = allcfs.crazyfliesById[i]
 			cf.hover(cf.initialPosition + np.array([0, 0, height]), 0, 1.0)
+		group += 1
 
 	print("press button to start rotation...")
 	joy.waitUntilButtonPressed()
@@ -78,13 +81,13 @@ def main():
 			cf.hover(cf.initialPosition + np.array([0, 0, height]), 0, 2.0)
 	time.sleep(2.5)
 
+	group = 1
 	for step, height in zip(pyramid_steps, heights):
 		print("press button to land...")
 		joy.waitUntilButtonPressed()
-		for i in step:
-			cf = allcfs.crazyfliesById[i]
-			cf.land(0.06, 1.0 + height)
+		allcfs.land(0.06, 1.0 + height, group = group)
 		time.sleep(1.2 + height)
+		group += 1
 
 if __name__ == "__main__":
 	main()

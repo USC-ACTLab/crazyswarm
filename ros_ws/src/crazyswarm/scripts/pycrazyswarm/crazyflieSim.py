@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 
 import cfsim.cffirmware as firm
 
+# "canned trajectory" "enum" from packetdef.h
+TRAJECTORY_FIGURE8 = firm.TRAJECTORY_FIGURE8
+
 # main class of simulation.
 # crazyflies keep reference to this object to ask what time it is.
 # also does the plotting.
@@ -100,8 +103,9 @@ class Crazyflie:
     def startTrajectory(self):
         firm.plan_start_poly(self.planner, self._vposition(), self.time())
 
-    # TODO: polynomial dictionary exposed from C
-    # def startCannedTrajectory(self, trajectory, timescale):
+    def startCannedTrajectory(self, trajectory, timescale):
+        firm.plan_start_canned_trajectory(self.planner,
+            trajectory, timescale, self._vposition(), self.time())
 
     # ellipse trajectories
     def setEllipse(self, center, major, minor, period):

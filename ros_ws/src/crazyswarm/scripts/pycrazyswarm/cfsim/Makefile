@@ -1,4 +1,4 @@
-firmdir = ../../../../../crazyflie-firmware
+firmdir = ../../../../../../crazyflie-firmware
 modinc = $(firmdir)/src/modules/interface
 modsrc = $(firmdir)/src/modules/src
 

@@ -26,7 +26,8 @@ class TimeHelper:
         self.ax.set_zlabel("Z")
         self.t = 0.0
         self.crazyflies = []
-        self.oldPlot = None
+        self.plot = None
+        self.timeAnnotation = self.ax.annotate("Time", xy=(0, 0), xycoords='axes fraction', fontsize=12, ha='right', va='bottom')
 
     def time(self):
         return self.t
@@ -48,11 +49,13 @@ class TimeHelper:
                 ys.append(y)
                 zs.append(z)
 
-            if self.oldPlot is not None:
-                self.ax.collections.remove(self.oldPlot)
-            self.oldPlot = self.ax.scatter(xs, ys, zs)
-            plt.pause(0.001)
-            print(self.t)
+            if self.plot is None:
+                self.plot = self.ax.scatter(xs, ys, zs)
+            else:
+                self.plot._offsets3d = (xs, ys, zs)
+
+            self.timeAnnotation.set_text("{} s".format(self.t))
+            plt.pause(0.0001)
             self.step(dt)
 
 
@@ -76,6 +79,7 @@ class Crazyflie:
         self.planner = firm.planner()
         firm.plan_init(self.planner, MASS)
         self.planner.home = arr2vec(initialPosition)
+        self.planner.lastKnownPosition = arr2vec(initialPosition)
         self.group = 0
 
     def setGroup(self, group):
@@ -150,9 +154,10 @@ class Crazyflie:
     def _vposition(self):
         # TODO this should be implemented in C
         if self.planner.state == firm.TRAJECTORY_STATE_IDLE:
-            return self.planner.home
+            return self.planner.lastKnownPosition
         else:
             ev = firm.plan_current_goal(self.planner, self.time())
+            self.planner.lastKnownPosition = firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
             # not totally sure why, but if we don't do this, we don't actually return by value
             return firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
 

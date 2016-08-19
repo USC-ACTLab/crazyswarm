@@ -91,13 +91,13 @@ class CrazyflieServer:
         rospy.wait_for_service("/land")
         self.landService = rospy.ServiceProxy("/land", Land)
         rospy.wait_for_service("/start_trajectory");
-        self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", Empty)
+        self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", StartTrajectory)
         rospy.wait_for_service("/start_ellipse")
-        self.ellipseService = rospy.ServiceProxy("/start_ellipse", Empty)
+        self.ellipseService = rospy.ServiceProxy("/start_ellipse", StartEllipse)
         rospy.wait_for_service("/start_canned_trajectory")
         self.startCannedTrajectoryService = rospy.ServiceProxy("/start_canned_trajectory", StartCannedTrajectory)
         rospy.wait_for_service("/go_home");
-        self.goHomeService = rospy.ServiceProxy("/go_home", Empty)
+        self.goHomeService = rospy.ServiceProxy("/go_home", GoHome)
 
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)

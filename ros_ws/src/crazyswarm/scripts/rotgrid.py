@@ -2,18 +2,13 @@
 
 from __future__ import print_function
 
-import time
 from math import *
 import numpy as np
 
-from crazyflie import *
-from trajectory import *
+from pycrazyswarm import *
 
-import rospy
-import joystick
-
-Z = 1.75
-PERIOD = 15
+Z = 1.0
+PERIOD = 7
 
 def setup(cfs):
     for cf in cfs:
@@ -25,24 +20,27 @@ def setup(cfs):
             minor  = minor,
             period = PERIOD)
 
-def stop(cfs):
+def stop(cfs, timeHelper):
     for cf in cfs:
         pos = cf.initialPosition + np.array([0, 0, Z])
         cf.hover(pos, 0, 1)
-    time.sleep(1.5)
+    timeHelper.sleep(1.5)
 
 def main():
-    allcfs = CrazyflieServer()
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    allcfs = swarm.allcfs
+
     allcfs.takeoff(targetHeight=Z, duration=3)
-    time.sleep(4)
+    timeHelper.sleep(4)
     cfs = allcfs.crazyflies
     setup(cfs)
     allcfs.startEllipse()
 
     print("press button to go home")
-    joy = joystick.Joystick()
-    joy.waitUntilButtonPressed()
-    stop(cfs)
+    swarm.input.waitUntilButtonPressed()
+
+    stop(cfs, timeHelper)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import time
 # import pyglet
 import linuxjsdev
+import keyboard
 
 # class JoyStickHandler:
 #     def __init__(self):
@@ -30,7 +31,12 @@ class Joystick:
 
         self.js = linuxjsdev.Joystick()
         dummy = self.js.devices()
-        self.js.open(0)
+        if len(dummy) == 0:
+            print("Warning: No joystick found!")
+            self.hasJoystick = False
+        else:
+            self.hasJoystick = True
+            self.js.open(0)
 
     # def on_joybutton_press(joystick, button):
         # print(button)
@@ -44,11 +50,21 @@ class Joystick:
     #     self.buttonWasPressed = False
 
     def checkIfButtonIsPressed(self):
-        state = self.js.read(0)
-        return state[1][5] == 1
+        if self.hasJoystick:
+            state = self.js.read(0)
+            return state[1][5] == 1
+        else:
+            return False
 
     def waitUntilButtonPressed(self):
-        while not self.checkIfButtonIsPressed():
-            self.timeHelper.sleep(0.01)
-        while self.checkIfButtonIsPressed():
-            self.timeHelper.sleep(0.01)
+        if self.hasJoystick:
+            while not self.checkIfButtonIsPressed():
+                self.timeHelper.sleep(0.01)
+            while self.checkIfButtonIsPressed():
+                self.timeHelper.sleep(0.01)
+        else:
+            with keyboard.KeyPoller() as keyPoller:
+                while keyPoller.poll() is None:
+                    self.timeHelper.sleep(0.01)
+                while keyPoller.poll() is not None:
+                    self.timeHelper.sleep(0.01)

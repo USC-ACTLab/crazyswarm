@@ -2,8 +2,7 @@
 
 import yaml
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-import matplotlib.pyplot as plt
+import visualizer.visMatplotlib
 
 import cfsim.cffirmware as firm
 
@@ -16,18 +15,9 @@ TRAJECTORY_FIGURE8 = firm.TRAJECTORY_FIGURE8
 #
 class TimeHelper:
     def __init__(self):
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, projection='3d')
-        self.ax.set_xlim([-5,5])
-        self.ax.set_ylim([-5,5])
-        self.ax.set_zlim([0,3])
-        self.ax.set_xlabel("X")
-        self.ax.set_ylabel("Y")
-        self.ax.set_zlabel("Z")
+        self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
         self.t = 0.0
         self.crazyflies = []
-        self.plot = None
-        self.timeAnnotation = self.ax.annotate("Time", xy=(0, 0), xycoords='axes fraction', fontsize=12, ha='right', va='bottom')
 
     def time(self):
         return self.t
@@ -40,22 +30,7 @@ class TimeHelper:
     def sleep(self, duration):
         dt = 0.1
         for t in np.arange(self.t, self.t + duration, dt):
-            xs = []
-            ys = []
-            zs = []
-            for cf in self.crazyflies:
-                x, y, z = cf.position()
-                xs.append(x)
-                ys.append(y)
-                zs.append(z)
-
-            if self.plot is None:
-                self.plot = self.ax.scatter(xs, ys, zs)
-            else:
-                self.plot._offsets3d = (xs, ys, zs)
-
-            self.timeAnnotation.set_text("{} s".format(self.t))
-            plt.pause(0.0001)
+            self.visualizer.update(t, self.crazyflies)
             self.step(dt)
 
 

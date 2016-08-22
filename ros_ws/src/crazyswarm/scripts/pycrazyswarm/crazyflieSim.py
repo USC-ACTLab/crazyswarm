@@ -2,7 +2,6 @@
 
 import yaml
 import numpy as np
-import visualizer.visMatplotlib
 
 import cfsim.cffirmware as firm
 
@@ -14,9 +13,17 @@ TRAJECTORY_FIGURE8 = firm.TRAJECTORY_FIGURE8
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self):
-        self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
+    def __init__(self, vis, dt):
+        if vis == "mpl":
+            import visualizer.visMatplotlib
+            self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
+        elif vis == "vispy":
+            import visualizer.visVispy
+            self.visualizer = visualizer.visVispy.VisVispy()
+        else:
+            raise Exception("Unknown visualization backend: {}".format(vis))
         self.t = 0.0
+        self.dt = dt
         self.crazyflies = []
 
     def time(self):
@@ -28,10 +35,9 @@ class TimeHelper:
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
     def sleep(self, duration):
-        dt = 0.1
-        for t in np.arange(self.t, self.t + duration, dt):
+        for t in np.arange(self.t, self.t + duration, self.dt):
             self.visualizer.update(t, self.crazyflies)
-            self.step(dt)
+            self.step(self.dt)
 
 
     def addObserver(self, observer):

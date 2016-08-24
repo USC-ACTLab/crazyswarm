@@ -63,30 +63,29 @@ def mouseDown(event):
 	drag_start = (event.x_root, event.y_root)
 	drag_startstate = [toggle.get() for toggle in toggles.values()]
 
-def drag(event):
+def drag(event, select):
 	x, y = event.x_root, event.y_root
 	dragx0, dragx1 = minmax(drag_start[0], x)
 	dragy0, dragy1 = minmax(drag_start[1], y)
+
 	def dragcontains(widget):
 		x0 = widget.winfo_rootx()
 		y0 = widget.winfo_rooty()
 		x1 = x0 + widget.winfo_width()
 		y1 = y0 + widget.winfo_height()
-		return not (
-			x0 > dragx1 or
-			x1 < dragx0 or
-			y0 > dragy1 or
-			y1 < dragy0)
-		
+		return not (x0 > dragx1 or x1 < dragx0 or y0 > dragy1 or y1 < dragy0)
+
 	# depending on interation over dicts being consistent
 	for initial, toggle, checkbox in zip(drag_startstate, toggles.values(), widgets.values()):
 		if dragcontains(checkbox):
-			toggle.set(True)
+			toggle.set(select)
 		else:
 			toggle.set(initial)
 
-top.bind('<ButtonPress-1>', mouseDown) 
-top.bind('<B1-Motion>', drag) 
+top.bind('<ButtonPress-1>', mouseDown)
+top.bind('<ButtonPress-3>', mouseDown)
+top.bind('<B1-Motion>', lambda event: drag(event, True))
+top.bind('<B3-Motion>', lambda event: drag(event, False))
 
 # construct top buttons for yaml configuration
 def save():

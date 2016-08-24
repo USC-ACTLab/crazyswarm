@@ -106,13 +106,14 @@ def fill():
 	for box in toggles.values():
 		box.set(True)
 
+def mkbutton(parent, name, command):
+	button = Tkinter.Button(parent, text=name, command=command)
+	button.pack(side='left')
+
 buttons = Tkinter.Frame(top)
-saveButton = Tkinter.Button(buttons, text="Save", command=save)
-saveButton.pack(side='left')
-clearButton = Tkinter.Button(buttons, text="Clear", command=clear)
-clearButton.pack(side='left')
-fillButton = Tkinter.Button(buttons, text="Fill", command=fill)
-fillButton.pack(side='left')
+mkbutton(buttons, "Save", save)
+mkbutton(buttons, "Clear", clear)
+mkbutton(buttons, "Fill", fill)
 
 # construct bottom buttons for utility scripts
 def sysOff():
@@ -122,10 +123,12 @@ def reboot():
 def flash():
 	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
 
-import random
+#import random
 def checkBattery():
 	proc = subprocess.Popen(
 		['python3', SCRIPTDIR + 'battery.py'], stdout=subprocess.PIPE)
+	#for id in widgets.iterkeys():
+		#line = "{}: {}".format(id, 3.3 + random.random())
 	for line in iter(proc.stdout.readline, ''):
 		match = re.search("(\d+): (\d+.\d+)", line)
 		if match:
@@ -136,14 +139,10 @@ def checkBattery():
 			widgets[addr].config(text="{}\n{}v".format(addr, voltage))
 
 scriptButtons = Tkinter.Frame(top)
-batteryButton = Tkinter.Button(scriptButtons, text="battery", command=checkBattery)
-batteryButton.pack(side='left')
-sysOffButton = Tkinter.Button(scriptButtons, text="sysOff", command=sysOff)
-sysOffButton.pack(side='left')
-rebootButton = Tkinter.Button(scriptButtons, text="reboot", command=reboot)
-rebootButton.pack(side='left')
-flashButton = Tkinter.Button(scriptButtons, text="flash", command=flash)
-flashButton.pack(side='left')
+mkbutton(scriptButtons, "battery", checkBattery)
+mkbutton(scriptButtons, "sysOff", sysOff)
+mkbutton(scriptButtons, "reboot", reboot)
+mkbutton(scriptButtons, "flash", flash)
 
 # start background threads
 def checkBatteryLoop():

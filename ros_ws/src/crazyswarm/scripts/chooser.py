@@ -6,7 +6,7 @@ import subprocess
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 SCRIPTDIR = "../../../../scripts/"
 
-# read the yaml files
+# read a yaml file
 def read_by_id(path):
 	by_id = {}
 	with open(path, 'r') as ymlfile:
@@ -15,9 +15,9 @@ def read_by_id(path):
 			id = int(node["id"])
 			by_id[id] = node
 	return by_id
-	
 
 all49 = read_by_id("../launch/all49.yaml")
+assert(len(all49) == 49)
 enabled = read_by_id("../launch/crazyflies.yaml").keys()
 
 # compute absolute pixel coordinates from the initial positions
@@ -34,40 +34,42 @@ xmax, ymax = max(pixel_x), max(pixel_y)
 # construct the main window
 top = Tkinter.Tk()
 top.title('Crazyflie Chooser')
-width = int(xmax - xmin + 70)
-height = int(ymax - ymin + 150) # extra room for buttons at top and bottom
-top.geometry("{0}x{1}".format(str(width), str(height)))
+
+# construct the frame containing the absolute-positioned checkboxes
+width = xmax - xmin + 50 # account for checkbox + text width
+height = ymax - ymin + 30 # account for checkbox + text height
+frame = Tkinter.Frame(top, width=width, height=height)
 
 # construct all the checkboxes
 toggles = {} # map crazyflie id to Tkinter data-binding variable
-widgets = []
+widgets = {}
 for (id, node), x, y in zip(all49.items(), pixel_x, pixel_y):
 	toggles[id] = Tkinter.BooleanVar()
 	toggles[id].set(id in enabled)
-	checkbox = Tkinter.Checkbutton(top, text=str(id).zfill(2), 
+	checkbox = Tkinter.Checkbutton(frame, text=str(id),
 		justify='left', variable=toggles[id])
-	checkbox.place(x = x - xmin + 10, y = y - ymin + 50)
-	widgets.append(checkbox)
+	checkbox.place(x = x - xmin, y = y - ymin)
+	widgets[id] = checkbox
 
-# dragging - TODO alt-drag to deselect
-drag_startx = None
-drag_starty = None
+# dragging functionality - TODO alt-drag to deselect
+drag_start = None
 drag_startstate = None
 
+def minmax(a, b):
+	return min(a, b), max(a, b)
+
 def mouseDown(event):
-	global drag_startx, drag_starty, drag_startstate
-	drag_starty = event.y
-	drag_startx = event.x
+	global drag_start, drag_startstate
+	drag_start = (event.x_root, event.y_root)
 	drag_startstate = [toggle.get() for toggle in toggles.values()]
 
 def drag(event):
-	dragx0 = min(drag_startx, event.x)
-	dragx1 = max(drag_startx, event.x)
-	dragy0 = min(drag_starty, event.y)
-	dragy1 = max(drag_starty, event.y)
+	x, y = event.x_root, event.y_root
+	dragx0, dragx1 = minmax(drag_start[0], x)
+	dragy0, dragy1 = minmax(drag_start[1], y)
 	def dragcontains(widget):
-		x0 = widget.winfo_x()
-		y0 = widget.winfo_y()
+		x0 = widget.winfo_rootx()
+		y0 = widget.winfo_rooty()
 		x1 = x0 + widget.winfo_width()
 		y1 = y0 + widget.winfo_height()
 		return not (
@@ -76,7 +78,8 @@ def drag(event):
 			y0 > dragy1 or
 			y1 < dragy0)
 		
-	for initial, toggle, checkbox in zip(drag_startstate, toggles.values(), widgets):
+	# depending on interation over dicts being consistent
+	for initial, toggle, checkbox in zip(drag_startstate, toggles.values(), widgets.values()):
 		if dragcontains(checkbox):
 			toggle.set(True)
 		else:
@@ -85,7 +88,7 @@ def drag(event):
 top.bind('<ButtonPress-1>', mouseDown) 
 top.bind('<B1-Motion>', drag) 
 
-# construct top buttons
+# construct top buttons for yaml configuration
 def save():
 	nodes = [node for id, node in all49.items() if toggles[id].get()]
 	with open("../launch/crazyflies.yaml", 'w') as outfile:
@@ -100,7 +103,6 @@ def fill():
 		box.set(True)
 
 buttons = Tkinter.Frame(top)
-buttons.pack()
 saveButton = Tkinter.Button(buttons, text="Save", command=save)
 saveButton.pack(side='left')
 clearButton = Tkinter.Button(buttons, text="Clear", command=clear)
@@ -108,7 +110,7 @@ clearButton.pack(side='left')
 fillButton = Tkinter.Button(buttons, text="Fill", command=fill)
 fillButton.pack(side='left')
 
-#construct bottom (script) buttons
+# construct bottom buttons for utility scripts
 def sysOff():
 	subprocess.Popen(["python3", SCRIPTDIR + "sysOff.py"])
 def reboot():
@@ -117,7 +119,6 @@ def flash():
 	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
 	
 scriptButtons = Tkinter.Frame(top)
-scriptButtons.pack(side='bottom')
 sysOffButton = Tkinter.Button(scriptButtons, text="sysOff", command=sysOff)
 sysOffButton.pack(side='left')
 rebootButton = Tkinter.Button(scriptButtons, text="reboot", command=reboot)
@@ -125,6 +126,8 @@ rebootButton.pack(side='left')
 flashButton = Tkinter.Button(scriptButtons, text="flash", command=flash)
 flashButton.pack(side='left')
 
-
-# run gui
+# place the widgets in the window and start
+buttons.pack()
+frame.pack(padx=10, pady=10)
+scriptButtons.pack()
 top.mainloop()

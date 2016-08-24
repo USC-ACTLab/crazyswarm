@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import yaml
+import math
 import numpy as np
 
 import cfsim.cffirmware as firm
@@ -130,6 +131,29 @@ class Crazyflie:
         ev = firm.plan_current_goal(self.planner, self.time())
         return ev.yaw
 
+    def acceleration(self):
+        if self.planner.state == firm.TRAJECTORY_STATE_IDLE:
+            return np.array([0, 0, 0])
+        else:
+            ev = firm.plan_current_goal(self.planner, self.time())
+            return np.array([ev.acc.x, ev.acc.y, ev.acc.z])
+
+    def rpy(self):
+        acc = self.acceleration()
+        yaw = self.yaw()
+        norm = np.linalg.norm(acc)
+        # print(acc)
+        if norm < 1e-6:
+            return (0.0, 0.0, yaw)
+        else:
+            thrust = acc + np.array([0, 0, 9.81])
+            z_body = thrust / np.linalg.norm(thrust)
+            x_world = np.array([math.cos(yaw), math.sin(yaw), 0])
+            y_body = np.cross(z_body, x_world)
+            x_body = np.cross(y_body, z_body)
+            pitch = math.asin(-x_body[2])
+            roll = math.atan2(y_body[2], z_body[2])
+            return (roll, pitch, yaw)
 
     # "private" methods
     def _vposition(self):

@@ -1,5 +1,6 @@
 import os
 import math
+import numpy as np
 
 from vispy import scene, app, io
 from vispy.color import Color
@@ -9,19 +10,18 @@ from vispy.scene.cameras import TurntableCamera
 
 class VisVispy:
     def __init__(self):
-        self.canvas = scene.SceneCanvas(keys='interactive', size=(800, 600), show=True)
+        self.canvas = scene.SceneCanvas(keys='interactive', size=(1024, 768), show=True, config=dict(samples=4), resizable=True)
 
         # Set up a viewbox to display the cube with interactive arcball
         self.view = self.canvas.central_widget.add_view()
         self.view.bgcolor = '#efefef'
-        self.view.camera = TurntableCamera(fov=60.0) #'arcball'
-        self.view.padding = 100
+        self.view.camera = TurntableCamera(fov=60.0, elevation=30.0, azimuth=280.0)
 
         # add a colored 3D axis for orientation
         axis = scene.visuals.XYZAxis(parent=self.view.scene)
         self.cfs = []
 
-        ground = scene.visuals.Plane(1.0, 0.5, direction="+z", color=(0.5, 0.5, 1, 0.5), parent=self.view.scene)
+        ground = scene.visuals.Plane(6.0, 6.0, direction="+z", color=(0.3, 0.3, 0.3, 0.5), parent=self.view.scene)
 
 
     def update(self, t, crazyflies):
@@ -34,9 +34,12 @@ class VisVispy:
 
         for i in range(0, len(self.cfs)):
             x, y, z = crazyflies[i].position()
+            roll, pitch, yaw = crazyflies[i].rpy()
             self.cfs[i].transform.reset()
             self.cfs[i].transform.rotate(90, (1, 0, 0))
-            # self.cfs[i].transform.rotate(math.pi / 2, (1, 0, 0))
+            self.cfs[i].transform.rotate(math.degrees(roll), (1, 0, 0))
+            self.cfs[i].transform.rotate(math.degrees(pitch), (0, 1, 0))
+            self.cfs[i].transform.rotate(math.degrees(yaw), (0, 0, 1))
             self.cfs[i].transform.scale((0.001, 0.001, 0.001))
             self.cfs[i].transform.translate((x, y, z))
 

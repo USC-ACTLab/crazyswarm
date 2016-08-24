@@ -3,6 +3,8 @@ import yaml
 import os
 import subprocess
 import re
+import time
+import threading
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 SCRIPTDIR = "../../../../scripts/"
@@ -51,6 +53,8 @@ for (id, node), x, y in zip(all49.items(), pixel_x, pixel_y):
 		justify='left', variable=toggles[id])
 	checkbox.place(x = x - xmin, y = y - ymin)
 	widgets[id] = checkbox
+
+defaultBackground = widgets.values()[0].cget('background')
 
 # dragging functionality - TODO alt-drag to deselect
 drag_start = None
@@ -118,20 +122,19 @@ def reboot():
 def flash():
 	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
 
+import random
 def checkBattery():
 	proc = subprocess.Popen(
 		['python3', SCRIPTDIR + 'battery.py'], stdout=subprocess.PIPE)
 	for line in iter(proc.stdout.readline, ''):
-	#for id in widgets.iterkeys():
-		#line = "{}: 3.8".format(id)
 		match = re.search("(\d+): (\d+.\d+)", line)
 		if match:
 			addr = int(match.group(1))
 			voltage = match.group(2)[:4] # truncate digits
-			if float(voltage) < 3.7:
-				widgets[addr].config(background='#FFFF00')
+			color = '#FFFF00' if float(voltage) < 3.7 else defaultBackground
+			widgets[addr].config(background=color)
 			widgets[addr].config(text="{}\n{}v".format(addr, voltage))
-	
+
 scriptButtons = Tkinter.Frame(top)
 batteryButton = Tkinter.Button(scriptButtons, text="battery", command=checkBattery)
 batteryButton.pack(side='left')
@@ -141,6 +144,16 @@ rebootButton = Tkinter.Button(scriptButtons, text="reboot", command=reboot)
 rebootButton.pack(side='left')
 flashButton = Tkinter.Button(scriptButtons, text="flash", command=flash)
 flashButton.pack(side='left')
+
+# start background threads
+def checkBatteryLoop():
+	while True:
+		# rely on GIL
+		checkBattery()
+		time.sleep(10.0) # seconds
+checkBatteryThread = threading.Thread(target=checkBatteryLoop)
+checkBatteryThread.daemon = True # so it exits when the main thread exit
+checkBatteryThread.start()
 
 # place the widgets in the window and start
 buttons.pack()

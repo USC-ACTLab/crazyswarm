@@ -29,8 +29,8 @@ DOWN_DIR = [-1, 0]
 RIGHT_DIR = [0, -1]
 def dot(a, b):
 	return a[0] * b[0] + a[1] * b[1]
-pixel_x = [100 * dot(pos, RIGHT_DIR) for pos in positions]
-pixel_y = [100 * dot(pos, DOWN_DIR) for pos in positions]
+pixel_x = [120 * dot(pos, RIGHT_DIR) for pos in positions]
+pixel_y = [120 * dot(pos, DOWN_DIR) for pos in positions]
 xmin, ymin = min(pixel_x), min(pixel_y)
 xmax, ymax = max(pixel_x), max(pixel_y)
 
@@ -43,18 +43,24 @@ width = xmax - xmin + 50 # account for checkbox + text width
 height = ymax - ymin + 30 # account for checkbox + text height
 frame = Tkinter.Frame(top, width=width, height=height)
 
+class CFWidget(Tkinter.Frame):
+	def __init__(self, parent, name):
+		Tkinter.Frame.__init__(self, parent)
+		self.checked = Tkinter.BooleanVar()
+		checkbox = Tkinter.Checkbutton(self, variable=self.checked,
+			padx=0, pady=0)
+		checkbox.grid(row=0, column=0, sticky='E')
+		nameLabel = Tkinter.Label(self, text=name, padx=0, pady=0)
+		nameLabel.grid(row=0, column=1, sticky='W')
+		self.batteryLabel = Tkinter.Label(self, text="", fg="#999999", padx=0, pady=0,
+			font=("", 12))
+		self.batteryLabel.grid(row=1, column=0, columnspan=2, sticky='E')
+
 # construct all the checkboxes
-toggles = {} # map crazyflie id to Tkinter data-binding variable
 widgets = {}
 for (id, node), x, y in zip(all49.items(), pixel_x, pixel_y):
-	toggles[id] = Tkinter.BooleanVar()
-	toggles[id].set(id in enabled)
-	checkbox = Tkinter.Checkbutton(frame, text=str(id),
-		justify='left', variable=toggles[id])
-	checkbox.place(x = x - xmin, y = y - ymin)
-	widgets[id] = checkbox
-
-defaultBackground = widgets.values()[0].cget('background')
+	widgets[id] = CFWidget(frame, str(id))
+	widgets[id].place(x = x - xmin, y = y - ymin)
 
 # dragging functionality - TODO alt-drag to deselect
 drag_start = None
@@ -66,7 +72,7 @@ def minmax(a, b):
 def mouseDown(event):
 	global drag_start, drag_startstate
 	drag_start = (event.x_root, event.y_root)
-	drag_startstate = [toggle.get() for toggle in toggles.values()]
+	drag_startstate = [cf.checked.get() for cf in widgets.values()]
 
 def drag(event, select):
 	x, y = event.x_root, event.y_root
@@ -81,11 +87,11 @@ def drag(event, select):
 		return not (x0 > dragx1 or x1 < dragx0 or y0 > dragy1 or y1 < dragy0)
 
 	# depending on interation over dicts being consistent
-	for initial, toggle, checkbox in zip(drag_startstate, toggles.values(), widgets.values()):
-		if dragcontains(checkbox):
-			toggle.set(select)
+	for initial, cf in zip(drag_startstate, widgets.values()):
+		if dragcontains(cf):
+			cf.checked.set(select)
 		else:
-			toggle.set(initial)
+			cf.checked.set(initial)
 
 top.bind('<ButtonPress-1>', mouseDown)
 top.bind('<ButtonPress-3>', mouseDown)
@@ -94,17 +100,17 @@ top.bind('<B3-Motion>', lambda event: drag(event, False))
 
 # construct top buttons for yaml configuration
 def save():
-	nodes = [node for id, node in all49.items() if toggles[id].get()]
+	nodes = [node for id, node in all49.items() if widgets[id].checked.get()]
 	with open("../launch/crazyflies.yaml", 'w') as outfile:
 		yaml.dump({"crazyflies": nodes}, outfile)
 
 def clear():
-	for box in toggles.values():
-		box.set(False)
+	for box in widgets.values():
+		box.checked.set(False)
 
 def fill():
-	for box in toggles.values():
-		box.set(True)
+	for box in widgets.values():
+		box.checked.set(True)
 
 def mkbutton(parent, name, command):
 	button = Tkinter.Button(parent, text=name, command=command)
@@ -123,20 +129,23 @@ def reboot():
 def flash():
 	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
 
-#import random
+import random
 def checkBattery():
+	for id, w in widgets.items():
+		w.batteryLabel.config(foreground='#999999')
 	proc = subprocess.Popen(
 		['python3', SCRIPTDIR + 'battery.py'], stdout=subprocess.PIPE)
-	#for id in widgets.iterkeys():
+	#for id, widget in widgets.items():
 		#line = "{}: {}".format(id, 3.3 + random.random())
+		#if not widget.checked.get():
+			#line = ""
 	for line in iter(proc.stdout.readline, ''):
 		match = re.search("(\d+): (\d+.\d+)", line)
 		if match:
 			addr = int(match.group(1))
 			voltage = match.group(2)[:4] # truncate digits
-			color = '#FFFF00' if float(voltage) < 3.7 else defaultBackground
-			widgets[addr].config(background=color)
-			widgets[addr].config(text="{}\n{}v".format(addr, voltage))
+			color = '#FF0000' if float(voltage) < 3.7 else '#000000'
+			widgets[addr].batteryLabel.config(foreground=color, text=voltage + ' v')
 
 scriptButtons = Tkinter.Frame(top)
 mkbutton(scriptButtons, "battery", checkBattery)

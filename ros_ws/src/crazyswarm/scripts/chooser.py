@@ -1,8 +1,10 @@
 import Tkinter
 import yaml
 import os
+import subprocess
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
+SCRIPTDIR = "../../../../scripts/"
 
 # read the yaml files
 def read_by_id(path):
@@ -33,7 +35,7 @@ xmax, ymax = max(pixel_x), max(pixel_y)
 top = Tkinter.Tk()
 top.title('Crazyflie Chooser')
 width = int(xmax - xmin + 70)
-height = int(ymax - ymin + 100) # extra room for buttons at top
+height = int(ymax - ymin + 150) # extra room for buttons at top and bottom
 top.geometry("{0}x{1}".format(str(width), str(height)))
 
 # construct all the checkboxes
@@ -83,7 +85,7 @@ def drag(event):
 top.bind('<ButtonPress-1>', mouseDown) 
 top.bind('<B1-Motion>', drag) 
 
-# button callbacks
+# construct top buttons
 def save():
 	nodes = [node for id, node in all49.items() if toggles[id].get()]
 	with open("../launch/crazyflies.yaml", 'w') as outfile:
@@ -97,7 +99,6 @@ def fill():
 	for box in toggles.values():
 		box.set(True)
 
-# construct top buttons
 buttons = Tkinter.Frame(top)
 buttons.pack()
 saveButton = Tkinter.Button(buttons, text="Save", command=save)
@@ -106,6 +107,24 @@ clearButton = Tkinter.Button(buttons, text="Clear", command=clear)
 clearButton.pack(side='left')
 fillButton = Tkinter.Button(buttons, text="Fill", command=fill)
 fillButton.pack(side='left')
+
+#construct bottom (script) buttons
+def sysOff():
+	subprocess.Popen(["python3", SCRIPTDIR + "sysOff.py"])
+def reboot():
+	subprocess.Popen(["python3", SCRIPTDIR + "rebootAll.py"])
+def flash():
+	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
+	
+scriptButtons = Tkinter.Frame(top)
+scriptButtons.pack(side='bottom')
+sysOffButton = Tkinter.Button(scriptButtons, text="sysOff", command=sysOff)
+sysOffButton.pack(side='left')
+rebootButton = Tkinter.Button(scriptButtons, text="reboot", command=reboot)
+rebootButton.pack(side='left')
+flashButton = Tkinter.Button(scriptButtons, text="flash", command=flash)
+flashButton.pack(side='left')
+
 
 # run gui
 top.mainloop()

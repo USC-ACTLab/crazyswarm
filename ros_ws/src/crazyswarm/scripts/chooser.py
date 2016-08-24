@@ -2,6 +2,7 @@ import Tkinter
 import yaml
 import os
 import subprocess
+import re
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 SCRIPTDIR = "../../../../scripts/"
@@ -116,8 +117,24 @@ def reboot():
 	subprocess.Popen(["python3", SCRIPTDIR + "rebootAll.py"])
 def flash():
 	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
+
+def checkBattery():
+	proc = subprocess.Popen(
+		['python3', SCRIPTDIR + 'battery.py'], stdout=subprocess.PIPE)
+	for line in iter(proc.stdout.readline, ''):
+	#for id in widgets.iterkeys():
+		#line = "{}: 3.8".format(id)
+		match = re.search("(\d+): (\d+.\d+)", line)
+		if match:
+			addr = int(match.group(1))
+			voltage = match.group(2)[:4] # truncate digits
+			if float(voltage) < 3.7:
+				widgets[addr].config(background='#FFFF00')
+			widgets[addr].config(text="{}\n{}v".format(addr, voltage))
 	
 scriptButtons = Tkinter.Frame(top)
+batteryButton = Tkinter.Button(scriptButtons, text="battery", command=checkBattery)
+batteryButton.pack(side='left')
 sysOffButton = Tkinter.Button(scriptButtons, text="sysOff", command=sysOff)
 sysOffButton.pack(side='left')
 rebootButton = Tkinter.Button(scriptButtons, text="reboot", command=reboot)

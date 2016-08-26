@@ -69,3 +69,26 @@ and type `connect`. In a second terminal:
 ```
 ./JLinkRTTClient
 ```
+
+## Simulation
+
+### Setup
+
+- Clone this repository
+- Clone the firmware into crazyflie-firmware
+- ```cd /ros_ws/src/crazyswarm/scripts/pycrazyswarm/cfsim```
+- ```make``` (this builds the simulator components which use the firmware)
+
+If you want to use the vispy backend:
+- Follow instructions at https://github.com/vispy/vispy
+
+### Usage (Matplotlib)
+
+- Enable a subset of Crazyflies by editing ```ros_ws/src/crazyswarm/launch/crazyflies.yaml```
+- ```cd ros_ws/src/crazyswarm/scripts```
+- ```python figure8_canned.py --sim```
+
+### Usage (Vispy)
+
+- ```cd ros_ws/src/crazyswarm/scripts```
+- ```python figure8_canned.py --sim --vis vispy --dt 0.01```

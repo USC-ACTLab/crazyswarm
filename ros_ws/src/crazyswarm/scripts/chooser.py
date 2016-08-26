@@ -19,6 +19,11 @@ def read_by_id(path):
 			by_id[id] = node
 	return by_id
 
+def save():
+	nodes = [node for id, node in all49.items() if widgets[id].checked.get()]
+	with open("../launch/crazyflies.yaml", 'w') as outfile:
+		yaml.dump({"crazyflies": nodes}, outfile)
+
 all49 = read_by_id("../launch/all49.yaml")
 assert(len(all49) == 49)
 enabled = read_by_id("../launch/crazyflies.yaml").keys()
@@ -47,20 +52,21 @@ class CFWidget(Tkinter.Frame):
 	def __init__(self, parent, name):
 		Tkinter.Frame.__init__(self, parent)
 		self.checked = Tkinter.BooleanVar()
-		checkbox = Tkinter.Checkbutton(self, variable=self.checked,
+		checkbox = Tkinter.Checkbutton(self, variable=self.checked, command=save,
 			padx=0, pady=0)
 		checkbox.grid(row=0, column=0, sticky='E')
 		nameLabel = Tkinter.Label(self, text=name, padx=0, pady=0)
 		nameLabel.grid(row=0, column=1, sticky='W')
-		self.batteryLabel = Tkinter.Label(self, text="", fg="#999999", padx=0, pady=0,
-			font=("", 12))
+		self.batteryLabel = Tkinter.Label(self, text="", fg="#999999", padx=0, pady=0)
 		self.batteryLabel.grid(row=1, column=0, columnspan=2, sticky='E')
 
 # construct all the checkboxes
 widgets = {}
 for (id, node), x, y in zip(all49.items(), pixel_x, pixel_y):
-	widgets[id] = CFWidget(frame, str(id))
-	widgets[id].place(x = x - xmin, y = y - ymin)
+	w = CFWidget(frame, str(id))
+	w.place(x = x - xmin, y = y - ymin)
+	w.checked.set(id in enabled)
+	widgets[id] = w
 
 # dragging functionality - TODO alt-drag to deselect
 drag_start = None
@@ -98,12 +104,7 @@ top.bind('<ButtonPress-3>', mouseDown)
 top.bind('<B1-Motion>', lambda event: drag(event, True))
 top.bind('<B3-Motion>', lambda event: drag(event, False))
 
-# construct top buttons for yaml configuration
-def save():
-	nodes = [node for id, node in all49.items() if widgets[id].checked.get()]
-	with open("../launch/crazyflies.yaml", 'w') as outfile:
-		yaml.dump({"crazyflies": nodes}, outfile)
-
+# buttons for clearing/filling all checkboxes
 def clear():
 	for box in widgets.values():
 		box.checked.set(False)
@@ -117,7 +118,6 @@ def mkbutton(parent, name, command):
 	button.pack(side='left')
 
 buttons = Tkinter.Frame(top)
-mkbutton(buttons, "Save", save)
 mkbutton(buttons, "Clear", clear)
 mkbutton(buttons, "Fill", fill)
 
@@ -144,7 +144,9 @@ def checkBattery():
 		if match:
 			addr = int(match.group(1))
 			voltage = match.group(2)[:4] # truncate digits
-			color = '#FF0000' if float(voltage) < 3.7 else '#000000'
+			color = '#000000'
+			if float(voltage) < 3.7: color = '#FF0000'
+			if float(voltage) < 3.8: color = '#FF8800'
 			widgets[addr].batteryLabel.config(foreground=color, text=voltage + ' v')
 
 scriptButtons = Tkinter.Frame(top)
@@ -159,9 +161,9 @@ def checkBatteryLoop():
 		# rely on GIL
 		checkBattery()
 		time.sleep(10.0) # seconds
-checkBatteryThread = threading.Thread(target=checkBatteryLoop)
-checkBatteryThread.daemon = True # so it exits when the main thread exit
-checkBatteryThread.start()
+# checkBatteryThread = threading.Thread(target=checkBatteryLoop)
+# checkBatteryThread.daemon = True # so it exits when the main thread exit
+# checkBatteryThread.start()
 
 # place the widgets in the window and start
 buttons.pack()

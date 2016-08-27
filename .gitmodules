@@ -20,7 +20,7 @@
 	branch = master
 [submodule "crazyflie-lib-python"]
 	path = crazyflie-lib-python
-	url = https://github.com/bitcraze/crazyflie-lib-python.git
+	url = https://github.com/USC-ACTLab/crazyflie-lib-python.git
 	branch = master
 [submodule "crazyflie-clients-python"]
 	path = crazyflie-clients-python

@@ -80,6 +80,9 @@ def mouseDown(event):
 	drag_start = (event.x_root, event.y_root)
 	drag_startstate = [cf.checked.get() for cf in widgets.values()]
 
+def mouseUp(event):
+	save()
+
 def drag(event, select):
 	x, y = event.x_root, event.y_root
 	dragx0, dragx1 = minmax(drag_start[0], x)
@@ -103,6 +106,8 @@ top.bind('<ButtonPress-1>', mouseDown)
 top.bind('<ButtonPress-3>', mouseDown)
 top.bind('<B1-Motion>', lambda event: drag(event, True))
 top.bind('<B3-Motion>', lambda event: drag(event, False))
+top.bind('<ButtonRelease-1>', mouseUp)
+top.bind('<ButtonRelease-3>', mouseUp)
 
 # buttons for clearing/filling all checkboxes
 def clear():

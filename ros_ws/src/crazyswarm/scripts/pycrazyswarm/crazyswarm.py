@@ -17,8 +17,8 @@ class Crazyswarm:
             self.allcfs = crazyflieSim.CrazyflieServer(self.timeHelper)
         else:
             import crazyflie
-            self.timeHelper = crazyflie.TimeHelper()
             self.allcfs = crazyflie.CrazyflieServer()
+            self.timeHelper = crazyflie.TimeHelper()
             if args.writecsv:
                 print("WARNING: writecsv argument ignored! This is only available in simulation.")
         self.input = genericJoystick.Joystick(self.timeHelper)

@@ -14,7 +14,8 @@ def arrayToGeometryPoint(a):
 
 class TimeHelper:
     def __init__(self):
-        pass
+        rospy.wait_for_service("/next_phase")
+        self.nextPhase = rospy.ServiceProxy("/next_phase", Empty)
 
     def time(self):
         return time.time()
@@ -23,7 +24,7 @@ class TimeHelper:
         time.sleep(duration)
 
     def nextPhase(self):
-        pass
+        self.nextPhase()
 
 class Crazyflie:
     def __init__(self, id, initialPosition, tf):

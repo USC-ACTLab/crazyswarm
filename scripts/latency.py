@@ -26,14 +26,53 @@ if __name__ == "__main__":
 
     matrix = np.loadtxt(args.csv_file, delimiter=',', skiprows=1)
     t = matrix[:,0]
-    imu = matrix[:,1]
-    vicon = matrix[:,2]
+    dt = np.diff(t)
+    t = matrix[1:,0]
+    dThetaImu = matrix[1:,1]
+    thetaImu = np.cumsum(dThetaImu * (dt / 1000.0))
+    thetaVicon = matrix[1:,2] - np.mean(matrix[0:100,2])
 
-    fig = plt.figure()
-    cid = fig.canvas.mpl_connect('button_press_event', onclick)
-    plt.plot(t, imu, label='imu (rad/s)')
-    plt.plot(t, vicon, label='vicon (rad)')
-    plt.legend()
-    plt.xlabel('Time [ms]')
+    currentIdx = 0
+    latencies = np.array([])
 
-    plt.show()
+    while True:
+
+        result = np.where(dThetaImu[currentIdx:] > 1)
+        if (len(result[0]) == 0):
+            break
+
+        startIdx = result[0][0] - 100 + currentIdx
+        print(startIdx)
+        endIdx = startIdx + 300
+
+
+        thetaImuSegment = thetaImu[startIdx:endIdx]
+
+        minError = float("inf")
+        minLatency = None
+        for latency in range(0, 60):
+            thetaViconTemp = thetaVicon[startIdx + latency:endIdx+latency]
+            error = np.sum(np.abs(thetaImuSegment - thetaViconTemp))
+            if error < minError:
+                minError = error
+                minLatency = latency
+
+        latency = t[startIdx + minLatency] - t[startIdx]
+        print("Latency: {}".format(latency))
+        latencies = np.append(latencies, latency)
+
+        tSegment = t[startIdx:endIdx]
+        thetaViconSegment = thetaVicon[startIdx + minLatency:endIdx+minLatency]
+
+        fig = plt.figure()
+        cid = fig.canvas.mpl_connect('button_press_event', onclick)
+        plt.plot(tSegment, thetaImuSegment, label='imu (rad)')
+        plt.plot(tSegment, thetaViconSegment, label='vicon (rad)')
+        plt.legend()
+        plt.xlabel('Time [ms]')
+
+        plt.show()
+
+        currentIdx = endIdx
+
+    print("Min: {} ms, Avg: {} ms, Max: {} ms".format(np.min(latencies), np.mean(latencies), np.max(latencies)))

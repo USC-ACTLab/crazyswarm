@@ -16,11 +16,16 @@ if __name__ == "__main__":
         for cf in allcfs.crazyflies:
             pos = np.array(cf.initialPosition) + np.array([0, 0, 1.0])
             cf.hover(pos, 0, 1.0)
-        timeHelper.sleep(2.0)
+        timeHelper.sleep(1.0)
+
+        print("press button to continue...")
+        swarm.input.waitUntilButtonPressed()
 
         allcfs.startCannedTrajectory(0, 0.8)
         timeHelper.sleep(8.0) # TODO...
 
-        allcfs.land(targetHeight=0.06, duration=2.0)
-        timeHelper.sleep(3.0)
+        print("press button to continue...")
+        swarm.input.waitUntilButtonPressed()
 
+        allcfs.land(targetHeight=0.06, duration=2.0)
+        timeHelper.sleep(2.0)

@@ -113,10 +113,12 @@ top.bind('<ButtonRelease-3>', mouseUp)
 def clear():
 	for box in widgets.values():
 		box.checked.set(False)
+	save()
 
 def fill():
 	for box in widgets.values():
 		box.checked.set(True)
+	save()
 
 def mkbutton(parent, name, command):
 	button = Tkinter.Button(parent, text=name, command=command)
@@ -150,8 +152,8 @@ def checkBattery():
 			addr = int(match.group(1))
 			voltage = match.group(2)[:4] # truncate digits
 			color = '#000000'
-			if float(voltage) < 3.7: color = '#FF0000'
 			if float(voltage) < 3.8: color = '#FF8800'
+			if float(voltage) < 3.7: color = '#FF0000'
 			widgets[addr].batteryLabel.config(foreground=color, text=voltage + ' v')
 
 scriptButtons = Tkinter.Frame(top)

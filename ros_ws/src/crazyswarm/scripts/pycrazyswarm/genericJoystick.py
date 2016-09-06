@@ -68,3 +68,4 @@ class Joystick:
                     self.timeHelper.sleep(0.01)
                 while keyPoller.poll() is not None:
                     self.timeHelper.sleep(0.01)
+        self.timeHelper.nextPhase()

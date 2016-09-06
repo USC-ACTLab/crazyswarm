@@ -14,7 +14,7 @@ TRAJECTORY_FIGURE8 = firm.TRAJECTORY_FIGURE8
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self, vis, dt):
+    def __init__(self, vis, dt, writecsv):
         if vis == "mpl":
             import visualizer.visMatplotlib
             self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
@@ -26,6 +26,11 @@ class TimeHelper:
         self.t = 0.0
         self.dt = dt
         self.crazyflies = []
+        if writecsv:
+            import output
+            self.output = output.Output()
+        else:
+            self.output = None
 
     def time(self):
         return self.t
@@ -38,8 +43,13 @@ class TimeHelper:
     def sleep(self, duration):
         for t in np.arange(self.t, self.t + duration, self.dt):
             self.visualizer.update(t, self.crazyflies)
+            if self.output:
+                self.output.update(t, self.crazyflies)
             self.step(self.dt)
 
+    def nextPhase(self):
+        if self.output:
+            self.output.nextPhase()
 
     def addObserver(self, observer):
         self.observers.append(observer)

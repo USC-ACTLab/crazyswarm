@@ -22,6 +22,8 @@ class TimeHelper:
     def sleep(self, duration):
         time.sleep(duration)
 
+    def nextPhase(self):
+        pass
 
 class Crazyflie:
     def __init__(self, id, initialPosition, tf):

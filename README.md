@@ -61,10 +61,10 @@ Unplug and replug radio.
 Use SEGGER Real-Time Transfers (RRT):
 
 ```
-./JLinkExe -if swd -device STM32F405RG -speed 4000
+./JLinkExe -if swd -device STM32F405RG -speed 4000 -autoconnect 1
 ```
 
-and type `connect`. In a second terminal:
+In a second terminal:
 
 ```
 ./JLinkRTTClient

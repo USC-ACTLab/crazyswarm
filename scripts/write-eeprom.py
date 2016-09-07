@@ -38,6 +38,9 @@ from cflib.crazyflie.mem import MemoryElement
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
 
+URI = "radio://0/110/2M/E7E7E7E731"
+NEW_CHANNEL = 100
+
 
 class EEPROMExample:
     """
@@ -91,7 +94,7 @@ class EEPROMExample:
 
         print('Updating channel {}'.format(mem.id))
         elems = mem.elements
-        elems['radio_channel'] = 110
+        elems['radio_channel'] = NEW_CHANNEL
         mem.write_data(self._data_written)
 
     def _stab_log_error(self, logconf, msg):
@@ -130,7 +133,7 @@ if __name__ == '__main__':
     #     print(i[0])
 
     # if len(available) > 0:
-    le = EEPROMExample("radio://0/100/2M/E7E7E7E723")
+    le = EEPROMExample(URI)
     # else:
     #     print('No Crazyflies found, cannot run example')
 

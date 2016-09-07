@@ -21,7 +21,7 @@ class VisVispy:
         axis = scene.visuals.XYZAxis(parent=self.view.scene)
         self.cfs = []
 
-        ground = scene.visuals.Plane(6.0, 6.0, direction="+z", color=(0.3, 0.3, 0.3, 0.5), parent=self.view.scene)
+        ground = scene.visuals.Plane(6.0, 6.0, direction="+z", color=(0.3, 0.3, 0.3, 1.0), parent=self.view.scene)
 
 
     def update(self, t, crazyflies):

@@ -1,7 +1,7 @@
 import time
 # import pyglet
-import linuxjsdev
-import keyboard
+from . import linuxjsdev
+from . import keyboard
 
 # class JoyStickHandler:
 #     def __init__(self):

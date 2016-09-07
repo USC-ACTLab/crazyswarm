@@ -1,4 +1,4 @@
-import cfsim.cffirmware as firm
+from .cfsim import cffirmware as firm
 import numpy as np
 
 def loadcsv(path):

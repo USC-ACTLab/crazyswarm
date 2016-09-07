@@ -1,6 +1,6 @@
 import argparse
 
-import genericJoystick
+from . import genericJoystick
 
 class Crazyswarm:
     def __init__(self):

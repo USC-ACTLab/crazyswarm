@@ -168,11 +168,13 @@ def checkVersion():
 	versionForMost = None
 	versionForMostCount = 0
 	for line in iter(proc.stdout.readline, ''):
-		match = re.search("(\d+): \d+,\d+", line)
+		print(line)
+		match = re.search("(\d+): ([0-9a-fA-F]+),(\d),([0-9a-fA-F]+)", line)
 		if match:
 			addr = int(match.group(1))
-			v1 = int(match.group(2))
-			v2 = int(match.group(3))
+			v1 = match.group(2)
+			modified = int(match.group(3)) == 1
+			v2 = match.group(4)
 			v = (v1,v2)
 			versions[addr] = v
 			if v in versionsCount:
@@ -186,7 +188,7 @@ def checkVersion():
 		color = '#000000'
 		if v != versionForMost:
 			color = '#FF0000'
-		widgets[addr].versionLabel.config(foreground=color, text=str(v[0])[0:4] + "," + str(v[1])[0:4])
+		widgets[addr].versionLabel.config(foreground=color, text=str(v[0])[0:3] + "," + str(v[1])[0:3])
 
 scriptButtons = Tkinter.Frame(top)
 mkbutton(scriptButtons, "battery", checkBattery)

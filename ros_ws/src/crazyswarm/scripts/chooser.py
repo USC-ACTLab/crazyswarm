@@ -59,6 +59,8 @@ class CFWidget(Tkinter.Frame):
 		nameLabel.grid(row=0, column=1, sticky='W')
 		self.batteryLabel = Tkinter.Label(self, text="", fg="#999999", padx=0, pady=0)
 		self.batteryLabel.grid(row=1, column=0, columnspan=2, sticky='E')
+		self.versionLabel = Tkinter.Label(self, text="", fg="#999999", padx=0, pady=0)
+		self.versionLabel.grid(row=2, column=0, columnspan=2, sticky='E')
 
 # construct all the checkboxes
 widgets = {}
@@ -156,8 +158,39 @@ def checkBattery():
 			if float(voltage) < 3.7: color = '#FF0000'
 			widgets[addr].batteryLabel.config(foreground=color, text=voltage + ' v')
 
+def checkVersion():
+	for id, w in widgets.items():
+		w.versionLabel.config(foreground='#999999')
+	proc = subprocess.Popen(
+		['python3', SCRIPTDIR + 'version.py'], stdout=subprocess.PIPE)
+	versions = dict()
+	versionsCount = dict()
+	versionForMost = None
+	versionForMostCount = 0
+	for line in iter(proc.stdout.readline, ''):
+		match = re.search("(\d+): \d+,\d+", line)
+		if match:
+			addr = int(match.group(1))
+			v1 = int(match.group(2))
+			v2 = int(match.group(3))
+			v = (v1,v2)
+			versions[addr] = v
+			if v in versionsCount:
+				versionsCount[v] += 1
+			else:
+				versionsCount[v] = 1
+			if versionsCount[v] > versionForMostCount:
+				versionForMostCount = versionsCount[v]
+				versionForMost = v
+	for addr, v in versions.items():
+		color = '#000000'
+		if v != versionForMost:
+			color = '#FF0000'
+		widgets[addr].versionLabel.config(foreground=color, text=str(v[0])[0:4] + "," + str(v[1])[0:4])
+
 scriptButtons = Tkinter.Frame(top)
 mkbutton(scriptButtons, "battery", checkBattery)
+mkbutton(scriptButtons, "version", checkVersion)
 mkbutton(scriptButtons, "sysOff", sysOff)
 mkbutton(scriptButtons, "reboot", reboot)
 mkbutton(scriptButtons, "flash", flash)

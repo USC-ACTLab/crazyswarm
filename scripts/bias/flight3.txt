@@ -1,0 +1,8 @@
+CF: 11
+Flighttime: 6:00
+Trajectory: Fig8, 0.8, repeated every 8 secs
+CtrlStats:
+  total: 0.0161983
+  x: 0.0120527
+  y: 0.00846276
+  z: 0.00224084

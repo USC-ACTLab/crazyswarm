@@ -1,0 +1,3 @@
+CF: 10
+Flighttime: 4:20
+Trajectory: Fig8, 0.8, repeated every 8 secs

@@ -5,17 +5,14 @@ import math
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 
-lastEvent = None
+latencies = np.array([])
+latencyGlob = None
 
 def onclick(event):
-    global lastEvent
-    print("t={} ms, y={}".format(event.xdata, event.ydata))
-    if lastEvent is not None:
-        lastt = lastEvent.xdata
-        t = event.xdata
-        dt = math.fabs(lastt - t)
-        print("dt: {} ms".format(dt))
-    lastEvent = event
+    global latencies
+    global latencyGlob
+    latencies = np.append(latencies, latencyGlob)
+    print("Added to Statistics!")
 
 
 if __name__ == "__main__":
@@ -30,10 +27,11 @@ if __name__ == "__main__":
     t = matrix[1:,0]
     dThetaImu = matrix[1:,1]
     thetaImu = np.cumsum(dThetaImu * (dt / 1000.0))
-    thetaVicon = matrix[1:,2] - np.mean(matrix[0:100,2])
+    thetaVicon = matrix[1:,2]
 
     currentIdx = 0
-    latencies = np.array([])
+    global latencies
+    global latencyGlob
 
     while True:
 
@@ -44,25 +42,27 @@ if __name__ == "__main__":
         startIdx = result[0][0] - 100 + currentIdx
         print(startIdx)
         endIdx = startIdx + 300
+        if len(thetaImu) < endIdx:
+            break
 
 
         thetaImuSegment = thetaImu[startIdx:endIdx]
+        offset = np.mean(thetaImuSegment[0:50])
 
         minError = float("inf")
         minLatency = None
         for latency in range(0, 60):
-            thetaViconTemp = thetaVicon[startIdx + latency:endIdx+latency]
+            thetaViconTemp = thetaVicon[startIdx + latency:endIdx+latency] + offset - np.mean(thetaVicon[startIdx+latency:startIdx+latency+50])
             error = np.sum(np.abs(thetaImuSegment - thetaViconTemp))
             if error < minError:
                 minError = error
                 minLatency = latency
 
-        latency = t[startIdx + minLatency] - t[startIdx]
-        print("Latency: {}".format(latency))
-        latencies = np.append(latencies, latency)
+        latencyGlob = t[startIdx + minLatency] - t[startIdx]
+        print("Latency: {}".format(latencyGlob))
 
         tSegment = t[startIdx:endIdx]
-        thetaViconSegment = thetaVicon[startIdx + minLatency:endIdx+minLatency]
+        thetaViconSegment = thetaVicon[startIdx + minLatency:endIdx+minLatency] + offset - np.mean(thetaVicon[startIdx+minLatency:startIdx+minLatency+50])
 
         fig = plt.figure()
         cid = fig.canvas.mpl_connect('button_press_event', onclick)

@@ -45,7 +45,7 @@ top.title('Crazyflie Chooser')
 
 # construct the frame containing the absolute-positioned checkboxes
 width = xmax - xmin + 50 # account for checkbox + text width
-height = ymax - ymin + 30 # account for checkbox + text height
+height = ymax - ymin + 50 # account for checkbox + text height
 frame = Tkinter.Frame(top, width=width, height=height)
 
 class CFWidget(Tkinter.Frame):

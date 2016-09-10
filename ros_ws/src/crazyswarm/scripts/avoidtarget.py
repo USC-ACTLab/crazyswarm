@@ -2,23 +2,21 @@
 
 from __future__ import print_function
 
-import time
 from math import *
 import numpy as np
 import random
 
-from crazyflie import *
-from trajectory import *
-import joystick
+from pycrazyswarm import *
 
 def main():
-    server = CrazyflieServer()
-    cfs = server.crazyflies
-    joy = joystick.Joystick()
+    swarm = Crazyswarm()
+    timeHelper = swarm.timeHelper
+    allcfs = swarm.allcfs
+    cfs = allcfs.crazyflies
 
 
     print("press button to take off...")
-    joy.waitUntilButtonPressed()
+    swarm.input.waitUntilButtonPressed()
 
     rand_heights = None
 
@@ -43,17 +41,17 @@ def main():
         duration = height + 1.0
         cf.takeoff(height, duration)
 
-    time.sleep(max(rand_heights) + 1.0)
+    timeHelper.sleep(max(rand_heights) + 1.0)
 
     for cf in cfs:
         hover_pos = cf.initialPosition + np.array([0, 0, heights[cf]])
         cf.hover(hover_pos, 0, 2.0)
 
-    time.sleep(2.5)
+    timeHelper.sleep(2.5)
 
 
     print("press button to start avoiding...")
-    joy.waitUntilButtonPressed()
+    swarm.input.waitUntilButtonPressed()
 
     MAX_DISPLACEMENT = 1.2 * 0.5 # TODO get spacing from init positions
     MAX_SPEED = 1.5 # m/s
@@ -64,14 +62,17 @@ def main():
 
 
     print("press button to go home...")
-    joy.waitUntilButtonPressed()
-    server.goHome()
-    time.sleep(2.0) # TODO know how long it will take
+    swarm.input.waitUntilButtonPressed()
+    for cf in cfs:
+        hover_pos = cf.initialPosition + np.array([0, 0, heights[cf]])
+        cf.hover(hover_pos, 0, 2.0)
+
+    timeHelper.sleep(2.5)
 
 
     print("press button to land...")
-    joy.waitUntilButtonPressed()
-    server.land(targetHeight = 0.04, duration = 3.5)
+    swarm.input.waitUntilButtonPressed()
+    allcfs.land(targetHeight = 0.02, duration = 3.5)
 
 
 if __name__ == "__main__":

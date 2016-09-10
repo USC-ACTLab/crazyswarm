@@ -18,14 +18,9 @@ if __name__ == "__main__":
             cf.hover(pos, 0, 2.0)
         timeHelper.sleep(2.0)
 
-        print("press button to continue...")
-        swarm.input.waitUntilButtonPressed()
-
-        allcfs.startCannedTrajectory(0, 0.8)
-        # timeHelper.sleep(8.0) # TODO...
-
-        print("press button to continue...")
-        swarm.input.waitUntilButtonPressed()
+        for i in range(0, 3):
+            allcfs.startCannedTrajectory(0, 0.8)
+            timeHelper.sleep(8.0)
 
         allcfs.land(targetHeight=0.02, duration=3.0)
         timeHelper.sleep(3.0)

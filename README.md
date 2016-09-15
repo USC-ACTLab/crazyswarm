@@ -27,6 +27,20 @@ via `git submodule update` so it points to your new commit.
 ## Prerequisites
 - Install ROS
 - Install GNU ARM toolchain following [these instructions](https://github.com/bitcraze/crazyflie-firmware#install-a-toolchain)
+- For legal reasons we are not allowed to include the VICON DataStream SDK in this repository, which is used to capture data from a VICON motion capture system.
+  Please download the SDK from http://www.vicon.com and place the following files in `ros_ws/src/crazyflie_ros/externalDependencies/vicon_sdk`
+```
+├── include
+│   └── vicon_sdk
+│       └── Client.h
+└── lib64
+    ├── libboost_locale-mt.so.1.53.0
+    ├── libboost_system-mt.so.1.53.0
+    ├── libboost_thread-mt.so.1.53.0
+    ├── libboost_unit_test_framework-mt.so.1.53.0
+    ├── libDebugServices.so
+    └── libViconDataStreamSDK_CPP.so
+```
 - ??? (create an issue/PR if there are some we missed)
 
 ## Setup

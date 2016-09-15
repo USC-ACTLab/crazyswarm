@@ -113,3 +113,14 @@ If you want to use the vispy backend:
 - The Crazyflies (initial position and channels) are defined in `ros_ws/src/crazyswarm/launch/crazyflies.yaml`. You can use the GUI in `ros_ws/src/crazyswarm/scripts/chooser.py` to enable or disable individual Crazyflies and execute commands such as powering them on- or off.
 - Use `roslaunch crazyswarm hover_swarm.launch` to connect to the Crazyflies and show the current tracking state in `rviz`.
 - Run one of the scripts in `ros_ws/src/crazyswarm/scripts` to execute a motion.
+
+If you use our work in academia, please cite us:
+
+```
+@inproceedings{crazyswarm,
+	Author = {James A. Preiss and Wolfgang H\"onig and Gaurav S. Sukhatme and Nora Ayanian},
+	Booktitle = {IEEE/RSJ Intl Conf. Intelligent Robots and Systems (Late Breaking Results)},
+	Title = {Crazyswarm: A Large Nano-Quadcopter Swarm},
+	Year = {2016}
+}
+```

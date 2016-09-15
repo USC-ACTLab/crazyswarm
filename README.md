@@ -1,8 +1,11 @@
 # crazyswarm
-How to fly a large swarm of Crazyflies
+A Large Nano-Quadcopter Swarm.
 
 ## Description
 This repository should be all you need to set up a development environment for the USC Crazyflie swarm.
+A high-level overview is given in our scientific papers "Crazyswarm: A Large Nano-Quadcopter Swarm", by James A. Preiss
+, Wolfgang Hönig, Gaurav S. Sukhatme, and Nora Ayanian, published as extended abstract at IROS 2016 and submitted for review to ICRA 2017.
+
 It mostly consists of links to other submodules, tied together with a build script.
 The submodules are:
 
@@ -10,10 +13,10 @@ repo | description
 ---- | -----------
 **crazyflie-clients-python**  | The official Crazyflie GUI client. Not customized. Useful for manual flight and sanity checks. |
 **crazyflie-firmware**        | Our fork of the software that runs onboard the Crazyflie on the main CPU. Extensively modified with new controller, EKF, spline trajectories, etc.
-**crazyflie-lib-python**      | A dependency of **crazyflie-clients-python**.
+**crazyflie-lib-python**      | A dependency of **crazyflie-clients-python**. Slightly modified for improved flashing.
 **crazyflie2-nrf-firmware**   | Our fork of the onboard software that controls the Crazyflie's radio. Modified to support broadcast communication to swarms.
 **crazyradio-firmware**       | (Public) fork of the Crazyradio firmware. Modified to support broadcasts.
-**ros_ws/src/crazyflie_ros**  | The main ROS stack dealing with sending commands and receiving telemetry from the Crazyflie in ROS.
+**ros_ws/src/crazyflie_ros**  | The main ROS stack dealing with sending commands and receiving telemetry from the Crazyflie in ROS. Modified for low latency and swarm support.
 
 Git submodules behave in a somewhat counterintuitive way.
 They point to a *specific commit* in the submodule's commit tree.
@@ -90,3 +93,9 @@ If you want to use the vispy backend:
 
 - ```cd ros_ws/src/crazyswarm/scripts```
 - ```python figure8_canned.py --sim --vis vispy --dt 0.01```
+
+## Usage
+
+- The Crazyflies (initial position and channels) are defined in `ros_ws/src/crazyswarm/launch/crazyflies.yaml`. You can use the GUI in `ros_ws/src/crazyswarm/scripts/chooser.py` to enable or disable individual Crazyflies and execute commands such as powering them on- or off.
+- Use `roslaunch crazyswarm hover_swarm.launch` to connect to the Crazyflies and show the current tracking state in `rviz`.
+- Run one of the scripts in `ros_ws/src/crazyswarm/scripts` to execute a motion.

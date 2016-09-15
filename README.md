@@ -14,8 +14,6 @@ repo | description
 **crazyflie2-nrf-firmware**   | Our fork of the onboard software that controls the Crazyflie's radio. Modified to support broadcast communication to swarms.
 **crazyradio-firmware**       | (Public) fork of the Crazyradio firmware. Modified to support broadcasts.
 **ros_ws/src/crazyflie_ros**  | The main ROS stack dealing with sending commands and receiving telemetry from the Crazyflie in ROS.
-**ros_ws/src/object_tracker** | Our custom object tracker that, unlike Vicon's object tracker, doesn't require unique marker configurations per vehicle.
-**ros_ws/src/vicon_ros**      | A ROS interface to the normal Vicon object tracking (that requires unique marker configurations).
 
 Git submodules behave in a somewhat counterintuitive way.
 They point to a *specific commit* in the submodule's commit tree.
@@ -30,7 +28,7 @@ via `git submodule update` so it points to your new commit.
 
 ## Setup
 ```
-git clone https://github.com/USC-ACTLab/crazyswarm2.git
+git clone https://github.com/USC-ACTLab/crazyswarm.git
 ./build.sh
 ```
 

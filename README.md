@@ -46,6 +46,7 @@ via `git submodule update` so it points to your new commit.
 ## Setup
 ```
 git clone https://github.com/USC-ACTLab/crazyswarm.git
+cd crazyswarm
 ./build.sh
 ```
 

@@ -4,12 +4,12 @@ ROOT=$PWD
 git submodule init
 git submodule update
 
-cd ros_ws/src/vicon_ros/
+cd ros_ws/src/crazyflie_ros/
 git submodule init
 git submodule update
 cd $ROOT
 
-cd ros_ws/src/crazyflie_ros/
+cd ros_ws/src/crazyflie_ros/externalDependencies/libmotioncapture/
 git submodule init
 git submodule update
 cd $ROOT

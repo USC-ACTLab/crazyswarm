@@ -41,6 +41,10 @@ via `git submodule update` so it points to your new commit.
     ├── libDebugServices.so
     └── libViconDataStreamSDK_CPP.so
 ```
+- Install additional dependencies:
+```
+sudo apt install swig
+```
 - ??? (create an issue/PR if there are some we missed)
 
 ## Setup
@@ -89,11 +93,6 @@ In a second terminal:
 ## Simulation
 
 ### Setup
-
-- Clone this repository
-- Clone the firmware into crazyflie-firmware
-- ```cd /ros_ws/src/crazyswarm/scripts/pycrazyswarm/cfsim```
-- ```make``` (this builds the simulator components which use the firmware)
 
 If you want to use the vispy backend:
 - Follow instructions at https://github.com/vispy/vispy

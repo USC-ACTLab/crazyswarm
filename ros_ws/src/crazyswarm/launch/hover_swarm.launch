@@ -44,7 +44,10 @@
           solidRed: 0 # if set to solid color
           headlightEnable: 0
       # tracking
-      host_name: "vicon"
+      motion_capture_type: "vicon" # one of vicon,optitrack
+      vicon_host_name: "vicon"
+      # optitrack_local_ip: "localhost"
+      # optitrack_server_ip: "optitrack"
       use_vicon_tracker: false # set to false to use custom object tracking instead
       save_point_clouds: ~/pointCloud.ot
       interactive_object: active-wand

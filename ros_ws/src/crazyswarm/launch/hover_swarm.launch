@@ -45,10 +45,10 @@
           headlightEnable: 0
       # tracking
       motion_capture_type: "vicon" # one of vicon,optitrack
+      object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
       vicon_host_name: "vicon"
       # optitrack_local_ip: "localhost"
       # optitrack_server_ip: "optitrack"
-      use_vicon_tracker: True # set to false to use custom object tracking instead
       save_point_clouds: ~/pointCloud.ot
       # interactive_object: active-wand
       numMarkerConfigurations: 1

@@ -38,8 +38,8 @@ from cflib.crazyflie.mem import MemoryElement
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
 
-URI = "radio://0/110/2M/E7E7E7E731"
-NEW_CHANNEL = 100
+URI = "radio://0/110/2M/E7E7E7E711"
+NEW_CHANNEL = 110
 
 
 class EEPROMExample:
@@ -96,14 +96,6 @@ class EEPROMExample:
         elems = mem.elements
         elems['radio_channel'] = NEW_CHANNEL
         mem.write_data(self._data_written)
-
-    def _stab_log_error(self, logconf, msg):
-        """Callback from the log API when an error occurs"""
-        print('Error when logging %s: %s' % (logconf.name, msg))
-
-    def _stab_log_data(self, timestamp, data, logconf):
-        """Callback froma the log API when data arrives"""
-        print('[%d][%s]: %s' % (timestamp, logconf.name, data))
 
     def _connection_failed(self, link_uri, msg):
         """Callback when connection initial connection fails (i.e no Crazyflie

@@ -7,7 +7,7 @@ import numpy as np
 
 from pycrazyswarm import *
 
-PERIOD = 20
+PERIOD = 15
 
 def main():
 
@@ -18,7 +18,7 @@ def main():
         [25]
     ]
 
-    heights = [0.7, 1.4, 2.1, 2.5]
+    heights = [0.7, 1.2, 1.7, 2.2]
     groups = [1, 2, 3, 4]
     #heights = [0.7, 1.4, 2.1]
 
@@ -78,8 +78,8 @@ def main():
     for step, height, group in zip(pyramid_steps, heights, groups):
         print("press button to land...")
         swarm.input.waitUntilButtonPressed()
-        allcfs.land(0.06, 1.0 + height, group = group)
-        timeHelper.sleep(1.2 + height)
+        allcfs.land(0.02, 1.5 + height, group = group)
+        timeHelper.sleep(1.7 + height)
 
 if __name__ == "__main__":
     main()

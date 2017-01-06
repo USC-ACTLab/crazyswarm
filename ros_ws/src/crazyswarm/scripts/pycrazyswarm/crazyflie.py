@@ -92,7 +92,7 @@ class Crazyflie:
 
     def setParam(self, name, value):
         rospy.set_param(self.prefix + "/" + name, value)
-        self.updateParamsService([name])
+        self.updateParamsService(0, [name])
 
 
 class CrazyflieServer:
@@ -152,4 +152,4 @@ class CrazyflieServer:
 
     def setParam(self, name, value, group = 0):
         rospy.set_param("/cfgroup" + group + "/" + name, value)
-        self.updateParamsService([name])
+        self.updateParamsService(group, [name])

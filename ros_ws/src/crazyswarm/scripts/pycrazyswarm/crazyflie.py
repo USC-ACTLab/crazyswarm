@@ -151,5 +151,5 @@ class CrazyflieServer:
         self.goHomeService(group)
 
     def setParam(self, name, value, group = 0):
-        rospy.set_param("/cfgroup" + group + "/" + name, value)
+        rospy.set_param("/cfgroup" + str(group) + "/" + name, value)
         self.updateParamsService(group, [name])

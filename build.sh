@@ -4,12 +4,12 @@ ROOT=$PWD
 git submodule init
 git submodule update
 
-cd ros_ws/src/vicon_ros/
+cd ros_ws/src/crazyflie_ros/
 git submodule init
 git submodule update
 cd $ROOT
 
-cd ros_ws/src/crazyflie_ros/
+cd ros_ws/src/crazyflie_ros/externalDependencies/libmotioncapture/
 git submodule init
 git submodule update
 cd $ROOT
@@ -29,6 +29,11 @@ cd $ROOT
 cd crazyflie-firmware
 git submodule init
 git submodule update
+make
+cd $ROOT
+
+# build simulator firmware backend
+cd ros_ws/src/crazyswarm/scripts/pycrazyswarm/cfsim
 make
 cd $ROOT
 

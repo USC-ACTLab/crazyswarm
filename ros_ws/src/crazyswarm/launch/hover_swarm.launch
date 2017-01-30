@@ -15,13 +15,13 @@
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
-      genericLogTopic_log1_Variables: ["stabilizer.x", "vicon.x", "ctrltarget.x"]
+      genericLogTopic_log1_Variables: ["stabilizer.z", "ctrltarget.z"]
       firmwareParams:
         flightmode:
           posCtrl: 1
         ctrlMel:
-          kp_xy: 0.6 # p for position
-          kd_xy: 0.5 # d for position
+          kp_xy: 0.3 # p for position
+          kd_xy: 0.175 # d for position
           ki_xy: 0.05
           i_range_xy: 2.0
           kR_xy: 70000 # p for attitude
@@ -29,10 +29,10 @@
           kR_z: 60000 # p for yaw
           kw_z: 12000  # d for yaw
           ki_m_z: 500     # yaw
-          kd_omega_rp: 100 # roll and pitch angular velocity d gain
+          kd_omega_rp: 200 # roll and pitch angular velocity d gain
           i_range_m_z: 1500
-          kp_z: 0.8
-          kd_z: 0.5
+          kp_z: 1.25
+          kd_z: 0.4
           ki_z: 0.05
           i_range_z: 0.4
           mass: 0.032
@@ -44,10 +44,13 @@
           solidRed: 0 # if set to solid color
           headlightEnable: 0
       # tracking
-      host_name: "vicon"
-      use_vicon_tracker: false # set to false to use custom object tracking instead
+      motion_capture_type: "vicon" # one of vicon,optitrack
+      object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
+      vicon_host_name: "vicon"
+      # optitrack_local_ip: "localhost"
+      # optitrack_server_ip: "optitrack"
       save_point_clouds: ~/pointCloud.ot
-      interactive_object: active-wand
+      # interactive_object: active-wand
       numMarkerConfigurations: 1
       markerConfigurations:
         "0":
@@ -71,7 +74,7 @@
           maxPitch: 1.4
           maxFitnessScore: 0.001
       print_latency: False
-      write_csvs: True
+      write_csvs: False
       force_no_cache: False
       enable_parameters: True
       enable_logging: False
@@ -103,7 +106,7 @@
 
   <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
 
-<!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf0A/log1/values[0] /cf0A/log1/values[1] /cf0A/log1/values[2]"/> -->
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf9/log1/values[0] /cf9/log1/values[1]"/> -->
 
 <!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
 

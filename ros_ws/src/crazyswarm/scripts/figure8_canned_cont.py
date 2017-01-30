@@ -9,8 +9,12 @@ if __name__ == "__main__":
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
+    print("press button to takeoff...")
+    swarm.input.waitUntilButtonPressed()
+
     TRIALS = 1
     for i in range(TRIALS):
+
         allcfs.takeoff(targetHeight=1.0, duration=2.0)
         timeHelper.sleep(2.0)
         for cf in allcfs.crazyflies:

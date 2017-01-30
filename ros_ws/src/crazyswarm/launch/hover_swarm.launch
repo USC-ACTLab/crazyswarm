@@ -15,22 +15,22 @@
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
-      genericLogTopic_log1_Variables: ["stabilizer.z", "ctrltarget.z"]
+      genericLogTopic_log1_Variables: ["stabilizer.yaw", "ctrltarget.yaw", "gyro.z", "vicon.yaw"] #, "stabilizer.x", "ctrltarget.x", "stabilizer.y", "ctrltarget.y"]
       firmwareParams:
         flightmode:
           posCtrl: 1
         ctrlMel:
-          kp_xy: 0.3 # p for position
-          kd_xy: 0.175 # d for position
+          kp_xy: 0.4 #0.6 # p for position
+          kd_xy: 0.2 # 0.35 # d for position
           ki_xy: 0.05
           i_range_xy: 2.0
           kR_xy: 70000 # p for attitude
           kw_xy: 20000 # d for attitude
-          kR_z: 60000 # p for yaw
-          kw_z: 12000  # d for yaw
-          ki_m_z: 500     # yaw
+          kR_z: 60000 # 70000 # p for yaw
+          kw_z: 12000 # 30000  # d for yaw
+          ki_m_z: 500 #0 #20000     # i for yaw
+          i_range_m_z: 1500 # i range for yaw
           kd_omega_rp: 200 # roll and pitch angular velocity d gain
-          i_range_m_z: 1500
           kp_z: 1.25
           kd_z: 0.4
           ki_z: 0.05
@@ -43,14 +43,21 @@
           solidGreen: 0 # if set to solid color
           solidRed: 0 # if set to solid color
           headlightEnable: 0
+        #ekf:
+        #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
+        #  ext_var_vel: 2e-4 # 2e-4
+        #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
+        #  gyro_var_xy: 0.2e-2 # 0.2e-4
+        #  gyro_var_z: 0.2e-2 # 0.2e-4
+        #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
       motion_capture_type: "vicon" # one of vicon,optitrack
-      object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
+      object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       vicon_host_name: "vicon"
       # optitrack_local_ip: "localhost"
       # optitrack_server_ip: "optitrack"
       save_point_clouds: ~/pointCloud.ot
-      # interactive_object: active-wand
+      interactive_object: active-wand # virtual #active-wand
       numMarkerConfigurations: 1
       markerConfigurations:
         "0":
@@ -106,7 +113,9 @@
 
   <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
 
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf9/log1/values[0] /cf9/log1/values[1]"/> -->
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_yaw" args="/cf47/log1/values[0] /cf47/log1/values[1] /cf47/log1/values[2] /cf47/log1/values[3]"/>
+
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf47/log1/values[2] /cf47/log1/values[3]"/> -->
 
 <!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
 

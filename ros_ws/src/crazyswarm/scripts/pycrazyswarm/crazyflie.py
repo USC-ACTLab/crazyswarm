@@ -45,7 +45,10 @@ class Crazyflie:
         self.avoidTargetService = rospy.ServiceProxy(prefix + "/avoid_target", AvoidTarget)
         rospy.wait_for_service(prefix + "/set_group")
         self.setGroupService = rospy.ServiceProxy(prefix + "/set_group", SetGroup)
+        rospy.wait_for_service(prefix + "/update_params")
+        self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
         self.tf = tf
+        self.prefix = prefix
 
     def uploadTrajectory(self, trajectory):
         # request = UploadTrajectory()
@@ -84,6 +87,14 @@ class Crazyflie:
             # position, quaternion = self.tf.lookupTransform("/cf" + self.id, "/world", t)
         return np.array(position)
 
+    def getParam(self, name):
+        return rospy.get_param(self.prefix + "/" + name)
+
+    def setParam(self, name, value):
+        rospy.set_param(self.prefix + "/" + name, value)
+        self.updateParamsService(0, [name])
+
+
 class CrazyflieServer:
     def __init__(self):
         rospy.init_node("CrazyflieAPI", anonymous=False)
@@ -101,6 +112,8 @@ class CrazyflieServer:
         self.startCannedTrajectoryService = rospy.ServiceProxy("/start_canned_trajectory", StartCannedTrajectory)
         rospy.wait_for_service("/go_home");
         self.goHomeService = rospy.ServiceProxy("/go_home", GoHome)
+        rospy.wait_for_service("/update_params")
+        self.updateParamsService = rospy.ServiceProxy("/update_params", UpdateParams)
 
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
@@ -136,3 +149,7 @@ class CrazyflieServer:
 
     def goHome(self, group = 0):
         self.goHomeService(group)
+
+    def setParam(self, name, value, group = 0):
+        rospy.set_param("/cfgroup" + str(group) + "/" + name, value)
+        self.updateParamsService(group, [name])

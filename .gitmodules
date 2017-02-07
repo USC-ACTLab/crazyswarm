@@ -6,10 +6,6 @@
 	path = crazyflie-firmware
 	url = https://github.com/USC-ACTLab/crazyflie-firmware.git
 	branch = crazyswarm_master
-[submodule "crazyflie2-nrf-firmware"]
-	path = crazyflie2-nrf-firmware
-	url = https://github.com/USC-ACTLab/crazyflie2-nrf-firmware.git
-	branch = master
 [submodule "crazyflie-lib-python"]
 	path = crazyflie-lib-python
 	url = https://github.com/USC-ACTLab/crazyflie-lib-python.git
@@ -21,3 +17,6 @@
 [submodule "crazyradio-firmware"]
 	path = crazyradio-firmware
 	url = https://github.com/bitcraze/crazyradio-firmware.git
+[submodule "crazyflie2-nrf-firmware"]
+	path = crazyflie2-nrf-firmware
+	url = https://github.com/bitcraze/crazyflie2-nrf-firmware.git

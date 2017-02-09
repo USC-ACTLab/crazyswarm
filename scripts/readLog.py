@@ -44,7 +44,6 @@ extPos_v_y=38
 extPos_v_z=39
 receivedExternalPosition=40
 
-
 fmt = "QfffffffffffffffffffffffffffffffffffffffB"
 
 result = np.empty((0,41))
@@ -56,6 +55,8 @@ with open("log.bin", "rb") as f:
 print(result)
 print(np.mean(np.diff(result[:,usec])))
 print(1/250*1e6)
+
+np.savetxt("log.csv", result, delimiter=",", header="usec,setpoint_roll,setpoint_pitch,setpoint_yaw,setpoint_w_roll,setpoint_w_pitch,setpoint_w_yaw,setpoint_x,setpoint_y,setpoint_z,setpoint_v_x,setpoint_v_y,setpoint_v_z,state_roll,state_pitch,state_yaw,state_w_roll,state_w_pitch,state_w_yaw,state_x,state_y,state_z,state_v_x,state_v_y,state_v_z,acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z,extPos_x,extPos_y,extPos_z,extPos_roll,extPos_pitch,extPos_yaw,extPos_v_x,extPos_v_y,extPos_v_z,receivedExternalPosition")
 
 # acc_x
 #print(np.mean(result[:,30]), np.std(result[:,30]))

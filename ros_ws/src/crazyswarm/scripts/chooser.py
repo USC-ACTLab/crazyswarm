@@ -25,7 +25,7 @@ def save():
 		yaml.dump({"crazyflies": nodes}, outfile)
 
 all49 = read_by_id("../launch/all49.yaml")
-assert(len(all49) == 49)
+#assert(len(all49) == 49)
 enabled = read_by_id("../launch/crazyflies.yaml").keys()
 
 # compute absolute pixel coordinates from the initial positions
@@ -135,8 +135,10 @@ def sysOff():
 	subprocess.Popen(["python3", SCRIPTDIR + "sysOff.py"])
 def reboot():
 	subprocess.Popen(["python3", SCRIPTDIR + "rebootAll.py"])
-def flash():
+def flashSTM():
 	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-stm32"])
+def flashNRF():
+	subprocess.Popen(["python3", SCRIPTDIR + "flashAll.py", "-nrf51"])
 
 import random
 def checkBattery():
@@ -195,7 +197,8 @@ mkbutton(scriptButtons, "battery", checkBattery)
 mkbutton(scriptButtons, "version", checkVersion)
 mkbutton(scriptButtons, "sysOff", sysOff)
 mkbutton(scriptButtons, "reboot", reboot)
-mkbutton(scriptButtons, "flash", flash)
+mkbutton(scriptButtons, "flash (STM)", flashSTM)
+mkbutton(scriptButtons, "flash (NRF)", flashNRF)
 
 # start background threads
 def checkBatteryLoop():

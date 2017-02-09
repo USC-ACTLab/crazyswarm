@@ -7,7 +7,9 @@ import numpy as np
 import time
 from std_srvs.srv import Empty
 from crazyflie_driver.srv import *
+from crazyflie_driver.msg import QuadcopterTrajectoryPoly
 from tf import TransformListener
+import cfsim.cffirmware as firm
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
@@ -25,6 +27,20 @@ class TimeHelper:
 
     def nextPhase(self):
         self.nextPhase()
+
+
+def pp_firmware_to_ros(pp):
+    def piece_to_ros(piece):
+        poly = QuadcopterTrajectoryPoly()
+        poly.duration = rospy.Duration.from_sec(piece.duration)
+        for i in range(8):
+            poly.poly_x.append(firm.poly4d_get(piece, 0, i))
+            poly.poly_y.append(firm.poly4d_get(piece, 1, i))
+            poly.poly_z.append(firm.poly4d_get(piece, 2, i))
+            poly.poly_yaw.append(firm.poly4d_get(piece, 3, i))
+        return poly
+    return [piece_to_ros(firm.pp_get_piece(pp, i)) for i in range(pp.n_pieces)]
+
 
 class Crazyflie:
     def __init__(self, id, initialPosition, tf):
@@ -50,10 +66,9 @@ class Crazyflie:
         self.tf = tf
         self.prefix = prefix
 
-    def uploadTrajectory(self, trajectory):
-        # request = UploadTrajectory()
-        # request.polygons = trajectory.polygons
-        self.uploadTrajectoryService(trajectory.polygons)
+    def uploadTrajectory(self, firmware_trajectory):
+        traj_ros = pp_firmware_to_ros(firmware_trajectory)
+        self.uploadTrajectoryService(traj_ros)
 
     def setEllipse(self, center, major, minor, period):
         self.setEllipseService(
@@ -106,6 +121,8 @@ class CrazyflieServer:
         self.landService = rospy.ServiceProxy("/land", Land)
         rospy.wait_for_service("/start_trajectory");
         self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", StartTrajectory)
+        rospy.wait_for_service("/start_trajectory_reversed");
+        self.startTrajectoryReversedService = rospy.ServiceProxy("/start_trajectory_reversed", StartTrajectoryReversed)
         rospy.wait_for_service("/start_ellipse")
         self.ellipseService = rospy.ServiceProxy("/start_ellipse", StartEllipse)
         rospy.wait_for_service("/start_canned_trajectory")
@@ -140,6 +157,9 @@ class CrazyflieServer:
 
     def startTrajectory(self, group = 0):
         self.startTrajectoryService(group)
+
+    def startTrajectoryReversed(self, group = 0):
+        self.startTrajectoryReversedService(group)
 
     def startEllipse(self, group = 0):
         self.ellipseService(group)

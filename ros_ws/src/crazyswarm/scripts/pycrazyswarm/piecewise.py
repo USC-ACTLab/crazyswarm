@@ -3,7 +3,7 @@ import numpy as np
 
 def loadcsv(path):
 
-    data = np.genfromtxt(path, delimiter=",", skiprows=1, usecols=range(34))
+    data = np.loadtxt(path, delimiter=",", skiprows=1, usecols=range(33))
 
     pp = firm.piecewise_traj()
     pp.n_pieces = len(data)

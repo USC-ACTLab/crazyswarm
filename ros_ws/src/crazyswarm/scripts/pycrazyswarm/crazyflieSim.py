@@ -101,11 +101,17 @@ class Crazyflie:
     # polynomial trajectories
     # input can be generated from piecewise.loadcsv().
     def uploadTrajectory(self, trajectory):
-        firm.plan_set_ppback(self.planner, trajectory)
+        self.user_traj = trajectory
 
     def startTrajectory(self, group = 0):
         if self._isGroup(group):
-            firm.plan_start_poly(self.planner, self._vposition(), self.time())
+            firm.plan_set_ppback(self.planner, self.user_traj)
+            firm.plan_start_poly(self.planner, self._vposition(), self.time(), False)
+
+    def startTrajectoryReversed(self, group = 0):
+        if self._isGroup(group):
+            firm.plan_set_ppback(self.planner, self.user_traj)
+            firm.plan_start_poly(self.planner, self._vposition(), self.time(), True)
 
     def startCannedTrajectory(self, trajectory, timescale, group = 0):
         if self._isGroup(group):
@@ -209,6 +215,10 @@ class CrazyflieServer:
     def startTrajectory(self, group = 0):
         for crazyflie in self.crazyflies:
             crazyflie.startTrajectory(group)
+
+    def startTrajectoryReversed(self, group = 0):
+        for crazyflie in self.crazyflies:
+            crazyflie.startTrajectoryReversed(group)
 
     def startEllipse(self, group = 0):
         for crazyflie in self.crazyflies:

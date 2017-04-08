@@ -43,7 +43,7 @@ via `git submodule update` so it points to your new commit.
 ```
 - Install additional dependencies:
 ```
-sudo apt install swig
+sudo apt install swig python-yaml python3-yaml
 ```
 - ??? (create an issue/PR if there are some we missed)
 

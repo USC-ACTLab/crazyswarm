@@ -35,6 +35,7 @@ Contents:
 .. toctree::
    gettingstarted
    installation
+   usage
    :maxdepth: 2
 
 

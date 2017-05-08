@@ -32,6 +32,11 @@ git submodule update
 make
 cd $ROOT
 
+# build radio firmware
+cd crazyradio-firmware/firmware
+make CRPA=1
+cd $ROOT
+
 # build simulator firmware backend
 cd ros_ws/src/crazyswarm/scripts/pycrazyswarm/cfsim
 make

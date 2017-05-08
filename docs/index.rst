@@ -36,6 +36,7 @@ Contents:
    gettingstarted
    installation
    usage
+   hardware
    :maxdepth: 2
 
 

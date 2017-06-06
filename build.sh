@@ -14,11 +14,6 @@ git submodule init
 git submodule update
 cd $ROOT
 
-cd ros_ws/src/object_tracker/
-git submodule init
-git submodule update
-cd $ROOT
-
 # build nrf firmware
 cd crazyflie2-nrf-firmware
 tools/build/download_deps

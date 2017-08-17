@@ -19,7 +19,11 @@ Crazyflies using three Crazyradios. An example video for what you can do is show
 
 
 
-Our contributed code is licensed under the permissive MIT license, however some of the parts (such as the firmware) are licensed under their respective license. If you use our work in academic research, please cite our paper:
+Our contributed code is licensed under the permissive MIT license, however some of the parts (such as the firmware) are licensed under their respective license.
+
+The Crazyswarm architecture, including some motivation for the design decisions, is described in
+`our paper <http://usc-actlab.github.io/publications/Preiss_ICRA2017.pdf/>`_ [pdf].
+If you use our work in academic research, please cite us:
 
 .. code-block:: none
 

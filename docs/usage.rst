@@ -14,8 +14,8 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
 
 #. Label your Crazyflies
 #. Assign addresses using the Crazyflie Python Client
-#. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number module the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
-#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+#. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
+#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares). Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
 #. Upgrade the firmware of you Crazyradios with the provided firmware.
 
 Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
@@ -37,7 +37,7 @@ There are two major configuration files. First, we have a config file listing al
         channel: 120
         initialPosition: [1.5, 0.5, 0.0]
 
-The file assumes that the address of each CF is set as discussed earlier. The channel can be freely configured. The initial position needs to be known for the frame-by-frame tracking as initial guess. It is not required that the CFs start exactly at those positions (a few centimeters variation is fine).
+The file assumes that the address of each CF is set as discussed earlier. The channel can be freely configured. The initial position needs to be known for the frame-by-frame tracking as initial guess. Positions are specified in meters, in the coordinate system of your motion capture device. It is not required that the CFs start exactly at those positions (a few centimeters variation is fine).
 
 The second configuration file is the ROS launch file (``ros_ws/src/crazyswarm/launch/hover_swarm.launch``). It contains settings on which motion capture system to use and the marker arrangement on the CFs.
 
@@ -56,12 +56,16 @@ Below are the relevant settings for the motion capture system::
 
 You can choose the motion capture type (currently ``vicon`` or ``optitrack``). The application will connect the the motion capture system using the appropriate SDKs (DataStream SDK and NatNet, respectively). If you select ``libobjecttracker`` as ``object_tracking_type``, the tracking will just use the raw marker cloud from the motion capture system and track the CFs frame-by-frame. If you select ``motionCapture`` as ``object_tracking_type``, the objects as tracked by the motion capture system will be used. In this case you will need unique marker arrangements and your objects need to be named ``cf1``, ``cf2``, ``cf3``, and so on.
 
+When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software. Some motion capture systems remove markers from the point cloud when they are matched to an object. Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
+
 Configure Marker Arrangement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers (identical for all CFs).
+If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration [#]_.
 
-#. Place one CF with the desired arrangement at the origin of your motion capture space.
+.. [#] Theoretically, it would be possible to support ``k`` marker arrangements, where ``1 < k < n``. This would be a good project for someone who wishes to learn the Crazyswarm server-side architecture (and submit a pull request 😁).
+
+#. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system. 
 #. Find the coordinates of the used markers
 #. Update the config file, see the example below::
 
@@ -76,6 +80,8 @@ If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need
           "1": [-0.0262914,0.0509139,0.0402475] # coordinates of 2nd marker
           "2": [-0.0328889,-0.02757,0.0390601]  # coordinates of 3rd marker
           "3": [0.0431307,-0.0331216,0.0388839] # coordinates of 4th marker
+
+.. I'm pretty sure we also assume a right-handed coordinate system... verify!!
 
 Monitor Swarm
 -------------
@@ -109,7 +115,7 @@ In order to fly the CFs, the ``crazyflie_server`` needs to be running. Execute i
     source ros_ws/devel/setup.bash
     roslaunch crazyswarm hover_swarm.launch
 
-It should only take a few seconds to connect to the CFs. If you have the LED ring extension installed, you can see the connectivity by the color (green=good connectivity; red=bad connectivity). Furthermore, ``rviz`` will show the estimated pose of all CFs. If there is an error (such as a faulty configuration or a turned-off Crazyflie) an error message will be shown and the application exits.
+It should only take a few seconds to connect to the CFs. If you have the LED ring extension installed, you can see the connectivity by the color (green=good connectivity; red=bad connectivity). Furthermore, ``rviz`` will show the estimated pose of all CFs. If there is an error (such as a faulty configuration or a turned-off Crazyflie) an error message will be shown and the application exits. If there is a problem in the communication between the motion capture system and the Crazyswarm server, the application will not exit but the positions of the Crazyflies will not appear in rviz.
 
 If you have an XBox360 joystick attached to your computer. You can issue a take-off command by pressing "Start" and a landing command by pressing "Back". All CFs should take-off/land in a synchronized fashion, holding the x/y position they were originally placed in.
 

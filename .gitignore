@@ -1,5 +1,6 @@
 ros_ws/build/
 ros_ws/devel/
+ros_ws/src/crazyflie_ros/externalDependencies/libmotioncapture/externalDependedncies/vicon_sdk/*
 .DS_Store
 *.pyc
 *~

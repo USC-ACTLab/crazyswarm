@@ -17,39 +17,74 @@
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
       genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x"] #, "stabilizer.x", "ctrltarget.x", "stabilizer.y", "ctrltarget.y"]
       firmwareParams:
-        flightmode:
-          posCtrl: 1
-        ctrlMel:
-          kp_xy: 8.0 # 0.4 #0.6 # p for position
-          kd_xy: 3.0 # 0.2 # 0.35 # d for position
-          ki_xy: 1.0 # 0.05
-          i_range_xy: 2.0
-          kR_xy: 40000 # p for attitude
-          kw_xy: 12000 # d for attitude
-          kR_z: 40000 # 70000 # p for yaw
-          kw_z: 10000 # 30000  # d for yaw
-          ki_m_z: 500 #0 #20000     # i for yaw
-          i_range_m_z: 1500 # i range for yaw
-          kd_omega_rp: 100 # roll and pitch angular velocity d gain
-          kp_z: 8.0 # 1.25
-          kd_z: 3.0 # 0.4
-          ki_z: 2.0 # 0.05
-          i_range_z: 4.0
-          mass: 0.380
-          massThrust: 5400 # 5500 - full battery
-        ring:
-          effect: 14 # 6: double spinner, 7: solid color
-          solidBlue: 20 # if set to solid color
-          solidGreen: 0 # if set to solid color
-          solidRed: 0 # if set to solid color
-          headlightEnable: 0
-        #ekf:
-        #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
-        #  ext_var_vel: 2e-4 # 2e-4
-        #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
-        #  gyro_var_xy: 0.2e-2 # 0.2e-4
-        #  gyro_var_z: 0.2e-2 # 0.2e-4
-        #  acc_var_xyz: 2.4e-3 # 2.4e-3
+        bigQuad:
+          flightmode:
+            posCtrl: 1
+          ctrlMel:
+            kp_xy: 8.0 # 0.4 #0.6 # p for position
+            kd_xy: 3.0 # 0.2 # 0.35 # d for position
+            ki_xy: 1.0 # 0.05
+            i_range_xy: 2.0
+            kR_xy: 40000 # p for attitude
+            kw_xy: 12000 # d for attitude
+            kR_z: 40000 # 70000 # p for yaw
+            kw_z: 10000 # 30000  # d for yaw
+            ki_m_z: 500 #0 #20000     # i for yaw
+            i_range_m_z: 1500 # i range for yaw
+            kd_omega_rp: 100 # roll and pitch angular velocity d gain
+            kp_z: 8.0 # 1.25
+            kd_z: 3.0 # 0.4
+            ki_z: 2.0 # 0.05
+            i_range_z: 4.0
+            mass: 0.380
+            massThrust: 5400 # 5500 - full battery
+          ring:
+            effect: 14 # 6: double spinner, 7: solid color
+            solidBlue: 20 # if set to solid color
+            solidGreen: 0 # if set to solid color
+            solidRed: 0 # if set to solid color
+            headlightEnable: 0
+          #ekf:
+          #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
+          #  ext_var_vel: 2e-4 # 2e-4
+          #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
+          #  gyro_var_xy: 0.2e-2 # 0.2e-4
+          #  gyro_var_z: 0.2e-2 # 0.2e-4
+          #  acc_var_xyz: 2.4e-3 # 2.4e-3
+        default:
+          flightmode:
+            posCtrl: 1
+          ctrlMel:
+            kp_xy: 0.4 #0.6 # p for position
+            kd_xy: 0.2 # 0.35 # d for position
+            ki_xy: 0.05
+            i_range_xy: 2.0
+            kR_xy: 70000 # p for attitude
+            kw_xy: 20000 # d for attitude
+            kR_z: 60000 # 70000 # p for yaw
+            kw_z: 12000 # 30000  # d for yaw
+            ki_m_z: 500 #0 #20000     # i for yaw
+            i_range_m_z: 1500 # i range for yaw
+            kd_omega_rp: 200 # roll and pitch angular velocity d gain
+            kp_z: 1.25
+            kd_z: 0.4
+            ki_z: 0.05
+            i_range_z: 0.4
+            mass: 0.032
+            massThrust: 132000
+          ring:
+            effect: 14 # 6: double spinner, 7: solid color
+            solidBlue: 20 # if set to solid color
+            solidGreen: 0 # if set to solid color
+            solidRed: 0 # if set to solid color
+            headlightEnable: 0
+          #ekf:
+          #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
+          #  ext_var_vel: 2e-4 # 2e-4
+          #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
+          #  gyro_var_xy: 0.2e-2 # 0.2e-4
+          #  gyro_var_z: 0.2e-2 # 0.2e-4
+          #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
       motion_capture_type: "vicon" # one of vicon,optitrack
       object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
@@ -84,7 +119,7 @@
       write_csvs: False
       force_no_cache: False
       enable_parameters: True
-      enable_logging: True
+      enable_logging: False
     </rosparam>
   </node>
 
@@ -111,9 +146,6 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
-  <node pkg="rqt_gui" type="rqt_gui" name="rqt" args="--perspective-file $(find crazyswarm)/launch/rqt.perspective"/>
-
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_yaw" args="/cf2/log1/values[0] /cf2/log1/values[1]"/>
 
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf47/log1/values[2] /cf47/log1/values[3]"/> -->
 

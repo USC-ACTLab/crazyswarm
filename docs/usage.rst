@@ -15,8 +15,26 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
 #. Label your Crazyflies
 #. Assign addresses using the Crazyflie Python Client
 #. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
-#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares). Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
+#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares). 
+  Option 1: Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
+  Option 2: Upload the precompiled firmware by executing the following steps:
+
+    Plug in a battery
+    Turn your Crazyflie off by pressing the on/off button
+    Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
+    rosrun crazyflie_tools flash --target nrf51 --filename prebuilt/cf2_nrf.bin
+    Turn your Crazyflie off by pressing the on/off button
+    Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
+    rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin
+
 #. Upgrade the firmware of you Crazyradios with the provided firmware.
+  Option 1: follow the instructions in the ``crazyradio-firmware`` folder to install the self-compiled version.
+  Option 2: Use the prebuilt binary:
+
+    python crazyradio-firmware/usbtools/launchBootloader.py
+    python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin
+
+Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan``, which should report ``Found Crazyradio with version 99.55``.
 
 Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
 

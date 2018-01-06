@@ -22,16 +22,24 @@ Crazyflies using three Crazyradios. An example video for what you can do is show
 Our contributed code is licensed under the permissive MIT license, however some of the parts (such as the firmware) are licensed under their respective license.
 
 The Crazyswarm architecture, including some motivation for the design decisions, is described in
-`our paper <http://usc-actlab.github.io/publications/Preiss_ICRA2017.pdf/>`_ [pdf].
+`our paper <http://usc-actlab.github.io/publications/Preiss_ICRA2017.pdf>`_ [pdf].
 If you use our work in academic research, please cite us:
 
 .. code-block:: none
 
     @inproceedings{crazyswarm,
-      Author = {James A. Preiss and Wolfgang H\"onig and Gaurav S. Sukhatme and Nora Ayanian},
-      Booktitle = {Proc. IEEE International Conference on Robotics and Automation},
-      Title = {Crazyswarm: A Large Nano-Quadcopter Swarm},
-      Year = {2017}
+      author    = {James A. Preiss* and
+                   Wolfgang  H\"onig* and
+                   Gaurav S. Sukhatme and
+                   Nora Ayanian},
+      title     = {Crazyswarm: {A} large nano-quadcopter swarm},
+      booktitle = {{IEEE} International Conference on Robotics and Automation ({ICRA})},
+      pages     = {3299--3304},
+      publisher = {{IEEE}},
+      year      = {2017},
+      url       = {https://doi.org/10.1109/ICRA.2017.7989376},
+      doi       = {10.1109/ICRA.2017.7989376},
+      note      = {Software available at \url{https://github.com/USC-ACTLab/crazyswarm}},
     }
 
 Contents:

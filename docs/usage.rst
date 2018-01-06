@@ -100,7 +100,9 @@ Use the following settings for correct operation:
 Configure Marker Arrangement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration [#]_.
+If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration [#]_. An example marker configuration using four markers is shown below:
+
+.. image:: markerConfigurationExample.jpg
 
 .. [#] Theoretically, it would be possible to support ``k`` marker arrangements, where ``1 < k < n``. This would be a good project for someone who wishes to learn the Crazyswarm server-side architecture (and submit a pull request 😁).
 

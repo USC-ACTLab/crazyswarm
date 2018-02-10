@@ -13,10 +13,30 @@ where ``<X>`` is the number of the Crazyflie in the hexadecimal system. For exam
 The easiest way to assign addresses is to use the official Crazyflie Python Client.
 
 #. Label your Crazyflies
-#. Assign addresses using the Crazyflie Python Client
+#. Assign addresses using the Crazyflie Python Client (use a USB cable for easiest handling)
 #. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
-#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares). Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
+#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+
+  - Option 1: Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
+  - Option 2: Upload the precompiled firmware by executing the following steps:
+
+      #. Plug in a battery
+      #. Turn your Crazyflie off by pressing the on/off button
+      #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
+      #. ``rosrun crazyflie_tools flash --target nrf51 --filename prebuilt/cf2_nrf.bin``
+      #. Turn your Crazyflie off by pressing the on/off button
+      #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
+      #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
+
+
 #. Upgrade the firmware of you Crazyradios with the provided firmware.
+
+  - Option 1: follow the instructions in the ``crazyradio-firmware`` folder to install the self-compiled version.
+  - Option 2: Use the prebuilt binary:
+
+      #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
+      #. ``python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
+      #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan``, which should report ``Found Crazyradio with version 99.55``.
 
 Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
 
@@ -58,14 +78,35 @@ You can choose the motion capture type (currently ``vicon`` or ``optitrack``). T
 
 When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software. Some motion capture systems remove markers from the point cloud when they are matched to an object. Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
 
+Vicon
+"""""
+
+Vicon is fully supported and tested with Tracker 3.4.
+
+OptiTrack
+"""""""""
+
+.. warning::
+
+    The OptiTrack support currently has the following limitations:
+      * It is incompatible with Motive 2.0 because it uses NatNet 3.0.1 which has a different bit-steam syntax. Use an older version (Motive 1.10.3 is known to work).
+
+Use the following settings for correct operation:
+  * Un-tick the rigid body in Motive so that the point cloud is streamed.
+  * Advanced network settings. Up axis: Z
+  * When specifying the marker locations in the config file you need to use the coordinates in Rviz and not Motive.
+
+
 Configure Marker Arrangement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration [#]_.
+If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration [#]_. An example marker configuration using four markers is shown below:
+
+.. image:: markerConfigurationExample.jpg
 
 .. [#] Theoretically, it would be possible to support ``k`` marker arrangements, where ``1 < k < n``. This would be a good project for someone who wishes to learn the Crazyswarm server-side architecture (and submit a pull request 😁).
 
-#. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system. 
+#. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
 #. Find the coordinates of the used markers
 #. Update the config file, see the example below::
 

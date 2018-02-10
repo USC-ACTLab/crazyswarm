@@ -57,7 +57,7 @@
       # optitrack_local_ip: "localhost"
       # optitrack_server_ip: "optitrack"
       save_point_clouds: ~/pointCloud.ot
-      interactive_object: active-wand # virtual #active-wand
+      # interactive_object: active-wand
       numMarkerConfigurations: 1
       markerConfigurations:
         "0":

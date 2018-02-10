@@ -15,8 +15,30 @@
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
-      genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x"] #, "stabilizer.x", "ctrltarget.x", "stabilizer.y", "ctrltarget.y"]
+      # genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld"]
+      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
       firmwareParams:
+        mediumQuad:
+          flightmode:
+            posCtrl: 1
+          ctrlMel:
+            kp_xy: 2.5 # p for position
+            kd_xy: 1.0 # d for position
+            ki_xy: 0.1 # i for position
+            i_range_xy: 2.0 # range for position
+            kR_xy: 60000 # p for attitude
+            kw_xy: 20000 # d for attitude
+            kR_z: 60000 # p for yaw
+            kw_z: 12000 # d for yaw
+            ki_m_z: 500 # i for yaw
+            i_range_m_z: 1500 # i range for yaw
+            kd_omega_rp: 200 # roll and pitch angular velocity d gain
+            kp_z: 3 # 1.25
+            kd_z: 1.0
+            ki_z: 0.5 # 0.05
+            i_range_z: 2.0
+            mass: 0.110
+            massThrust: 23000 # 23000 - full battery
         bigQuad:
           flightmode:
             posCtrl: 1
@@ -119,7 +141,7 @@
       write_csvs: False
       force_no_cache: False
       enable_parameters: True
-      enable_logging: False
+      enable_logging: True
     </rosparam>
   </node>
 
@@ -147,7 +169,8 @@
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
 
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf47/log1/values[2] /cf47/log1/values[3]"/> -->
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf1/log1/values[0] /cf1/log1/values[1]"/>
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/>
 
 <!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
 

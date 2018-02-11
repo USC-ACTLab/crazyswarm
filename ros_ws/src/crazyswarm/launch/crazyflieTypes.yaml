@@ -1,5 +1,10 @@
 crazyflieTypes:
   default:
+    bigQuad: False
+    batteryVoltageWarning: 3.8  # V
+    batteryVoltateCritical: 3.7 # V
+    markerConfiguration: 0
+    dynamicsConfiguration: 0
     firmwareParams:
       ctrlMel:
         kp_xy: 0.4 #0.6 # p for position
@@ -19,9 +24,12 @@ crazyflieTypes:
         i_range_z: 0.4
         mass: 0.032
         massThrust: 132000
+  medium:
+    bigQuad: True
+    batteryVoltageWarning: 7.6  # V
+    batteryVoltateCritical: 7.4 # V
     markerConfiguration: 0
     dynamicsConfiguration: 0
-  medium:
     firmwareParams:
       ctrlMel:
         kp_xy: 2.5 # p for position
@@ -42,6 +50,11 @@ crazyflieTypes:
         mass: 0.110
         massThrust: 23000 # 23000 - full battery
   large:
+    bigQuad: True
+    batteryVoltageWarning: 7.6  # V
+    batteryVoltateCritical: 7.4 # V
+    markerConfiguration: 0
+    dynamicsConfiguration: 0
     firmwareParams:
       ctrlMel:
         kp_xy: 8.0 # 0.4 #0.6 # p for position

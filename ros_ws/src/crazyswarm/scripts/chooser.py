@@ -26,6 +26,9 @@ def save():
 
 allCrazyflies = read_by_id("../launch/allCrazyflies.yaml")
 enabled = read_by_id("../launch/crazyflies.yaml").keys()
+with open("../launch/crazyflieTypes.yaml", 'r') as ymlfile:
+	data = yaml.load(ymlfile)
+	cfTypes = data["crazyflieTypes"]
 
 # compute absolute pixel coordinates from the initial positions
 positions = [node["initialPosition"] for node in allCrazyflies.values()]
@@ -155,8 +158,11 @@ def checkBattery():
 			addr = int(match.group(1))
 			voltage = match.group(2)[:4] # truncate digits
 			color = '#000000'
-			if float(voltage) < 3.8: color = '#FF8800'
-			if float(voltage) < 3.7: color = '#FF0000'
+			cfType = allCrazyflies[int(addr)]["type"]
+			if float(voltage) < cfTypes[cfType]["batteryVoltageWarning"]:
+				color = '#FF8800'
+			if float(voltage) < cfTypes[cfType]["batteryVoltateCritical"]:
+				color = '#FF0000'
 			widgets[addr].batteryLabel.config(foreground=color, text=voltage + ' v')
 
 def checkVersion():

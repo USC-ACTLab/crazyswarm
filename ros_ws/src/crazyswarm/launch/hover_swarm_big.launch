@@ -15,7 +15,7 @@
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
       # genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld"]
-      genericLogTopic_log1_Variables: ["vicon.x", "vicon.y", "vicon.z", "vicon.dt"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
+      genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld", "gyro.x", "ctrltarget.rollRate"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
       firmwareParams: # for all (independent of type)
         flightmode:
           posCtrl: 1
@@ -34,7 +34,7 @@
         #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
       motion_capture_type: "vicon" # one of vicon,optitrack
-      object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
+      object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       vicon_host_name: "vicon"
       # optitrack_local_ip: "localhost"
       # optitrack_server_ip: "optitrack"
@@ -58,7 +58,7 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf1/log1/values[0] /cf1/log1/values[1] /cf1/log1/values[2] /cf1/log1/values[3]"/>
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf40/log1/values[2] /cf40/log1/values[3]"/> -->
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf1/log1/values[0] /cf1/log1/values[1]"/>
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/>
 
 </launch>

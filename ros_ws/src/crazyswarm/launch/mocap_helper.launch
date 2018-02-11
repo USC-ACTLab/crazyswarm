@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="crazyflie_driver" type="mocap_helper" name="mocap_helper" output="screen" >
+    <rosparam>
+      # tracking
+      motion_capture_type: "vicon" # one of vicon,optitrack
+      object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
+      vicon_host_name: "vicon"
+      # optitrack_local_ip: "localhost"
+      # optitrack_server_ip: "optitrack"
+    </rosparam>
+  </node>
+</launch>

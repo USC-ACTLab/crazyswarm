@@ -1,0 +1,86 @@
+crazyflieTypes:
+  default:
+    firmwareParams:
+      ctrlMel:
+        kp_xy: 0.4 #0.6 # p for position
+        kd_xy: 0.2 # 0.35 # d for position
+        ki_xy: 0.05
+        i_range_xy: 2.0
+        kR_xy: 70000 # p for attitude
+        kw_xy: 20000 # d for attitude
+        kR_z: 60000 # 70000 # p for yaw
+        kw_z: 12000 # 30000  # d for yaw
+        ki_m_z: 500 #0 #20000     # i for yaw
+        i_range_m_z: 1500 # i range for yaw
+        kd_omega_rp: 200 # roll and pitch angular velocity d gain
+        kp_z: 1.25
+        kd_z: 0.4
+        ki_z: 0.05
+        i_range_z: 0.4
+        mass: 0.032
+        massThrust: 132000
+    markerConfiguration: 0
+    dynamicsConfiguration: 0
+  medium:
+    firmwareParams:
+      ctrlMel:
+        kp_xy: 2.5 # p for position
+        kd_xy: 1.0 # d for position
+        ki_xy: 0.1 # i for position
+        i_range_xy: 2.0 # range for position
+        kR_xy: 60000 # p for attitude
+        kw_xy: 20000 # d for attitude
+        kR_z: 60000 # p for yaw
+        kw_z: 12000 # d for yaw
+        ki_m_z: 500 # i for yaw
+        i_range_m_z: 1500 # i range for yaw
+        kd_omega_rp: 200 # roll and pitch angular velocity d gain
+        kp_z: 3 # 1.25
+        kd_z: 1.0
+        ki_z: 0.5 # 0.05
+        i_range_z: 2.0
+        mass: 0.110
+        massThrust: 23000 # 23000 - full battery
+  large:
+    firmwareParams:
+      ctrlMel:
+        kp_xy: 8.0 # 0.4 #0.6 # p for position
+        kd_xy: 3.0 # 0.2 # 0.35 # d for position
+        ki_xy: 1.0 # 0.05
+        i_range_xy: 2.0
+        kR_xy: 40000 # p for attitude
+        kw_xy: 12000 # d for attitude
+        kR_z: 40000 # 70000 # p for yaw
+        kw_z: 10000 # 30000  # d for yaw
+        ki_m_z: 500 #0 #20000     # i for yaw
+        i_range_m_z: 1500 # i range for yaw
+        kd_omega_rp: 100 # roll and pitch angular velocity d gain
+        kp_z: 8.0 # 1.25
+        kd_z: 3.0 # 0.4
+        ki_z: 2.0 # 0.05
+        i_range_z: 4.0
+        mass: 0.380
+        massThrust: 5400 # 5500 - full battery
+numMarkerConfigurations: 1
+markerConfigurations:
+  "0":
+    numPoints: 4
+    offset: [0.0, -0.01, -0.04]
+    points:
+      "0": [0.0177184,0.0139654,0.0557585]
+      "1": [-0.0262914,0.0509139,0.0402475]
+      "2": [-0.0328889,-0.02757,0.0390601]
+      "3": [0.0431307,-0.0331216,0.0388839]
+numDynamicsConfigurations: 1
+dynamicsConfigurations:
+  "0":
+    maxXVelocity: 2.0
+    maxYVelocity: 2.0
+    maxZVelocity: 3.0
+    maxPitchRate: 20.0
+    maxRollRate: 20.0
+    maxYawRate: 10.0
+    maxRoll: 1.4
+    maxPitch: 1.4
+    maxFitnessScore: 0.001
+

@@ -2,13 +2,12 @@
 <launch>
   <arg name="joy_dev" default="/dev/input/js0" />
 
+  <rosparam command="load" file="$(find crazyswarm)/launch/crazyflieTypes.yaml" />
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflies.yaml" />
 
-
-  <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen">
+  <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" >
     <rosparam>
       broadcast_address: "FFE7E7E7E7"
-      #broadcast_uri: "radio://0/100/2M/FFE7E7E7E7"
       world_frame: "/world"
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
@@ -16,97 +15,23 @@
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
       # genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld"]
-      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
-      firmwareParams:
-        mediumQuad:
-          flightmode:
-            posCtrl: 1
-          ctrlMel:
-            kp_xy: 2.5 # p for position
-            kd_xy: 1.0 # d for position
-            ki_xy: 0.1 # i for position
-            i_range_xy: 2.0 # range for position
-            kR_xy: 60000 # p for attitude
-            kw_xy: 20000 # d for attitude
-            kR_z: 60000 # p for yaw
-            kw_z: 12000 # d for yaw
-            ki_m_z: 500 # i for yaw
-            i_range_m_z: 1500 # i range for yaw
-            kd_omega_rp: 200 # roll and pitch angular velocity d gain
-            kp_z: 3 # 1.25
-            kd_z: 1.0
-            ki_z: 0.5 # 0.05
-            i_range_z: 2.0
-            mass: 0.110
-            massThrust: 23000 # 23000 - full battery
-        bigQuad:
-          flightmode:
-            posCtrl: 1
-          ctrlMel:
-            kp_xy: 8.0 # 0.4 #0.6 # p for position
-            kd_xy: 3.0 # 0.2 # 0.35 # d for position
-            ki_xy: 1.0 # 0.05
-            i_range_xy: 2.0
-            kR_xy: 40000 # p for attitude
-            kw_xy: 12000 # d for attitude
-            kR_z: 40000 # 70000 # p for yaw
-            kw_z: 10000 # 30000  # d for yaw
-            ki_m_z: 500 #0 #20000     # i for yaw
-            i_range_m_z: 1500 # i range for yaw
-            kd_omega_rp: 100 # roll and pitch angular velocity d gain
-            kp_z: 8.0 # 1.25
-            kd_z: 3.0 # 0.4
-            ki_z: 2.0 # 0.05
-            i_range_z: 4.0
-            mass: 0.380
-            massThrust: 5400 # 5500 - full battery
-          ring:
-            effect: 14 # 6: double spinner, 7: solid color
-            solidBlue: 20 # if set to solid color
-            solidGreen: 0 # if set to solid color
-            solidRed: 0 # if set to solid color
-            headlightEnable: 0
-          #ekf:
-          #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
-          #  ext_var_vel: 2e-4 # 2e-4
-          #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
-          #  gyro_var_xy: 0.2e-2 # 0.2e-4
-          #  gyro_var_z: 0.2e-2 # 0.2e-4
-          #  acc_var_xyz: 2.4e-3 # 2.4e-3
-        default:
-          flightmode:
-            posCtrl: 1
-          ctrlMel:
-            kp_xy: 0.4 #0.6 # p for position
-            kd_xy: 0.2 # 0.35 # d for position
-            ki_xy: 0.05
-            i_range_xy: 2.0
-            kR_xy: 70000 # p for attitude
-            kw_xy: 20000 # d for attitude
-            kR_z: 60000 # 70000 # p for yaw
-            kw_z: 12000 # 30000  # d for yaw
-            ki_m_z: 500 #0 #20000     # i for yaw
-            i_range_m_z: 1500 # i range for yaw
-            kd_omega_rp: 200 # roll and pitch angular velocity d gain
-            kp_z: 1.25
-            kd_z: 0.4
-            ki_z: 0.05
-            i_range_z: 0.4
-            mass: 0.032
-            massThrust: 132000
-          ring:
-            effect: 14 # 6: double spinner, 7: solid color
-            solidBlue: 20 # if set to solid color
-            solidGreen: 0 # if set to solid color
-            solidRed: 0 # if set to solid color
-            headlightEnable: 0
-          #ekf:
-          #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
-          #  ext_var_vel: 2e-4 # 2e-4
-          #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
-          #  gyro_var_xy: 0.2e-2 # 0.2e-4
-          #  gyro_var_z: 0.2e-2 # 0.2e-4
-          #  acc_var_xyz: 2.4e-3 # 2.4e-3
+      genericLogTopic_log1_Variables: ["vicon.x", "vicon.y", "vicon.z", "vicon.dt"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
+      firmwareParams: # for all (independent of type)
+        flightmode:
+          posCtrl: 1
+        ring:
+          effect: 14 # 6: double spinner, 7: solid color, 14: packetRate
+          solidBlue: 255 # if set to solid color
+          solidGreen: 0 # if set to solid color
+          solidRed: 0 # if set to solid color
+          headlightEnable: 0
+        #ekf:
+        #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
+        #  ext_var_vel: 2e-4 # 2e-4
+        #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
+        #  gyro_var_xy: 0.2e-2 # 0.2e-4
+        #  gyro_var_z: 0.2e-2 # 0.2e-4
+        #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
       motion_capture_type: "vicon" # one of vicon,optitrack
       object_tracking_type: "motionCapture" # one of motionCapture,libobjecttracker
@@ -114,29 +39,6 @@
       # optitrack_local_ip: "localhost"
       # optitrack_server_ip: "optitrack"
       save_point_clouds: ~/pointCloud.ot
-      #interactive_object: active-wand  virtual #active-wand
-      numMarkerConfigurations: 1
-      markerConfigurations:
-        "0":
-          numPoints: 4
-          offset: [0.0, -0.01, -0.04]
-          points:
-            "0": [0.0177184,0.0139654,0.0557585]
-            "1": [-0.0262914,0.0509139,0.0402475]
-            "2": [-0.0328889,-0.02757,0.0390601]
-            "3": [0.0431307,-0.0331216,0.0388839]
-      numDynamicsConfigurations: 1
-      dynamicsConfigurations:
-        "0":
-          maxXVelocity: 2.0
-          maxYVelocity: 2.0
-          maxZVelocity: 3.0
-          maxPitchRate: 20.0
-          maxRollRate: 20.0
-          maxYawRate: 10.0
-          maxRoll: 1.4
-          maxPitch: 1.4
-          maxFitnessScore: 0.001
       print_latency: False
       write_csvs: False
       force_no_cache: False
@@ -154,30 +56,9 @@
     <param name="timescale" value="0.8" />
   </node>
 
-
-<!--   <node name="vicon" pkg="vicon_ros" type="vicon_node" output="screen">
-    <param name="hostName" value="vicon" />
-    <param name="enableLatencyTopic" value="true" />
-    <param name="enablePointCloudTopic" value="true" />
-    <param name="enableTfBroadcast" value="true" />
-  </node>
-
-  <node name="object_tracker" pkg="object_tracker" type="object_tracker_node" output="screen">
-    <rosparam command="load" file="$(find crazyswarm)/launch/object_tracker.yaml" />
-  </node> -->
-
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
-
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf1/log1/values[0] /cf1/log1/values[1]"/>
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/>
-
-<!--   <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf06/log1/values[3] /cf06/log1/values[4] /cf06/log1/values[5]"/>
-
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/pose/pose/position/x /pose/pose/position/y"/> -->
-
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf05/log1/values[0] /cf05/log1/values[1]"/> -->
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_y" args="/cf05/log1/values[3] /cf05/log1/values[4] /cf05/log1/values[5]"/> -->
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_3" args="/cf05/log1/values[4] /cf05/log1/values[5]"/> -->
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf1/log1/values[0] /cf1/log1/values[1] /cf1/log1/values[2] /cf1/log1/values[3]"/>
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf40/log1/values[2] /cf40/log1/values[3]"/> -->
 
 </launch>

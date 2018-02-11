@@ -20,16 +20,15 @@ def read_by_id(path):
 	return by_id
 
 def save():
-	nodes = [node for id, node in all49.items() if widgets[id].checked.get()]
+	nodes = [node for id, node in allCrazyflies.items() if widgets[id].checked.get()]
 	with open("../launch/crazyflies.yaml", 'w') as outfile:
 		yaml.dump({"crazyflies": nodes}, outfile)
 
-all49 = read_by_id("../launch/all49.yaml")
-#assert(len(all49) == 49)
+allCrazyflies = read_by_id("../launch/allCrazyflies.yaml")
 enabled = read_by_id("../launch/crazyflies.yaml").keys()
 
 # compute absolute pixel coordinates from the initial positions
-positions = [node["initialPosition"] for node in all49.values()]
+positions = [node["initialPosition"] for node in allCrazyflies.values()]
 DOWN_DIR = [-1, 0]
 RIGHT_DIR = [0, -1]
 def dot(a, b):
@@ -64,7 +63,7 @@ class CFWidget(Tkinter.Frame):
 
 # construct all the checkboxes
 widgets = {}
-for (id, node), x, y in zip(all49.items(), pixel_x, pixel_y):
+for (id, node), x, y in zip(allCrazyflies.items(), pixel_x, pixel_y):
 	w = CFWidget(frame, str(id))
 	w.place(x = x - xmin, y = y - ymin)
 	w.checked.set(id in enabled)

@@ -11,9 +11,6 @@ if __name__ == "__main__":
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
-    ids = [1,40]
-    cfs = [allcfs.crazyfliesById[i] for i in ids]
-
     print("press button to take off...")
     swarm.input.waitUntilButtonPressed()
 
@@ -25,15 +22,23 @@ if __name__ == "__main__":
         cf.hover(pos, 0, 2.0)
     timeHelper.sleep(2.0)
 
-    pos = cfs[1].initialPosition + np.array([0, 0, 1.0])
+    speed = 0.5 # m/s
+    odd = True
     while True:
-        print("current pos", pos)
-        print("press left/right shoulder to move left/right")
+        print("press left/right shoulder to move slower/faster (or back on the joystick to land)")
         buttons = swarm.input.waitUntilAnyButtonPressed()
         print(buttons)
         if buttons[5] == 1:
-            pos += np.array([0, 0.05, 0.0])
+            speed += 0.1
         else:
-            pos -= np.array([0, 0.05, 0.0])
-        cfs[1].hover(pos, 0, 1.0)
-        timeHelper.sleep(1.0)
+            speed -= 0.1
+        print("current speed", speed)
+        for cf in allcfs.crazyflies:
+            pos = np.array(cf.initialPosition)
+            if odd:
+                pos += np.array([-3.0, 0.0, 1.0])
+            else:
+                pos += np.array([0, 0.0, 1.0])
+            cf.hover(pos, 0, 3.0 / speed)
+        timeHelper.sleep(3.0 / speed)
+        odd = not odd

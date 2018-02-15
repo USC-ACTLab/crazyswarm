@@ -48,6 +48,7 @@ Contents:
    gettingstarted
    installation
    usage
+   api
    hardware
    :maxdepth: 2
 

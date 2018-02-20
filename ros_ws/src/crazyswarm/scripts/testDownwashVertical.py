@@ -11,7 +11,7 @@ if __name__ == "__main__":
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
-    ids = [1, 40]
+    ids = [40, 2]
     cfs = [allcfs.crazyfliesById[i] for i in ids]
 
     print("press button to take off...")
@@ -52,6 +52,9 @@ if __name__ == "__main__":
     #     timeHelper.sleep(4.0)
 
     ####################################
+
+    pos = cfs[0].initialPosition + np.array([0.0, 0.0, 2.0])
+    cfs[0].hover(pos, 0, 3.0)
 
     pos = cfs[0].initialPosition + np.array([0, 0, 0.5])
     cfs[1].hover(pos, 0, 3.0)

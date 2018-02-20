@@ -51,9 +51,9 @@ crazyflieTypes:
         massThrust: 23000 # 23000 - full battery
   large:
     bigQuad: True
-    batteryVoltageWarning: 7.6  # V
-    batteryVoltateCritical: 7.4 # V
-    markerConfiguration: 0
+    batteryVoltageWarning: 11.4  # V
+    batteryVoltateCritical: 11.1 # V
+    markerConfiguration: 2
     dynamicsConfiguration: 0
     firmwareParams:
       ctrlMel:
@@ -61,8 +61,8 @@ crazyflieTypes:
         kd_xy: 3.0 # 0.2 # 0.35 # d for position
         ki_xy: 1.0 # 0.05
         i_range_xy: 2.0
-        kR_xy: 40000 # p for attitude
-        kw_xy: 12000 # d for attitude
+        kR_xy: 30000 # 40000 # p for attitude
+        kw_xy: 9000 # 13000 # d for attitude
         kR_z: 40000 # 70000 # p for yaw
         kw_z: 10000 # 30000  # d for yaw
         ki_m_z: 500 #0 #20000     # i for yaw
@@ -74,7 +74,7 @@ crazyflieTypes:
         i_range_z: 4.0
         mass: 0.380
         massThrust: 5400 # 5500 - full battery
-numMarkerConfigurations: 2
+numMarkerConfigurations: 3
 markerConfigurations:
   "0":  # for standard Crazyflie
     numPoints: 4
@@ -86,12 +86,20 @@ markerConfigurations:
       "3": [0.0431307,-0.0331216,0.0388839]
   "1": # medium frame
     numPoints: 4
-    offset: [0.0, 0.0, 0.02]
+    offset: [0.0, 0.0, -0.03]
     points:
-      "0": [-0.0106473,0.0025374,0.0723608]
-      "1": [0.0435882,-0.08513,0.0409143]
-      "2": [0.0493227,0.0998233,0.0470097]
-      "3": [-0.0812554,-0.0229209,0.0486834]
+      "0": [-0.00896228,-0.000716753,0.0716129]
+      "1": [-0.0156318,0.0997402,0.0508162]
+      "2": [0.0461693,-0.0881012,0.0380672]
+      "3": [-0.0789959,-0.0269793,0.0461144]
+  "2": # big frame
+    numPoints: 4
+    offset: [0.0, 0.0, -0.06]
+    points:
+      "0": [0.0558163,-0.00196302,0.0945539]
+      "1": [-0.0113941,0.00945842,0.0984811]
+      "2": [-0.0306277,0.0514879,0.0520456]
+      "3": [0.0535816,-0.0400775,0.0432799]
 numDynamicsConfigurations: 1
 dynamicsConfigurations:
   "0":

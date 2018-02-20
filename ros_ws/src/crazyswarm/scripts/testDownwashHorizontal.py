@@ -11,7 +11,7 @@ if __name__ == "__main__":
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
-    ids = [1,40]
+    ids = [2,40]
     cfs = [allcfs.crazyfliesById[i] for i in ids]
 
     print("press button to take off...")

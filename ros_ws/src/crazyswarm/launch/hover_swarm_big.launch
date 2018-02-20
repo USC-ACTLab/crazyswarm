@@ -15,10 +15,13 @@
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
       # genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld"]
-      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x", "gyro.x", "ctrltarget.rollRate"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
+      genericLogTopic_log1_Variables: ["ctrlStat.edist"]
+      # genericLogTopic_log1_Variables: ["stateEstimate.yaw", "ctrltarget.yaw", "stateEstimate.x", "ctrltarget.x"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
       firmwareParams: # for all (independent of type)
         flightmode:
           posCtrl: 1
+        traj:
+          auto_yaw: 0
         kalmanUSC:
           rstWithExtPos: 1 # re-initialize EKF with vicon data
         ring:
@@ -45,7 +48,7 @@
       write_csvs: False
       force_no_cache: False
       enable_parameters: True
-      enable_logging: False
+      enable_logging: True
     </rosparam>
   </node>
 
@@ -60,7 +63,7 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
-  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf1/log1/values[0] /cf1/log1/values[1]"/> -->
+  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf2/log1/values[0]"/>
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/> -->
 
 </launch>

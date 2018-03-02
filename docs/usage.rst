@@ -43,23 +43,74 @@ Your Crazyflie needs to be rebooted after any change of the channel/address for 
 Adjust Configuration Files
 --------------------------
 
-There are two major configuration files. First, we have a config file listing all available (but not necessarily active) CFs::
+There are three major configuration files. First, we have a config file listing all available (but not necessarily active) CFs::
 
-    # ros_ws/src/crazyswarm/launch/all49.yaml
+    # ros_ws/src/crazyswarm/launch/allCrazyflies.yaml
     crazyflies:
       - id: 1
         channel: 100
         initialPosition: [1.5, 1.5, 0.0]
+        type: default
       - id: 2
         channel: 110
         initialPosition: [1.5, 1.0, 0.0]
-      - id: 3
-        channel: 120
-        initialPosition: [1.5, 0.5, 0.0]
+        type: medium
 
 The file assumes that the address of each CF is set as discussed earlier. The channel can be freely configured. The initial position needs to be known for the frame-by-frame tracking as initial guess. Positions are specified in meters, in the coordinate system of your motion capture device. It is not required that the CFs start exactly at those positions (a few centimeters variation is fine).
 
-The second configuration file is the ROS launch file (``ros_ws/src/crazyswarm/launch/hover_swarm.launch``). It contains settings on which motion capture system to use and the marker arrangement on the CFs.
+The second configuration file defines the possible types::
+
+    # ros_ws/src/crazyswarm/launch/crazyflieTypes.yaml
+    crazyflieTypes:
+      default:
+        bigQuad: False
+        batteryVoltageWarning: 3.8  # V
+        batteryVoltateCritical: 3.7 # V
+        markerConfiguration: 0
+        dynamicsConfiguration: 0
+        firmwareParams:
+          ...
+      medium:
+        bigQuad: True
+        batteryVoltageWarning: 7.6  # V
+        batteryVoltateCritical: 7.4 # V
+        markerConfiguration: 1
+        dynamicsConfiguration: 0
+        firmwareParams:
+          ...
+    numMarkerConfigurations: 2
+    markerConfigurations:
+      "0":  # for standard Crazyflie
+        numPoints: 4
+        offset: [0.0, -0.01, -0.04]
+        points:
+          "0": [0.0177184,0.0139654,0.0557585]
+          "1": [-0.0262914,0.0509139,0.0402475]
+          "2": [-0.0328889,-0.02757,0.0390601]
+          "3": [0.0431307,-0.0331216,0.0388839]
+      "1": # medium frame
+        numPoints: 4
+        offset: [0.0, 0.0, -0.03]
+        points:
+          "0": [-0.00896228,-0.000716753,0.0716129]
+          "1": [-0.0156318,0.0997402,0.0508162]
+          "2": [0.0461693,-0.0881012,0.0380672]
+          "3": [-0.0789959,-0.0269793,0.0461144]
+    numDynamicsConfigurations: 1
+    dynamicsConfigurations:
+      "0":
+        maxXVelocity: 2.0
+        maxYVelocity: 2.0
+        maxZVelocity: 3.0
+        maxPitchRate: 20.0
+        maxRollRate: 20.0
+        maxYawRate: 10.0
+        maxRoll: 1.4
+        maxPitch: 1.4
+        maxFitnessScore: 0.001
+
+
+The third configuration file is the ROS launch file (``ros_ws/src/crazyswarm/launch/hover_swarm.launch``). It contains settings on which motion capture system to use and the marker arrangement on the CFs.
 
 Select Motion Capture System
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,29 +151,14 @@ Use the following settings for correct operation:
 Configure Marker Arrangement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration [#]_. An example marker configuration using four markers is shown below:
+If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration. An example marker configuration using four markers is shown below:
 
 .. image:: markerConfigurationExample.jpg
 
-.. [#] Theoretically, it would be possible to support ``k`` marker arrangements, where ``1 < k < n``. This would be a good project for someone who wishes to learn the Crazyswarm server-side architecture (and submit a pull request 😁).
-
 #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
-#. Find the coordinates of the used markers
-#. Update the config file, see the example below::
+#. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``.
+#. Update ``crazyflieTypes.yaml``, see the example above.
 
-    # ros_ws/src/crazyswarm/launch/hover_swarm.launch
-    numMarkerConfigurations: 1
-    markerConfigurations:
-      "0":
-        numPoints: 4
-        offset: [0.0, -0.01, -0.04] # use this offset if the CF was not placed at the origin
-        points:
-          "0": [0.0177184,0.0139654,0.0557585]  # coordinates of 1st marker
-          "1": [-0.0262914,0.0509139,0.0402475] # coordinates of 2nd marker
-          "2": [-0.0328889,-0.02757,0.0390601]  # coordinates of 3rd marker
-          "3": [0.0431307,-0.0331216,0.0388839] # coordinates of 4th marker
-
-.. I'm pretty sure we also assume a right-handed coordinate system... verify!!
 
 Monitor Swarm
 -------------

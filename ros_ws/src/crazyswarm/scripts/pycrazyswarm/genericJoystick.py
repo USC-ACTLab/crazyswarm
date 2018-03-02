@@ -1,4 +1,5 @@
 import time
+import copy
 # import pyglet
 from . import linuxjsdev
 from . import keyboard
@@ -68,4 +69,26 @@ class Joystick:
                     self.timeHelper.sleep(0.01)
                 while keyPoller.poll() is not None:
                     self.timeHelper.sleep(0.01)
+        self.timeHelper.nextPhase()
+
+
+    def checkIfAnyButtonIsPressed(self):
+        if self.hasJoystick:
+            state = self.js.read(0)
+            if state[1][5] == 1 or state[1][4] == 1 or state[1][3] == 1:
+                return state[1]
+            else:
+                return None
+        else:
+            return None
+
+    def waitUntilAnyButtonPressed(self):
+        if self.hasJoystick:
+            buttons = self.checkIfAnyButtonIsPressed()
+            while buttons is None:
+                self.timeHelper.sleep(0.01)
+                buttons = copy.copy(self.checkIfAnyButtonIsPressed())
+            while self.checkIfAnyButtonIsPressed() is not None:
+                self.timeHelper.sleep(0.01)
+            return buttons
         self.timeHelper.nextPhase()

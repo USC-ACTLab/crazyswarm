@@ -21,7 +21,7 @@ if __name__ == "__main__":
         print("press button to continue...")
         swarm.input.waitUntilButtonPressed()
 
-        allcfs.startCannedTrajectory(0, 0.8)
+        allcfs.startCannedTrajectory(0, 0.6)
         # timeHelper.sleep(8.0) # TODO...
 
         print("press button to continue...")

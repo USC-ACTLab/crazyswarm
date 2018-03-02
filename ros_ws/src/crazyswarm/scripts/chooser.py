@@ -20,16 +20,18 @@ def read_by_id(path):
 	return by_id
 
 def save():
-	nodes = [node for id, node in all49.items() if widgets[id].checked.get()]
+	nodes = [node for id, node in allCrazyflies.items() if widgets[id].checked.get()]
 	with open("../launch/crazyflies.yaml", 'w') as outfile:
 		yaml.dump({"crazyflies": nodes}, outfile)
 
-all49 = read_by_id("../launch/all49.yaml")
-#assert(len(all49) == 49)
+allCrazyflies = read_by_id("../launch/allCrazyflies.yaml")
 enabled = read_by_id("../launch/crazyflies.yaml").keys()
+with open("../launch/crazyflieTypes.yaml", 'r') as ymlfile:
+	data = yaml.load(ymlfile)
+	cfTypes = data["crazyflieTypes"]
 
 # compute absolute pixel coordinates from the initial positions
-positions = [node["initialPosition"] for node in all49.values()]
+positions = [node["initialPosition"] for node in allCrazyflies.values()]
 DOWN_DIR = [-1, 0]
 RIGHT_DIR = [0, -1]
 def dot(a, b):
@@ -64,7 +66,7 @@ class CFWidget(Tkinter.Frame):
 
 # construct all the checkboxes
 widgets = {}
-for (id, node), x, y in zip(all49.items(), pixel_x, pixel_y):
+for (id, node), x, y in zip(allCrazyflies.items(), pixel_x, pixel_y):
 	w = CFWidget(frame, str(id))
 	w.place(x = x - xmin, y = y - ymin)
 	w.checked.set(id in enabled)
@@ -156,8 +158,11 @@ def checkBattery():
 			addr = int(match.group(1))
 			voltage = match.group(2)[:4] # truncate digits
 			color = '#000000'
-			if float(voltage) < 3.8: color = '#FF8800'
-			if float(voltage) < 3.7: color = '#FF0000'
+			cfType = allCrazyflies[int(addr)]["type"]
+			if float(voltage) < cfTypes[cfType]["batteryVoltageWarning"]:
+				color = '#FF8800'
+			if float(voltage) < cfTypes[cfType]["batteryVoltateCritical"]:
+				color = '#FF0000'
 			widgets[addr].batteryLabel.config(foreground=color, text=voltage + ' v')
 
 def checkVersion():

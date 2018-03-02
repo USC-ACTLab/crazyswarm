@@ -8,4 +8,5 @@ ros_ws/devel/
 cfs.yaml
 firm
 client
-launch
+launch # ignore launch symlink
+!*ros_ws/*launch* # don't ignore folders with launch in the name

@@ -6,7 +6,7 @@ swig:
 	swig -python -I$(modinc) cffirmware.i
 	gcc -std=c99 -shared -fPIC \
 		-I$(modinc) -I/usr/include/python2.7 \
-		$(modsrc)/planner.c $(modsrc)/pptraj.c $(modsrc)/avoidtarget.c $(modsrc)/fig8traj.c \
+		$(modsrc)/planner.c $(modsrc)/pptraj.c $(modsrc)/fig8traj.c \
 		cffirmware_wrap.c \
 		-lm -lpython2.7 \
 		-o _cffirmware.so

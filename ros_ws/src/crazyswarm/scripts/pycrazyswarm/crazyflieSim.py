@@ -67,9 +67,8 @@ class Crazyflie:
         self.initialPosition = np.array(initialPosition)
         self.time = lambda: timeHelper.time()
 
-        MASS = 0.032
         self.planner = firm.planner()
-        firm.plan_init(self.planner, MASS)
+        firm.plan_init(self.planner)
         self.planner.home = arr2vec(initialPosition)
         self.planner.lastKnownPosition = arr2vec(initialPosition)
         self.group = 0
@@ -129,11 +128,6 @@ class Crazyflie:
     def startEllipse(self, group = 0):
         if self._isGroup(group):
             firm.plan_start_ellipse(self.planner, self.time())
-
-    # interactive trajectories
-    def avoidTarget(self, home, maxDisplacement, maxSpeed):
-        firm.plan_start_avoid_target(self.planner,
-            arr2vec(home), maxDisplacement, maxSpeed, self.time())
 
     def updateTarget(self, target):
         firm.plan_update_avoid_target(self.planner, arr2vec(target), self.time())

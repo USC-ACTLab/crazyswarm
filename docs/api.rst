@@ -53,7 +53,6 @@ Individual Crazyflie
 - ``cf.land(self, targetHeight, duration)``
 - ``cf.hover(self, goal, yaw, duration)``
     Move to the specified goal (position) and yaw angle in the specified time.
-- ``cf.avoidTarget(self, home, maxDisplacement, maxSpeed)``
 - ``cf.setGroup(self, group)``
     Assign this Crazyflies to be part of the given group (all CFs are part of group 0)
 - ``cf.position(self)``

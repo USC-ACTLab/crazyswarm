@@ -147,6 +147,8 @@ Use the following settings for correct operation:
   * Advanced network settings. Up axis: Z
   * When specifying the marker locations in the config file you need to use the coordinates in Rviz and not Motive.
 
+Instruction on how to use the rigid body option with Optitrack are available `here <https://github.com/USC-ACTLab/libmotioncapture/pull/3>`_.
+
 
 Configure Marker Arrangement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

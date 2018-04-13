@@ -1,50 +1,35 @@
 <?xml version="1.0"?>
 <package>
   <name>crazyswarm</name>
-  <version>0.0.0</version>
-  <description>The crazyswarm package</description>
+  <version>0.0.3</version>
+  <description>Crazyswarm: A swarm of Crazyflie-based quadrotors</description>
 
-  <!-- One maintainer tag required, multiple allowed, one person per tag --> 
-  <!-- Example:  -->
-  <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="whoenig@todo.todo">whoenig</maintainer>
+  <maintainer email="whoenig@usc.edu">Wolfgang Hoenig</maintainer>
 
+  <license>MIT</license>
 
-  <!-- One license tag required, multiple allowed, one license per tag -->
-  <!-- Commonly used license strings: -->
-  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <url type="website">http://crazyswarm.readthedocs.io</url>
+  <url type="bugtracker">https://github.com/USC-ACTLab/crazyswarm/issues</url>
 
+  <author email="whoenig@usc.edu">Wolfgang Hoenig</author>
 
-  <!-- Url tags are optional, but mutiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/crazyswarm</url> -->
-
-
-  <!-- Author tags are optional, mutiple are allowed, one per tag -->
-  <!-- Authors do not have to be maintianers, but could be -->
-  <!-- Example: -->
-  <!-- <author email="jane.doe@example.com">Jane Doe</author> -->
-
-
-  <!-- The *_depend tags are used to specify dependencies -->
-  <!-- Dependencies can be catkin packages or system dependencies -->
-  <!-- Examples: -->
-  <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
-  <!-- Use buildtool_depend for build tool packages: -->
-  <!--   <buildtool_depend>catkin</buildtool_depend> -->
-  <!-- Use run_depend for packages you need at runtime: -->
-  <!--   <run_depend>message_runtime</run_depend> -->
-  <!-- Use test_depend for packages you need only for testing: -->
-  <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
 
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>crazyflie_cpp</build_depend>
+  <build_depend>crazyflie_driver</build_depend>
+  <build_depend>libobjecttracker</build_depend>
+  <build_depend>libmotioncapture</build_depend>
+  <build_depend>tf_conversion</build_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>crazyflie_cpp</run_depend>
+  <run_depend>crazyflie_driver</run_depend>
+  <run_depend>libobjecttracker</run_depend>
+  <run_depend>libmotioncapture</run_depend>
 
-  </export>
 </package>

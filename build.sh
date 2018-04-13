@@ -9,7 +9,7 @@ git submodule init
 git submodule update
 cd $ROOT
 
-cd ros_ws/src/crazyflie_ros/externalDependencies/libmotioncapture/
+cd ros_ws/src/externalDependencies/libmotioncapture/
 git submodule init
 git submodule update
 cd $ROOT

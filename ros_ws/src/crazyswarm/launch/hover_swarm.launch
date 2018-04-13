@@ -5,7 +5,7 @@
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflieTypes.yaml" />
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflies.yaml" />
 
-  <node pkg="crazyflie_driver" type="crazyflie_server" name="crazyflie_server" output="screen" >
+  <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
       broadcast_address: "FFE7E7E7E7"
       world_frame: "/world"
@@ -56,7 +56,7 @@
     <param name="dev" value="$(arg joy_dev)" />
   </node>
 
-  <node pkg="crazyflie_manager" type="crazyflie_manager" name="crazyflie_manager" output="screen">
+  <node pkg="crazyswarm" type="crazyswarm_teleop" name="crazyswarm_teleop" output="screen">
     <param name="csv_file" value="$(find crazyswarm)/launch/figure8_smooth.csv" />
     <param name="timescale" value="0.8" />
   </node>

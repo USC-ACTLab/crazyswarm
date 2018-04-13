@@ -4,11 +4,23 @@ project(crazyswarm)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  std_msgs
+  tf
+  crazyflie_cpp
+  crazyflie_driver
+  libobjecttracker
+  libmotioncapture
+  tf_conversions
+)
+
+# Enable C++11
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(PCL REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -97,8 +109,14 @@ find_package(catkin REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES crazyswarm
-#  CATKIN_DEPENDS other_catkin_pkg
+#  LIBRARIES crazyflie
+  CATKIN_DEPENDS
+    message_runtime
+    std_msgs
+    tf
+    crazyflie_cpp
+    crazyflie_driver
+    # libobjecttracker
 #  DEPENDS system_lib
 )
 
@@ -106,31 +124,53 @@ catkin_package(
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  ../externalDependencies/libobjecttracker/include
+  ## TODO remove this dependency
+  ../../../crazyflie-firmware/src/modules/interface/
+)
 
-## Declare a C++ library
-# add_library(crazyswarm
-#   src/${PROJECT_NAME}/crazyswarm.cpp
-# )
+link_directories(
+  ${LIBMOTIONCAPTURE_LINK_DIR}
+)
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(crazyswarm ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+if (ENABLE_VICON)
+  add_definitions(-DENABLE_VICON)
+endif()
+if (ENABLE_OPTITRACK)
+  add_definitions(-DENABLE_OPTITRACK)
+endif()
+if (ENABLE_PHASESPACE)
+  add_definitions(-DENABLE_PHASESPACE)
+endif()
 
-## Declare a C++ executable
-# add_executable(crazyswarm_node src/crazyswarm_node.cpp)
+# message(${CMAKE_BINARY_DIR}/crazyflie_ros/externalDependencies/libobjecttracker)
 
-## Add cmake target dependencies of the executable
-## same as for the library above
-# add_dependencies(crazyswarm_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+## Declare a cpp executable
+add_executable(crazyswarm_server
+  src/crazyswarm_server.cpp
+)
+target_link_libraries(crazyswarm_server
+  ${catkin_LIBRARIES}
+)
 
-## Specify libraries to link a library or executable target against
-# target_link_libraries(crazyswarm_node
-#   ${catkin_LIBRARIES}
-# )
+## Declare a cpp executable
+add_executable(crazyswarm_teleop
+  src/crazyswarm_teleop.cpp
+)
+target_link_libraries(crazyswarm_teleop
+  ${catkin_LIBRARIES}
+)
+## Declare a cpp executable
+add_executable(mocap_helper
+  src/mocap_helper.cpp
+)
+
+target_link_libraries(mocap_helper
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

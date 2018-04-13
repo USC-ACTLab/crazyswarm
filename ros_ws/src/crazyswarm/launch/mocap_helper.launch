@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
 
-  <node pkg="crazyflie_driver" type="mocap_helper" name="mocap_helper" output="screen" >
+  <node pkg="crazyswarm" type="mocap_helper" name="mocap_helper" output="screen" >
     <rosparam>
       # tracking
       motion_capture_type: "vicon" # one of vicon,optitrack

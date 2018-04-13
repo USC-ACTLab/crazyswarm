@@ -20,3 +20,9 @@
 [submodule "crazyflie2-nrf-firmware"]
 	path = crazyflie2-nrf-firmware
 	url = https://github.com/bitcraze/crazyflie2-nrf-firmware.git
+[submodule "ros_ws/src/externalDependencies/libobjecttracker"]
+	path = ros_ws/src/externalDependencies/libobjecttracker
+	url = https://github.com/USC-ACTLab/libobjecttracker
+[submodule "ros_ws/src/externalDependencies/libmotioncapture"]
+	path = ros_ws/src/externalDependencies/libmotioncapture
+	url = https://github.com/USC-ACTLab/libmotioncapture.git

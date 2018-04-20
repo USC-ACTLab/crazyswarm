@@ -1,7 +1,3 @@
-[submodule "ros_ws/src/crazyflie_ros"]
-	path = ros_ws/src/crazyflie_ros
-	url = https://github.com/USC-ACTLab/crazyflie_ros.git
-	branch = crazyswarm_master
 [submodule "crazyflie-firmware"]
 	path = crazyflie-firmware
 	url = https://github.com/USC-ACTLab/crazyflie-firmware.git

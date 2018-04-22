@@ -206,7 +206,7 @@ The flight can be controlled by a python script. A few examples are in ``ros_ws/
 
 #. Test the script in simulation first::
 
-    python figure8_canned.py --sim
+    python figure8_csv.py --sim
 
 (If you are asked to press a button, use the right shoulder on your joystick or press enter on the keyboard.)
 
@@ -217,4 +217,4 @@ The flight can be controlled by a python script. A few examples are in ``ros_ws/
 
 #. Once the connection is successful, execute the script without ``--sim``::
 
-    python figure8_canned.py
+    python figure8_csv.py

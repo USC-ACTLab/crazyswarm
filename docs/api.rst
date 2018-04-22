@@ -19,18 +19,16 @@ Broadcasts
 
 - ``allcfs.emergency(self)``
     Cut power to motors of all CFs
-- ``allcfs.takeoff(self, targetHeight, duration, group = 0)``
+- ``allcfs.takeoff(self, targetHeight, duration, groupMask = 0)``
     Take-off of given Crazyflie group to specified hight within the specified duration.
-- ``allcfs.land(self, targetHeight, duration, group = 0)``
+- ``allcfs.land(self, targetHeight, duration, groupMask = 0)``
     Land given Crazyflie group to specified hight within the specified duration.
-- ``allcfs.startTrajectory(self, group = 0)``
-    The given Crazyflie group starts executing their uploaded trajectory.
-- ``allcfs.startTrajectoryReversed(self, group = 0)``
-    The given Crazyflie group starts executing their uploaded trajectory in reverse (i.e., from end to beginning).
-- ``allcfs.startEllipse(self, group = 0)``:
-- ``allcfs.startCannedTrajectory(self, trajectory, timescale, group = 0)``:
-- ``allcfs.goHome(self, group = 0)``:
-- ``allcfs.setParam(self, name, value, group = 0)``:
+- ``allcfs.stop(self, groupMask = 0)``
+    Stops (i.e., turns off motors) for given Crazyflie group.
+- ``goTo(self, goal, yaw, duration, groupMask = 0)``
+    Moves each Crazyflie relative to its current position/yaw by the specified goal/yaw offset and reaches that location after the specified duration.
+- ``startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0)``
+    Starts executing the specified trajectory. Trajectory can be scaled in time (larger number = slower), or executed in reverse.
 
 Access Crazyflies
 -----------------
@@ -47,18 +45,20 @@ Individual Crazyflie
    ID of the crazyflie
 - ``cf.initialPosition``
    Initial position (as defined in ``crazyflies.yaml``)
-- ``cf.uploadTrajectory(self, firmware_trajectory)``
-- ``cf.setEllipse(self, center, major, minor, period)``
-- ``cf.takeoff(self, targetHeight, duration)``
-- ``cf.land(self, targetHeight, duration)``
-- ``cf.hover(self, goal, yaw, duration)``
+- ``cf.setGroupMask(self, groupMask)``
+    Assign this Crazyflies to be part of the given groups (all CFs are part of group 0)
+- ``cf.takeoff(self, targetHeight, duration, groupMask = 0)``
+- ``cf.land(self, targetHeight, duration, groupMask = 0)``
+- ``cf.stop(self, groupMask = 0)``
+- ``cf.goTo(self, goal, yaw, duration, relative = False, groupMask = 0)``
     Move to the specified goal (position) and yaw angle in the specified time.
-- ``cf.setGroup(self, group)``
-    Assign this Crazyflies to be part of the given group (all CFs are part of group 0)
+- ``cf.uploadTrajectory(self, trajectoryId, pieceOffset, trajectory)``
+- ``cf.startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0)``
 - ``cf.position(self)``
     Returns the current position of the Crazyflie
 - ``cf.getParam(self, name)``
 - ``cf.setParam(self, name, value)``
+- ``cf.setParams(self, params)``
 
 Examples
 --------
@@ -82,7 +82,7 @@ niceHover.py::
     timeHelper.sleep(2.0)
     for cf in allcfs.crazyflies:
         pos = np.array(cf.initialPosition) + np.array([0, 0, 1.0])
-        cf.hover(pos, 0, 1.0)
+        cf.goTo(pos, 0, 1.0)
 
     # Wait 5 seconds
     timeHelper.sleep(5)

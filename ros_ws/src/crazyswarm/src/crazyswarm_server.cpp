@@ -8,17 +8,13 @@
 #include "crazyflie_driver/GenericLogData.h"
 #include "crazyflie_driver/UpdateParams.h"
 #include "crazyflie_driver/UploadTrajectory.h"
-#include "crazyflie_driver/StartCannedTrajectory.h"
 #undef major
 #undef minor
-#include "crazyflie_driver/SetEllipse.h"
 #include "crazyflie_driver/Takeoff.h"
 #include "crazyflie_driver/Land.h"
-#include "crazyflie_driver/Hover.h"
+#include "crazyflie_driver/GoTo.h"
 #include "crazyflie_driver/StartTrajectory.h"
-#include "crazyflie_driver/StartEllipse.h"
-#include "crazyflie_driver/GoHome.h"
-#include "crazyflie_driver/SetGroup.h"
+#include "crazyflie_driver/SetGroupMask.h"
 #include "std_srvs/Empty.h"
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/Imu.h"
@@ -180,22 +176,21 @@ public:
     , m_type(type)
     , m_serviceUpdateParams()
     , m_serviceUploadTrajectory()
-    , m_serviceSetEllipse()
     , m_serviceTakeoff()
     , m_serviceLand()
-    , m_serviceHover()
-    , m_serviceSetGroup()
+    , m_serviceGoTo()
+    , m_serviceSetGroupMask()
     , m_logBlocks(log_blocks)
     , m_forceNoCache(force_no_cache)
+    , m_initializedPosition(false)
   {
     ros::NodeHandle n;
     n.setCallbackQueue(&queue);
     m_serviceUploadTrajectory = n.advertiseService(tf_prefix + "/upload_trajectory", &CrazyflieROS::uploadTrajectory, this);
-    m_serviceSetEllipse = n.advertiseService(tf_prefix + "/set_ellipse", &CrazyflieROS::setEllipse, this);
     m_serviceTakeoff = n.advertiseService(tf_prefix + "/takeoff", &CrazyflieROS::takeoff, this);
     m_serviceLand = n.advertiseService(tf_prefix + "/land", &CrazyflieROS::land, this);
-    m_serviceHover = n.advertiseService(tf_prefix + "/hover", &CrazyflieROS::hover, this);
-    m_serviceSetGroup = n.advertiseService(tf_prefix + "/set_group", &CrazyflieROS::setGroup, this);
+    m_serviceGoTo = n.advertiseService(tf_prefix + "/go_to", &CrazyflieROS::goTo, this);
+    m_serviceSetGroupMask = n.advertiseService(tf_prefix + "/set_group_mask", &CrazyflieROS::setGroupMask, this);
 
     if (m_enableLogging) {
       m_logFile.open("logcf" + std::to_string(id) + ".csv");
@@ -342,37 +337,27 @@ public:
   {
     ROS_INFO("[%s] Upload trajectory", m_frame.c_str());
 
-    m_cf.trajectoryReset();
-
-    for (auto& p : req.polygons) {
-      m_cf.trajectoryAdd(
-        p.duration.toSec(),
-        p.poly_x,
-        p.poly_y,
-        p.poly_z,
-        p.poly_yaw);
+    std::vector<Crazyflie::poly4d> pieces(req.pieces.size());
+    for (size_t i = 0; i < pieces.size(); ++i) {
+      if (   req.pieces[i].poly_x.size() != 8
+          || req.pieces[i].poly_y.size() != 8
+          || req.pieces[i].poly_z.size() != 8
+          || req.pieces[i].poly_yaw.size() != 8) {
+        ROS_FATAL("Wrong number of pieces!");
+        return false;
+      }
+      pieces[i].duration = req.pieces[i].duration.toSec();
+      for (size_t j = 0; j < 8; ++j) {
+        pieces[i].p[0][j] = req.pieces[i].poly_x[j];
+        pieces[i].p[1][j] = req.pieces[i].poly_y[j];
+        pieces[i].p[2][j] = req.pieces[i].poly_z[j];
+        pieces[i].p[3][j] = req.pieces[i].poly_yaw[j];
+      }
     }
+    m_cf.uploadTrajectory(req.trajectoryId, req.pieceOffset, pieces);
 
     ROS_INFO("[%s] Uploaded trajectory", m_frame.c_str());
 
-
-    return true;
-  }
-
-  bool setEllipse(
-    crazyflie_driver::SetEllipse::Request& req,
-    crazyflie_driver::SetEllipse::Response& res)
-  {
-    ROS_INFO("[%s] Set ellipse", m_frame.c_str());
-
-    m_cf.setEllipse(
-      {(float)req.center.x, (float)req.center.y, (float)req.center.z},
-      {(float)req.major.x, (float)req.major.y, (float)req.major.z},
-      {(float)req.minor.x, (float)req.minor.y, (float)req.minor.z},
-      req.period.toSec()
-    );
-
-    ROS_INFO("[%s] Set ellipse completed", m_frame.c_str());
 
     return true;
   }
@@ -383,7 +368,7 @@ public:
   {
     ROS_INFO("[%s] Takeoff", m_frame.c_str());
 
-    m_cf.takeoff(req.group, req.height, req.time_from_start.toSec() * 1000);
+    m_cf.takeoff(req.height, req.duration.toSec(), req.groupMask);
 
     return true;
   }
@@ -394,29 +379,29 @@ public:
   {
     ROS_INFO("[%s] Land", m_frame.c_str());
 
-    m_cf.land(req.group, req.height, req.time_from_start.toSec() * 1000);
+    m_cf.land(req.height, req.duration.toSec(), req.groupMask);
 
     return true;
   }
 
-  bool hover(
-    crazyflie_driver::Hover::Request& req,
-    crazyflie_driver::Hover::Response& res)
+  bool goTo(
+    crazyflie_driver::GoTo::Request& req,
+    crazyflie_driver::GoTo::Response& res)
   {
-    ROS_INFO("[%s] Hover", m_frame.c_str());
+    ROS_INFO("[%s] GoTo", m_frame.c_str());
 
-    m_cf.trajectoryHover(req.goal.x, req.goal.y, req.goal.z, req.yaw, req.duration.toSec());
+    m_cf.goTo(req.goal.x, req.goal.y, req.goal.z, req.yaw, req.duration.toSec(), req.relative, req.groupMask);
 
     return true;
   }
 
-  bool setGroup(
-    crazyflie_driver::SetGroup::Request& req,
-    crazyflie_driver::SetGroup::Response& res)
+  bool setGroupMask(
+    crazyflie_driver::SetGroupMask::Request& req,
+    crazyflie_driver::SetGroupMask::Response& res)
   {
-    ROS_INFO("[%s] Set Group", m_frame.c_str());
+    ROS_INFO("[%s] Set Group Mask", m_frame.c_str());
 
-    m_cf.setGroup(req.group);
+    m_cf.setGroupMask(req.groupMask);
 
     return true;
   }
@@ -508,17 +493,13 @@ public:
       ROS_INFO("[%s] logBlocks: %f s", m_frame.c_str(), elapsedSeconds1.count());
     }
 
+    ROS_INFO("Requesting memories...");
+    m_cf.requestMemoryToc();
+
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsedSeconds = end-start;
     ROS_INFO("[%s] Ready. Elapsed: %f s", m_frame.c_str(), elapsedSeconds.count());
   }
-
-  void sendPositionExternalBringup(
-    const stateExternalBringup& data)
-  {
-    m_cf.sendPositionExternalBringup(data);
-  }
-
 
   void onLinkQuality(float linkQuality) {
       if (linkQuality < 0.7) {
@@ -550,6 +531,27 @@ public:
     return m_cf.getParamTocEntry(group, name);
   }
 
+  void initializePositionIfNeeded(float x, float y, float z)
+  {
+    if (m_initializedPosition) {
+      return;
+    }
+
+    m_cf.startSetParamRequest();
+    auto entry = m_cf.getParamTocEntry("kalman", "initialX");
+    m_cf.addSetParam(entry->id, x);
+    entry = m_cf.getParamTocEntry("kalman", "initialY");
+    m_cf.addSetParam(entry->id, y);
+    entry = m_cf.getParamTocEntry("kalman", "initialZ");
+    m_cf.addSetParam(entry->id, z);
+    m_cf.setRequestedParams();
+
+    entry = m_cf.getParamTocEntry("kalman", "resetEstimation");
+    m_cf.setParam<uint8_t>(entry->id, 1);
+
+    m_initializedPosition = true;
+  }
+
 private:
   Crazyflie m_cf;
   std::string m_tf_prefix;
@@ -562,11 +564,10 @@ private:
 
   ros::ServiceServer m_serviceUpdateParams;
   ros::ServiceServer m_serviceUploadTrajectory;
-  ros::ServiceServer m_serviceSetEllipse;
   ros::ServiceServer m_serviceTakeoff;
   ros::ServiceServer m_serviceLand;
-  ros::ServiceServer m_serviceHover;
-  ros::ServiceServer m_serviceSetGroup;
+  ros::ServiceServer m_serviceGoTo;
+  ros::ServiceServer m_serviceSetGroupMask;
 
   std::vector<crazyflie_driver::LogBlock> m_logBlocks;
   std::vector<ros::Publisher> m_pubLogDataGeneric;
@@ -576,6 +577,7 @@ private:
 
   std::ofstream m_logFile;
   bool m_forceNoCache;
+  bool m_initializedPosition;
 };
 
 
@@ -645,7 +647,7 @@ public:
     return m_radio;
   }
 
-  void runInteractiveObject(std::vector<stateExternalBringup> &states)
+  void runInteractiveObject(std::vector<CrazyflieBroadcaster::externalPose> &states)
   {
     publishRigidBody(m_interactiveObject, 0xFF, states);
   }
@@ -654,7 +656,7 @@ public:
   {
     auto stamp = std::chrono::high_resolution_clock::now();
 
-    std::vector<stateExternalBringup> states;
+    std::vector<CrazyflieBroadcaster::externalPose> states;
 
     if (!m_interactiveObject.empty()) {
       runInteractiveObject(states);
@@ -688,10 +690,12 @@ public:
           states.back().x = translation.x();
           states.back().y = translation.y();
           states.back().z = translation.z();
-          states.back().q0 = q.x();
-          states.back().q1 = q.y();
-          states.back().q2 = q.z();
-          states.back().q3 = q.w();
+          states.back().qx = q.x();
+          states.back().qy = q.y();
+          states.back().qz = q.z();
+          states.back().qw = q.w();
+
+          m_cfs[i]->initializePositionIfNeeded(states.back().x, states.back().y, states.back().z);
 
           tf::Transform tftransform;
           tftransform.setOrigin(tf::Vector3(translation.x(), translation.y(), translation.z()));
@@ -720,7 +724,7 @@ public:
 
     {
       auto start = std::chrono::high_resolution_clock::now();
-      m_cfbc.sendPositionExternalBringup(states);
+      m_cfbc.sendExternalPoses(states);
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> elapsedSeconds = end-start;
       m_latency.broadcasting = elapsedSeconds.count();
@@ -758,62 +762,32 @@ public:
     m_isEmergency = true;
   }
 
-  void takeoff(
-    uint8_t group,
-    double targetHeight,
-    uint16_t time_in_ms)
+  void takeoff(float height, float duration, uint8_t groupMask)
   {
     // for (size_t i = 0; i < 10; ++i) {
-    m_cfbc.takeoff(group, targetHeight, time_in_ms);
+    m_cfbc.takeoff(height, duration, groupMask);
       // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     // }
   }
 
-  void land(
-    uint8_t group,
-    double targetHeight,
-    uint16_t time_in_ms)
+  void land(float height, float duration, uint8_t groupMask)
   {
     // for (size_t i = 0; i < 10; ++i) {
-      m_cfbc.land(group, targetHeight, time_in_ms);
+      m_cfbc.land(height, duration, groupMask);
       // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     // }
   }
 
   void startTrajectory(
-    uint8_t group,
-    bool reversed)
+    uint8_t trajectoryId,
+    float timescale,
+    bool reversed,
+    uint8_t groupMask)
   {
     // for (size_t i = 0; i < 10; ++i) {
-      m_cfbc.trajectoryStart(group, reversed);
+      m_cfbc.startTrajectory(trajectoryId, timescale, reversed, groupMask);
       // std::this_thread::sleep_for(std::chrono::milliseconds(1));
     // }
-  }
-
-  void startEllipse(
-    uint8_t group)
-  {
-    // for (size_t i = 0; i < 10; ++i) {
-      m_cfbc.ellipse(group);
-      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    // }
-  }
-
-  void goHome(
-    uint8_t group)
-  {
-    // for (size_t i = 0; i < 10; ++i) {
-      m_cfbc.goHome(group);
-      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    // }
-  }
-
-  void startCannedTrajectory(
-    uint8_t group,
-    uint16_t trajectory,
-    float timescale)
-  {
-      m_cfbc.startCannedTrajectory(group, trajectory, timescale);
   }
 
   void nextPhase()
@@ -827,7 +801,7 @@ public:
       m_phase += 1;
       m_phaseStart = std::chrono::system_clock::now();
   }
-
+#if 0
   template<class T, class U>
   void updateParam(uint8_t group, uint8_t id, Crazyflie::ParamType type, const std::string& ros_param) {
       U value;
@@ -879,10 +853,11 @@ public:
       }
     }
   }
+#endif
 
 private:
 
-  void publishRigidBody(const std::string& name, uint8_t id, std::vector<stateExternalBringup> &states)
+  void publishRigidBody(const std::string& name, uint8_t id, std::vector<CrazyflieBroadcaster::externalPose> &states)
   {
     bool found = false;
     for (const auto& rigidBody : *m_pMocapObjects) {
@@ -894,10 +869,10 @@ private:
         states.back().x = rigidBody.position().x();
         states.back().y = rigidBody.position().y();
         states.back().z = rigidBody.position().z();
-        states.back().q0 = rigidBody.rotation().x();
-        states.back().q1 = rigidBody.rotation().y();
-        states.back().q2 = rigidBody.rotation().z();
-        states.back().q3 = rigidBody.rotation().w();
+        states.back().qx = rigidBody.rotation().x();
+        states.back().qy = rigidBody.rotation().y();
+        states.back().qz = rigidBody.rotation().z();
+        states.back().qw = rigidBody.rotation().w();
 
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(
@@ -905,10 +880,10 @@ private:
           states.back().y,
           states.back().z));
         tf::Quaternion q(
-          states.back().q0,
-          states.back().q1,
-          states.back().q2,
-          states.back().q3);
+          states.back().qx,
+          states.back().qy,
+          states.back().qz,
+          states.back().qw);
         transform.setRotation(q);
         m_br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", name));
         found = true;
@@ -1132,12 +1107,8 @@ public:
     : m_isEmergency(false)
     , m_serviceEmergency()
     , m_serviceStartTrajectory()
-    , m_serviceStartTrajectoryReversed()
     , m_serviceTakeoff()
     , m_serviceLand()
-    , m_serviceStartEllipse()
-    , m_serviceGoHome()
-    , m_serviceStartCannedTrajectory()
     , m_serviceNextPhase()
     , m_lastInteractiveObjectPosition(-10, -10, 1)
     , m_broadcastingNumRepeats(15)
@@ -1148,15 +1119,11 @@ public:
 
     m_serviceEmergency = nh.advertiseService("emergency", &CrazyflieServer::emergency, this);
     m_serviceStartTrajectory = nh.advertiseService("start_trajectory", &CrazyflieServer::startTrajectory, this);
-    m_serviceStartTrajectoryReversed = nh.advertiseService("start_trajectory_reversed", &CrazyflieServer::startTrajectoryReversed, this);
     m_serviceTakeoff = nh.advertiseService("takeoff", &CrazyflieServer::takeoff, this);
     m_serviceLand = nh.advertiseService("land", &CrazyflieServer::land, this);
-    m_serviceStartEllipse = nh.advertiseService("start_ellipse", &CrazyflieServer::startEllipse, this);
-    m_serviceGoHome = nh.advertiseService("go_home", &CrazyflieServer::goHome, this);
-    m_serviceStartCannedTrajectory = nh.advertiseService("start_canned_trajectory", &CrazyflieServer::startCannedTrajectory, this);
 
     m_serviceNextPhase = nh.advertiseService("next_phase", &CrazyflieServer::nextPhase, this);
-    m_serviceUpdateParams = nh.advertiseService("update_params", &CrazyflieServer::updateParams, this);
+    // m_serviceUpdateParams = nh.advertiseService("update_params", &CrazyflieServer::updateParams, this);
 
     m_pubPointCloud = nh.advertise<sensor_msgs::PointCloud>("pointCloud", 1);
 
@@ -1188,7 +1155,7 @@ public:
   void runFast()
   {
 
-    // std::vector<stateExternalBringup> states(1);
+    // std::vector<CrazyflieBroadcaster::externalPose> states(1);
     // states.back().id = 07;
     // states.back().q0 = 0;
     // states.back().q1 = 0;
@@ -1561,7 +1528,7 @@ private:
 
     for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
       for (auto& group : m_groups) {
-        group->takeoff(req.group, req.height, req.time_from_start.toSec() * 1000);
+        group->takeoff(req.height, req.duration.toSec(), req.groupMask);
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
     }
@@ -1577,7 +1544,7 @@ private:
 
     for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
       for (auto& group : m_groups) {
-        group->land(req.group, req.height, req.time_from_start.toSec() * 1000);
+        group->land(req.height, req.duration.toSec(), req.groupMask);
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
     }
@@ -1593,73 +1560,9 @@ private:
 
     for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
       for (auto& group : m_groups) {
-        group->startTrajectory(req.group, false); // false -> not reversed
+        group->startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.groupMask);
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(3));
-    }
-
-    return true;
-  }
-
-  bool startTrajectoryReversed(
-    crazyflie_driver::StartTrajectory::Request& req,
-    crazyflie_driver::StartTrajectory::Response& res)
-  {
-    ROS_INFO("Start trajectory!");
-
-    for (size_t i = 0; i < 5; ++i) {
-      for (auto& group : m_groups) {
-        group->startTrajectory(req.group, true); // true -> reversed
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
-    }
-
-    return true;
-  }
-
-  bool startEllipse(
-    crazyflie_driver::StartEllipse::Request& req,
-    crazyflie_driver::StartEllipse::Response& res)
-  {
-    ROS_INFO("Start Ellipse!");
-
-    for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
-      for (auto& group : m_groups) {
-        group->startEllipse(req.group);
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
-    }
-
-    return true;
-  }
-
-  bool goHome(
-    crazyflie_driver::GoHome::Request& req,
-    crazyflie_driver::GoHome::Response& res)
-  {
-    ROS_INFO("Go Home!");
-
-    for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
-      for (auto& group : m_groups) {
-        group->goHome(req.group);
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
-    }
-
-    return true;
-  }
-
-  bool startCannedTrajectory(
-    crazyflie_driver::StartCannedTrajectory::Request& req,
-    crazyflie_driver::StartCannedTrajectory::Response& res)
-  {
-    ROS_INFO("StartCannedTrajectory!");
-
-    for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
-      for (auto& group : m_groups) {
-        group->startCannedTrajectory(req.group, req.trajectory, req.timescale);
-      }
-      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
     }
 
     return true;
@@ -1676,7 +1579,7 @@ private:
 
     return true;
   }
-
+#if 0
   bool updateParams(
     crazyflie_driver::UpdateParams::Request& req,
     crazyflie_driver::UpdateParams::Response& res)
@@ -1692,7 +1595,7 @@ private:
 
     return true;
   }
-
+#endif
 //
   void readMarkerConfigurations(
     std::vector<libobjecttracker::MarkerConfiguration>& markerConfigurations)
@@ -1768,12 +1671,8 @@ private:
   bool m_isEmergency;
   ros::ServiceServer m_serviceEmergency;
   ros::ServiceServer m_serviceStartTrajectory;
-  ros::ServiceServer m_serviceStartTrajectoryReversed;
   ros::ServiceServer m_serviceTakeoff;
   ros::ServiceServer m_serviceLand;
-  ros::ServiceServer m_serviceStartEllipse;
-  ros::ServiceServer m_serviceGoHome;
-  ros::ServiceServer m_serviceStartCannedTrajectory;
   ros::ServiceServer m_serviceNextPhase;
   ros::ServiceServer m_serviceUpdateParams;
 

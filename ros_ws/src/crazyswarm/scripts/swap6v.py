@@ -42,7 +42,7 @@ if __name__ == "__main__":
     timeHelper.sleep(2.5)
 
     for cf, pos in zip(cfs, POSITIONS):
-        cf.hover(np.array(pos), 0, 3.0)
+        cf.goTo(np.array(pos), 0, 3.0)
     timeHelper.sleep(3.5)
 
     allcfs.startTrajectory()
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     for cf in cfs:
         pos = np.array(cf.initialPosition) + np.array([0, 0, 1.0])
-        cf.hover(pos, 0, 3.0)
+        cf.goTo(pos, 0, 3.0)
     timeHelper.sleep(3.5)
 
     allcfs.land(targetHeight=0.06, duration=2.0)

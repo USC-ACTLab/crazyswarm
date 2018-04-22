@@ -6,9 +6,6 @@ import numpy as np
 
 import cfsim.cffirmware as firm
 
-# "canned trajectory" "enum" from packetdef.h
-TRAJECTORY_FIGURE8 = firm.TRAJECTORY_FIGURE8
-
 # main class of simulation.
 # crazyflies keep reference to this object to ask what time it is.
 # also does the plotting.
@@ -69,74 +66,79 @@ class Crazyflie:
 
         self.planner = firm.planner()
         firm.plan_init(self.planner)
-        self.planner.home = arr2vec(initialPosition)
         self.planner.lastKnownPosition = arr2vec(initialPosition)
-        self.group = 0
+        self.groupMask = 0
+        self.trajectories = dict()
 
-    def setGroup(self, group):
-        self.group = group
+    def setGroupMask(self, groupMask):
+        self.groupMask = groupMask
 
-    def _isGroup(self, group):
-        return group == 0 or self.group == group
-
-    # online-planning trajectories
-    def takeoff(self, targetHeight, duration, group = 0):
-        if self._isGroup(group):
+    def takeoff(self, targetHeight, duration, groupMask = 0):
+        if self._isGroup(groupMask):
             firm.plan_takeoff(self.planner,
                 self._vposition(), self.yaw(), targetHeight, duration, self.time())
 
-    def land(self, targetHeight, duration, group = 0):
-        if self._isGroup(group):
+    def land(self, targetHeight, duration, groupMask = 0):
+        if self._isGroup(groupMask):
             firm.plan_land(self.planner,
                 self._vposition(), self.yaw(), targetHeight, duration, self.time())
 
-    def hover(self, goal, yaw, duration):
-        firm.plan_hover(self.planner, arr2vec(goal), yaw, duration, self.time())
+    def stop(self, groupMask = 0):
+        if self._isGroup(groupMask):
+            firm.plan_stop(self.planner)
 
-    def goHome(self, group = 0):
-        # TODO
-        pass
+    def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
+        if self._isGroup(groupMask):
+            firm.plan_go_to(self.planner, relative, arr2vec(goal), yaw, duration, self.time())
 
-    # polynomial trajectories
-    # input can be generated from piecewise.loadcsv().
-    def uploadTrajectory(self, trajectory):
-        self.user_traj = trajectory
+    def uploadTrajectory(self, trajectoryId, pieceOffset, trajectory):
+        traj = firm.piecewise_traj()
+        traj.t_begin = 0
+        traj.timescale = 1.0
+        traj.shift = firm.mkvec(0, 0, 0)
+        traj.n_pieces = len(trajectory.polynomials)
+        traj.pieces = firm.malloc_poly4d(len(trajectory.polynomials))
+        for i, poly in enumerate(trajectory.polynomials):
+            piece = firm.pp_get_piece(traj, i)
+            piece.duration = poly.duration
+            for coef in range(0, 8):
+                firm.poly4d_set(piece, 0, coef, poly.px.p[coef])
+                firm.poly4d_set(piece, 1, coef, poly.py.p[coef])
+                firm.poly4d_set(piece, 2, coef, poly.pz.p[coef])
+                firm.poly4d_set(piece, 3, coef, poly.pyaw.p[coef])
+        self.trajectories[trajectoryId] = traj
 
-    def startTrajectory(self, group = 0):
-        if self._isGroup(group):
-            firm.plan_set_ppback(self.planner, self.user_traj)
-            firm.plan_start_poly(self.planner, self._vposition(), self.time(), False)
+    def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
+        if self._isGroup(groupMask):
+            traj = self.trajectories[trajectoryId]
+            traj.t_begin = self.time()
+            traj.timescale = timescale
+            if relative:
+                pos = self._vposition()
+                traj.shift = firm.vzero()
+                if reverse:
+                    traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)
+                else:
+                    traj_init = firm.piecewise_eval(traj, traj.t_begin)
+                traj.shift = firm.vsub(pos, traj_init.pos)
+            else:
+                traj.shift = firm.vzero()
+            firm.plan_start_trajectory(self.planner, traj, reverse)
 
-    def startTrajectoryReversed(self, group = 0):
-        if self._isGroup(group):
-            firm.plan_set_ppback(self.planner, self.user_traj)
-            firm.plan_start_poly(self.planner, self._vposition(), self.time(), True)
-
-    def startCannedTrajectory(self, trajectory, timescale, group = 0):
-        if self._isGroup(group):
-            firm.plan_start_canned_trajectory(self.planner,
-                trajectory, timescale, self._vposition(), self.time())
-
-    # ellipse trajectories
-    def setEllipse(self, center, major, minor, period):
-        e = self.planner.ellipse
-        e.center = arr2vec(center)
-        e.major = arr2vec(major)
-        e.minor = arr2vec(minor)
-        e.period = period
-
-    def startEllipse(self, group = 0):
-        if self._isGroup(group):
-            firm.plan_start_ellipse(self.planner, self.time())
-
-    def updateTarget(self, target):
-        firm.plan_update_avoid_target(self.planner, arr2vec(target), self.time())
-
-    # query state
     def position(self):
         pos = self._vposition()
         return np.array([pos.x, pos.y, pos.z])
 
+    def getParam(self, name):
+        print("WARNING: getParam not implemented in simulation!")
+
+    def setParam(self, name, value):
+        print("WARNING: setParam not implemented in simulation!")
+
+    def setParams(self, params):
+        print("WARNING: setParams not implemented in simulation!")
+
+    # simulation only functions
     def yaw(self):
         ev = firm.plan_current_goal(self.planner, self.time())
         return ev.yaw
@@ -166,13 +168,18 @@ class Crazyflie:
             return (roll, pitch, yaw)
 
     # "private" methods
+    def _isGroup(self, groupMask):
+        return groupMask == 0 or (self.groupMask & groupMask) > 0
+
     def _vposition(self):
         # TODO this should be implemented in C
+        # print(self.id, self.planner, self.planner.state)
         if self.planner.state == firm.TRAJECTORY_STATE_IDLE:
             return self.planner.lastKnownPosition
         else:
             ev = firm.plan_current_goal(self.planner, self.time())
             self.planner.lastKnownPosition = firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
+            # print(self.id, ev.pos.z)
             # not totally sure why, but if we don't do this, we don't actually return by value
             return firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
 
@@ -195,33 +202,24 @@ class CrazyflieServer:
         self.timeHelper.crazyflies = self.crazyflies
 
     def emergency(self):
-        # TODO
-        pass
+        print("WARNING: setParams not implemented in simulation!")
 
-    def takeoff(self, targetHeight, duration, group = 0):
+    def takeoff(self, targetHeight, duration, groupMask = 0):
         for crazyflie in self.crazyflies:
-            crazyflie.takeoff(targetHeight, duration, group)
+            crazyflie.takeoff(targetHeight, duration, groupMask)
 
-    def land(self, targetHeight, duration, group = 0):
+    def land(self, targetHeight, duration, groupMask = 0):
         for crazyflie in self.crazyflies:
-            crazyflie.land(targetHeight, duration, group)
+            crazyflie.land(targetHeight, duration, groupMask)
 
-    def startTrajectory(self, group = 0):
+    def stop(self, groupMask = 0):
         for crazyflie in self.crazyflies:
-            crazyflie.startTrajectory(group)
+            crazyflie.stop(groupMask)
 
-    def startTrajectoryReversed(self, group = 0):
+    def goTo(self, goal, yaw, duration, groupMask = 0):
         for crazyflie in self.crazyflies:
-            crazyflie.startTrajectoryReversed(group)
+            crazyflie.goTo(goal, yaw, duration, False, groupMask)
 
-    def startEllipse(self, group = 0):
+    def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         for crazyflie in self.crazyflies:
-            crazyflie.startEllipse(group)
-
-    def startCannedTrajectory(self, trajectory, timescale, group = 0):
-        for crazyflie in self.crazyflies:
-            crazyflie.startCannedTrajectory(trajectory, timescale, group)
-
-    def goHome(self, group = 0):
-        for crazyflie in self.crazyflies:
-            crazyflie.goHome(group)
+            crazyflie.startTrajectory(trajectoryId, timescale, reverse, relative, groupMask)

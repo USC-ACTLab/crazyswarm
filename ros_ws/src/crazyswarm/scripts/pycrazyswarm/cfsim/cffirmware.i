@@ -20,16 +20,12 @@ float poly4d_get(struct poly4d *poly, int dim, int coef)
 {
     return poly->p[dim][coef];
 }
-void pp_set_piece(struct piecewise_traj *pp, int i, struct poly4d const *poly)
+struct poly4d* pp_get_piece(struct piecewise_traj *pp, int i)
 {
-    pp->pieces[i] = *poly;
+    return &pp->pieces[i];
 }
-struct poly4d pp_get_piece(struct piecewise_traj *pp, int i)
+struct poly4d* malloc_poly4d(int size)
 {
-    return pp->pieces[i];
-}
-void plan_set_ppback(struct planner *p, struct piecewise_traj const *pp)
-{
-    *p->ppBack = *pp;
+    return (struct poly4d*)malloc(sizeof(struct poly4d) * size);
 }
 %}

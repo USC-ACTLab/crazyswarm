@@ -18,10 +18,10 @@
       genericLogTopic_log1_Variables: ["ctrlStat.edist"]
       # genericLogTopic_log1_Variables: ["stateEstimate.yaw", "ctrltarget.yaw", "stateEstimate.x", "ctrltarget.x"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
       firmwareParams: # for all (independent of type)
-        flightmode:
-          posCtrl: 1
-        traj:
-          auto_yaw: 0
+        commander:
+          enHighLevel: 1
+#        traj:
+#          auto_yaw: 0
         kalmanUSC:
           rstWithExtPos: 1 # re-initialize EKF with vicon data
         ring:
@@ -63,7 +63,7 @@
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 
-  <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf2/log1/values[0]"/>
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf2/log1/values[0]"/> -->
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/> -->
 
 </launch>

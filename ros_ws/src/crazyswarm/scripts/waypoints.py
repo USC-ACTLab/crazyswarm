@@ -62,14 +62,14 @@ if __name__ == "__main__":
             pos = [waypoint.x, waypoint.y, waypoint.z]
             # print(waypoint.agent, pos, 2.0)
             cf = allcfs.crazyfliesById[waypoint.agent]
-            cf.hover(pos, 0, 2.0)
+            cf.goTo(pos, 0, 2.0)
         elif waypoint.duration > 0:
             timeHelper.sleep(waypoint.arrival - lastTime)
             lastTime = waypoint.arrival
             pos = [waypoint.x, waypoint.y, waypoint.z]
             # print(waypoint.agent, pos, waypoint.duration)
             cf = allcfs.crazyfliesById[waypoint.agent]
-            cf.hover(pos, 0, waypoint.duration)
+            cf.goTo(pos, 0, waypoint.duration)
 
     # land
     allcfs.land(targetHeight=0.02, duration=2.0)

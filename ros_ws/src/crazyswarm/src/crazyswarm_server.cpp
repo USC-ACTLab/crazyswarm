@@ -549,6 +549,12 @@ public:
     entry = m_cf.getParamTocEntry("kalman", "resetEstimation");
     m_cf.setParam<uint8_t>(entry->id, 1);
 
+    // kalmanUSC might not be part of the firmware
+    entry = m_cf.getParamTocEntry("kalmanUSC", "rstWithExtPos");
+    if (entry) {
+      m_cf.setParam<uint8_t>(entry->id, 1);
+    }
+
     m_initializedPosition = true;
   }
 
@@ -602,7 +608,8 @@ public:
     bool useMotionCaptureObjectTracking,
     const std::vector<crazyflie_driver::LogBlock>& logBlocks,
     std::string interactiveObject,
-    bool writeCSVs
+    bool writeCSVs,
+    bool sendPositionOnly
     )
     : m_cfs()
     , m_tracker(nullptr)
@@ -615,6 +622,7 @@ public:
     , m_useMotionCaptureObjectTracking(useMotionCaptureObjectTracking)
     , m_br()
     , m_interactiveObject(interactiveObject)
+    , m_sendPositionOnly(sendPositionOnly)
     , m_outputCSVs()
     , m_phase(0)
     , m_phaseStart()
@@ -724,7 +732,18 @@ public:
 
     {
       auto start = std::chrono::high_resolution_clock::now();
-      m_cfbc.sendExternalPoses(states);
+      if (!m_sendPositionOnly) {
+        m_cfbc.sendExternalPoses(states);
+      } else {
+        std::vector<CrazyflieBroadcaster::externalPosition> positions(states.size());
+        for (size_t i = 0; i < positions.size(); ++i) {
+          positions[i].id = states[i].id;
+          positions[i].x  = states[i].x;
+          positions[i].y  = states[i].y;
+          positions[i].z  = states[i].z;
+        }
+        m_cfbc.sendExternalPositions(positions);
+      }
       auto end = std::chrono::high_resolution_clock::now();
       std::chrono::duration<double> elapsedSeconds = end-start;
       m_latency.broadcasting = elapsedSeconds.count();
@@ -1094,6 +1113,7 @@ private:
   bool m_useMotionCaptureObjectTracking;
   tf::TransformBroadcaster m_br;
   latency m_latency;
+  bool m_sendPositionOnly;
   std::vector<std::unique_ptr<std::ofstream>> m_outputCSVs;
   int m_phase;
   std::chrono::high_resolution_clock::time_point m_phaseStart;
@@ -1186,6 +1206,7 @@ public:
     std::string interactiveObject;
     bool printLatency;
     bool writeCSVs;
+    bool sendPositionOnly;
     std::string motionCaptureType;
 
     ros::NodeHandle nl("~");
@@ -1201,6 +1222,16 @@ public:
 
     nl.param<int>("broadcasting_num_repeats", m_broadcastingNumRepeats, 15);
     nl.param<int>("broadcasting_delay_between_repeats_ms", m_broadcastingDelayBetweenRepeatsMs, 1);
+
+    std::string firmware;
+    nl.param<std::string>("firmware", firmware, "crazyswarm");
+    if (firmware == "crazyswarm") {
+      sendPositionOnly = false;
+    } else if (firmware == "bitcraze") {
+      sendPositionOnly = true;
+    } else {
+      ROS_ERROR("Unknown firmware parameter (%s)!", firmware.c_str());
+    }
 
     // tilde-expansion
     wordexp_t wordexp_result;
@@ -1303,7 +1334,8 @@ public:
                 useMotionCaptureObjectTracking,
                 logBlocks,
                 interactiveObject,
-                writeCSVs);
+                writeCSVs,
+                sendPositionOnly);
             },
             channel,
             r

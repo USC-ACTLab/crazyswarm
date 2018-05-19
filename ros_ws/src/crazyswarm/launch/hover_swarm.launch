@@ -7,6 +7,7 @@
 
   <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
+      firmware: "crazyswarm" # one of "crazyswarm", "bitcraze"
       broadcast_address: "FFE7E7E7E7"
       world_frame: "/world"
       genericLogTopics: ["log1"]
@@ -20,10 +21,6 @@
       firmwareParams: # for all (independent of type)
         commander:
           enHighLevel: 1
-#        traj:
-#          auto_yaw: 0
-        kalmanUSC:
-          rstWithExtPos: 1 # re-initialize EKF with vicon data
         ring:
           effect: 14 # 6: double spinner, 7: solid color, 14: packetRate
           solidBlue: 255 # if set to solid color
@@ -48,7 +45,7 @@
       write_csvs: False
       force_no_cache: False
       enable_parameters: True
-      enable_logging: True
+      enable_logging: False
     </rosparam>
   </node>
 

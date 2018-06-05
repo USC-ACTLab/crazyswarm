@@ -21,6 +21,9 @@
       firmwareParams: # for all (independent of type)
         commander:
           enHighLevel: 1
+        stabilizer:
+          estimator: 3 # 1: complementary, 2: kalman, 3: kalmanUSC (only crazyswarm firmware)
+          controller: 2 # 1: PID, 2: mellinger
         ring:
           effect: 14 # 6: double spinner, 7: solid color, 14: packetRate
           solidBlue: 255 # if set to solid color

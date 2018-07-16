@@ -145,6 +145,10 @@ endif()
 if (ENABLE_PHASESPACE)
   add_definitions(-DENABLE_PHASESPACE)
 endif()
+if (ENABLE_QUALISYS)
+  add_definitions(-DENABLE_QUALISYS)
+endif()
+
 
 # message(${CMAKE_BINARY_DIR}/crazyflie_ros/externalDependencies/libobjecttracker)
 

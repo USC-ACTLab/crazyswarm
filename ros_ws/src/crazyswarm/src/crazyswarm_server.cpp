@@ -46,6 +46,9 @@
 #ifdef ENABLE_PHASESPACE
 #include "libmotioncapture/phasespace.h"
 #endif
+#ifdef ENABLE_QUALISYS
+#include <libmotioncapture/qualisys.h>
+#endif
 
 // Object tracker
 #include <libobjecttracker/object_tracker.h>
@@ -1303,6 +1306,18 @@ public:
       std::map<size_t, std::pair<int, int> > cfs;
       cfs[231] = std::make_pair<int, int>(10, 11);
       mocap = new libmotioncapture::MotionCapturePhasespace(ip, numMarkers, cfs);
+    }
+#endif
+#ifdef ENABLE_QUALISYS
+    else if (motionCaptureType == "qualisys")
+    {
+      std::string hostname;
+      int port;
+      nl.getParam("qualisys_host_name", hostname);
+      nl.getParam("qualisys_base_port", port);
+      mocap = new libmotioncapture::MotionCaptureQualisys(hostname, port,
+        /*enableObjects*/ true,
+        /*enablePointcloud*/ true);
     }
 #endif
     else {

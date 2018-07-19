@@ -3,6 +3,11 @@ Installation
 
 We assume that you have Ubuntu 16.04. Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
 
+.. warning::
+
+    Using ubuntu in `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/about>`_ is not supported since WSL does not have USB support and so Crazyradio will not work.
+    You must install Ubuntu either directly on the computer or in a VM.
+
 Simulation Only
 ---------------
 

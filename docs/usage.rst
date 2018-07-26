@@ -127,7 +127,7 @@ Below are the relevant settings for the motion capture system::
     qualisys_host_name: "10.0.5.219" # only needed if qualisys is selected
     qualisys_base_port: 22222 # only needed if qualisys is selected
 
-You can choose the motion capture type (currently ``vicon``, ``optitrack`` or ``qualisys``). The application will connect the the motion capture system using the appropriate SDKs (DataStream SDK, NatNet and Qualisys2Ros, respectively). If you select ``libobjecttracker`` as ``object_tracking_type``, the tracking will just use the raw marker cloud from the motion capture system and track the CFs frame-by-frame. If you select ``motionCapture`` as ``object_tracking_type``, the objects as tracked by the motion capture system will be used. In this case you will need unique marker arrangements and your objects need to be named ``cf1``, ``cf2``, ``cf3``, and so on.
+You can choose the motion capture type (currently ``vicon``, ``optitrack``, ``qualisys``, or ``none``). The application will connect the the motion capture system using the appropriate SDKs (DataStream SDK, NatNet and Qualisys2Ros, respectively). If you select ``libobjecttracker`` as ``object_tracking_type``, the tracking will just use the raw marker cloud from the motion capture system and track the CFs frame-by-frame. If you select ``motionCapture`` as ``object_tracking_type``, the objects as tracked by the motion capture system will be used. In this case you will need unique marker arrangements and your objects need to be named ``cf1``, ``cf2``, ``cf3``, and so on.
 
 When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software. Some motion capture systems remove markers from the point cloud when they are matched to an object. Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
 
@@ -159,6 +159,12 @@ Qualisys has been tested to work with QTM 2.16 both for rigid body and point clo
 If using ``motionCapture`` as ``object_tracking_type`` make sure to check the checkbox ``Calculate 6DOF`` in QTM ``Project options/Processing/Real time actions``.
 
 If using ``libobjecttracker`` as ``object_tracking_type`` and you have setup 6DOF tracking for your Crazyflies in QTM, make sure to disable the ``Calculate 6DOF`` checkbox.
+
+None
+""""
+
+The usage of a motion capture system can be disabled by selecting ``none``. This is useful for on-board solutions such as the Ultra-Wideband localization system (UWB), or dead-reckoning using the flow-deck.
+
 
 Configure Marker Arrangement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

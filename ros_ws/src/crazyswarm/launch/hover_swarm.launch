@@ -38,7 +38,7 @@
         #  gyro_var_z: 0.2e-2 # 0.2e-4
         #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
-      motion_capture_type: "vicon" # one of vicon,optitrack,qualisys
+      motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       vicon_host_name: "vicon"
       # optitrack_local_ip: "localhost"

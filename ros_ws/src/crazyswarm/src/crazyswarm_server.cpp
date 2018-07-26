@@ -1273,7 +1273,7 @@ public:
 
     // Make a new client
     libmotioncapture::MotionCapture* mocap = nullptr;
-    if (false)
+    if (motionCaptureType == "none")
     {
     }
 #ifdef ENABLE_VICON
@@ -1382,160 +1382,162 @@ public:
     //   }
     //   ros::spinOnce();
     // }
+    if (mocap) {
 
-    // setup messages
-    sensor_msgs::PointCloud msgPointCloud;
-    msgPointCloud.header.seq = 0;
-    msgPointCloud.header.frame_id = "world";
+      // setup messages
+      sensor_msgs::PointCloud msgPointCloud;
+      msgPointCloud.header.seq = 0;
+      msgPointCloud.header.frame_id = "world";
 
-    auto startTime = std::chrono::high_resolution_clock::now();
+      auto startTime = std::chrono::high_resolution_clock::now();
 
-    struct latencyEntry {
-      std::string name;
-      double secs;
-    };
-    std::vector<latencyEntry> latencies;
+      struct latencyEntry {
+        std::string name;
+        double secs;
+      };
+      std::vector<latencyEntry> latencies;
 
-    std::vector<double> latencyTotal(6 + 3 * 2, 0.0);
-    uint32_t latencyCount = 0;
-    std::vector<libmotioncapture::LatencyInfo> mocapLatency;
+      std::vector<double> latencyTotal(6 + 3 * 2, 0.0);
+      uint32_t latencyCount = 0;
+      std::vector<libmotioncapture::LatencyInfo> mocapLatency;
 
-    while (ros::ok() && !m_isEmergency) {
-      // Get a frame
-      mocap->waitForNextFrame();
+      while (ros::ok() && !m_isEmergency) {
+        // Get a frame
+        mocap->waitForNextFrame();
 
-      latencies.clear();
+        latencies.clear();
 
-      auto startIteration = std::chrono::high_resolution_clock::now();
-      double totalLatency = 0;
+        auto startIteration = std::chrono::high_resolution_clock::now();
+        double totalLatency = 0;
 
-      // Get the latency
-      mocap->getLatency(mocapLatency);
-      float viconLatency = 0;
-      for (const auto& item : mocapLatency) {
-        viconLatency += item.value();
-      }
-      if (viconLatency > 0.035) {
-        std::stringstream sstr;
-        sstr << "VICON Latency high: " << viconLatency << " s." << std::endl;
+        // Get the latency
+        mocap->getLatency(mocapLatency);
+        float viconLatency = 0;
         for (const auto& item : mocapLatency) {
-          sstr << "  Latency: " << item.name() << ": " << item.value() << " s." << std::endl;
+          viconLatency += item.value();
         }
-        ROS_WARN("%s", sstr.str().c_str());
-      }
-
-      if (printLatency) {
-        size_t i = 0;
-        for (const auto& item : mocapLatency) {
-          latencies.push_back({item.name(), item.value()});
-          latencyTotal[i] += item.value();
-          totalLatency += item.value();
-          latencyTotal.back() += item.value();
-        }
-        ++i;
-      }
-
-      // size_t latencyCount = client.GetLatencySampleCount().Count;
-      // for(size_t i = 0; i < latencyCount; ++i) {
-      //   std::string sampleName  = client.GetLatencySampleName(i).Name;
-      //   double      sampleValue = client.GetLatencySampleValue(sampleName).Value;
-
-      //   ROS_INFO("Latency: %s: %f", sampleName.c_str(), sampleValue);
-      // }
-
-      // Get the unlabeled markers and create point cloud
-      if (!useMotionCaptureObjectTracking) {
-        mocap->getPointCloud(markers);
-
-        msgPointCloud.header.seq += 1;
-        msgPointCloud.header.stamp = ros::Time::now();
-        msgPointCloud.points.resize(markers->size());
-        for (size_t i = 0; i < markers->size(); ++i) {
-          const pcl::PointXYZ& point = markers->at(i);
-          msgPointCloud.points[i].x = point.x;
-          msgPointCloud.points[i].y = point.y;
-          msgPointCloud.points[i].z = point.z;
-        }
-        m_pubPointCloud.publish(msgPointCloud);
-
-        if (logClouds) {
-          pointCloudLogger.log(markers);
-        }
-      }
-
-      if (useMotionCaptureObjectTracking || !interactiveObject.empty()) {
-        // get mocap rigid bodies
-        mocapObjects.clear();
-        mocap->getObjects(mocapObjects);
-        if (interactiveObject == "virtual") {
-          Eigen::Quaternionf quat(0, 0, 0, 1);
-          mocapObjects.push_back(
-            libmotioncapture::Object(
-              interactiveObject,
-              m_lastInteractiveObjectPosition,
-              quat));
-        }
-      }
-
-      auto startRunGroups = std::chrono::high_resolution_clock::now();
-      std::vector<std::future<void> > handles;
-      for (auto group : m_groups) {
-        auto handle = std::async(std::launch::async, &CrazyflieGroup::runFast, group);
-        handles.push_back(std::move(handle));
-      }
-
-      for (auto& handle : handles) {
-        handle.wait();
-      }
-      auto endRunGroups = std::chrono::high_resolution_clock::now();
-      if (printLatency) {
-        std::chrono::duration<double> elapsedRunGroups = endRunGroups - startRunGroups;
-        latencies.push_back({"Run All Groups", elapsedRunGroups.count()});
-        latencyTotal[4] += elapsedRunGroups.count();
-        totalLatency += elapsedRunGroups.count();
-        latencyTotal.back() += elapsedRunGroups.count();
-        int groupId = 0;
-        for (auto group : m_groups) {
-          auto latency = group->lastLatency();
-          int radio = group->radio();
-          latencies.push_back({"Group " + std::to_string(radio) + " objectTracking", latency.objectTracking});
-          latencies.push_back({"Group " + std::to_string(radio) + " broadcasting", latency.broadcasting});
-          latencyTotal[5 + 2*groupId] += latency.objectTracking;
-          latencyTotal[6 + 2*groupId] += latency.broadcasting;
-          ++groupId;
-        }
-      }
-
-      auto endIteration = std::chrono::high_resolution_clock::now();
-      std::chrono::duration<double> elapsed = endIteration - startIteration;
-      double elapsedSeconds = elapsed.count();
-      if (elapsedSeconds > 0.009) {
-        ROS_WARN("Latency too high! Is %f s.", elapsedSeconds);
-      }
-
-      if (printLatency) {
-        ++latencyCount;
-        std::cout << "Latencies" << std::endl;
-        for (auto& latency : latencies) {
-          std::cout << latency.name << ": " << latency.secs * 1000 << " ms" << std::endl;
-        }
-        std::cout << "Total " << totalLatency * 1000 << " ms" << std::endl;
-        // // if (latencyCount % 100 == 0) {
-          std::cout << "Avg " << latencyCount << std::endl;
-          for (size_t i = 0; i < latencyTotal.size(); ++i) {
-            std::cout << latencyTotal[i] / latencyCount * 1000.0 << ",";
+        if (viconLatency > 0.035) {
+          std::stringstream sstr;
+          sstr << "VICON Latency high: " << viconLatency << " s." << std::endl;
+          for (const auto& item : mocapLatency) {
+            sstr << "  Latency: " << item.name() << ": " << item.value() << " s." << std::endl;
           }
-          std::cout << std::endl;
-        // // }
+          ROS_WARN("%s", sstr.str().c_str());
+        }
+
+        if (printLatency) {
+          size_t i = 0;
+          for (const auto& item : mocapLatency) {
+            latencies.push_back({item.name(), item.value()});
+            latencyTotal[i] += item.value();
+            totalLatency += item.value();
+            latencyTotal.back() += item.value();
+          }
+          ++i;
+        }
+
+        // size_t latencyCount = client.GetLatencySampleCount().Count;
+        // for(size_t i = 0; i < latencyCount; ++i) {
+        //   std::string sampleName  = client.GetLatencySampleName(i).Name;
+        //   double      sampleValue = client.GetLatencySampleValue(sampleName).Value;
+
+        //   ROS_INFO("Latency: %s: %f", sampleName.c_str(), sampleValue);
+        // }
+
+        // Get the unlabeled markers and create point cloud
+        if (!useMotionCaptureObjectTracking) {
+          mocap->getPointCloud(markers);
+
+          msgPointCloud.header.seq += 1;
+          msgPointCloud.header.stamp = ros::Time::now();
+          msgPointCloud.points.resize(markers->size());
+          for (size_t i = 0; i < markers->size(); ++i) {
+            const pcl::PointXYZ& point = markers->at(i);
+            msgPointCloud.points[i].x = point.x;
+            msgPointCloud.points[i].y = point.y;
+            msgPointCloud.points[i].z = point.z;
+          }
+          m_pubPointCloud.publish(msgPointCloud);
+
+          if (logClouds) {
+            pointCloudLogger.log(markers);
+          }
+        }
+
+        if (useMotionCaptureObjectTracking || !interactiveObject.empty()) {
+          // get mocap rigid bodies
+          mocapObjects.clear();
+          mocap->getObjects(mocapObjects);
+          if (interactiveObject == "virtual") {
+            Eigen::Quaternionf quat(0, 0, 0, 1);
+            mocapObjects.push_back(
+              libmotioncapture::Object(
+                interactiveObject,
+                m_lastInteractiveObjectPosition,
+                quat));
+          }
+        }
+
+        auto startRunGroups = std::chrono::high_resolution_clock::now();
+        std::vector<std::future<void> > handles;
+        for (auto group : m_groups) {
+          auto handle = std::async(std::launch::async, &CrazyflieGroup::runFast, group);
+          handles.push_back(std::move(handle));
+        }
+
+        for (auto& handle : handles) {
+          handle.wait();
+        }
+        auto endRunGroups = std::chrono::high_resolution_clock::now();
+        if (printLatency) {
+          std::chrono::duration<double> elapsedRunGroups = endRunGroups - startRunGroups;
+          latencies.push_back({"Run All Groups", elapsedRunGroups.count()});
+          latencyTotal[4] += elapsedRunGroups.count();
+          totalLatency += elapsedRunGroups.count();
+          latencyTotal.back() += elapsedRunGroups.count();
+          int groupId = 0;
+          for (auto group : m_groups) {
+            auto latency = group->lastLatency();
+            int radio = group->radio();
+            latencies.push_back({"Group " + std::to_string(radio) + " objectTracking", latency.objectTracking});
+            latencies.push_back({"Group " + std::to_string(radio) + " broadcasting", latency.broadcasting});
+            latencyTotal[5 + 2*groupId] += latency.objectTracking;
+            latencyTotal[6 + 2*groupId] += latency.broadcasting;
+            ++groupId;
+          }
+        }
+
+        auto endIteration = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = endIteration - startIteration;
+        double elapsedSeconds = elapsed.count();
+        if (elapsedSeconds > 0.009) {
+          ROS_WARN("Latency too high! Is %f s.", elapsedSeconds);
+        }
+
+        if (printLatency) {
+          ++latencyCount;
+          std::cout << "Latencies" << std::endl;
+          for (auto& latency : latencies) {
+            std::cout << latency.name << ": " << latency.secs * 1000 << " ms" << std::endl;
+          }
+          std::cout << "Total " << totalLatency * 1000 << " ms" << std::endl;
+          // // if (latencyCount % 100 == 0) {
+            std::cout << "Avg " << latencyCount << std::endl;
+            for (size_t i = 0; i < latencyTotal.size(); ++i) {
+              std::cout << latencyTotal[i] / latencyCount * 1000.0 << ",";
+            }
+            std::cout << std::endl;
+          // // }
+        }
+
+        // ROS_INFO("Latency: %f s", elapsedSeconds.count());
+
+        // m_fastQueue.callAvailable(ros::WallDuration(0));
       }
 
-      // ROS_INFO("Latency: %f s", elapsedSeconds.count());
-
-      // m_fastQueue.callAvailable(ros::WallDuration(0));
-    }
-
-    if (logClouds) {
-      pointCloudLogger.flush();
+      if (logClouds) {
+        pointCloudLogger.flush();
+      }
     }
 
     // wait for other threads

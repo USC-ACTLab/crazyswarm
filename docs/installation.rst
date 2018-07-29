@@ -36,16 +36,6 @@ Install the dependencies and clone the repository::
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
 
-For legal reasons we are not allowed to include the VICON DataStream SDK in this repository, which is used to capture data from a VICON motion capture system. Please download the SDK (version 1.7.1) from http://www.vicon.com and place the following files in `ros_ws/src/externalDependencies/libmotioncapture/externalDependencies/vicon_sdk` (that is, from the Linux64-boost-1.58.0 folder)::
-
-    ├── include
-    │   └── vicon_sdk
-    │       └── DataStreamClient.h
-    └── lib64
-        ├── libboost_system-mt.so.1.58.0
-        ├── libboost_thread-mt.so.1.58.0
-        └── libViconDataStreamSDK_CPP.so
-
 You can now build everything by running our build script.::
     
     $ ./build.sh

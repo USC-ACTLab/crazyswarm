@@ -179,6 +179,7 @@ public:
     , m_type(type)
     , m_serviceUpdateParams()
     , m_serviceUploadTrajectory()
+    , m_serviceStartTrajectory()
     , m_serviceTakeoff()
     , m_serviceLand()
     , m_serviceGoTo()
@@ -190,6 +191,7 @@ public:
     ros::NodeHandle n;
     n.setCallbackQueue(&queue);
     m_serviceUploadTrajectory = n.advertiseService(tf_prefix + "/upload_trajectory", &CrazyflieROS::uploadTrajectory, this);
+    m_serviceStartTrajectory = n.advertiseService(tf_prefix + "/start_trajectory", &CrazyflieROS::startTrajectory, this);
     m_serviceTakeoff = n.advertiseService(tf_prefix + "/takeoff", &CrazyflieROS::takeoff, this);
     m_serviceLand = n.advertiseService(tf_prefix + "/land", &CrazyflieROS::land, this);
     m_serviceGoTo = n.advertiseService(tf_prefix + "/go_to", &CrazyflieROS::goTo, this);
@@ -361,6 +363,17 @@ public:
 
     ROS_INFO("[%s] Uploaded trajectory", m_frame.c_str());
 
+
+    return true;
+  }
+
+  bool startTrajectory(
+    crazyflie_driver::StartTrajectory::Request& req,
+    crazyflie_driver::StartTrajectory::Response& res)
+  {
+    ROS_INFO("[%s] Start trajectory", m_frame.c_str());
+
+    m_cf.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.groupMask);
 
     return true;
   }
@@ -573,6 +586,7 @@ private:
 
   ros::ServiceServer m_serviceUpdateParams;
   ros::ServiceServer m_serviceUploadTrajectory;
+  ros::ServiceServer m_serviceStartTrajectory;
   ros::ServiceServer m_serviceTakeoff;
   ros::ServiceServer m_serviceLand;
   ros::ServiceServer m_serviceGoTo;

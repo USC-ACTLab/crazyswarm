@@ -111,10 +111,11 @@ class Crazyflie:
     def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         if self._isGroup(groupMask):
             traj = self.trajectories[trajectoryId]
+            # if traj is also current traj, must take pos before changing t_begin.
+            pos = self._vposition()
             traj.t_begin = self.time()
             traj.timescale = timescale
             if relative:
-                pos = self._vposition()
                 traj.shift = firm.vzero()
                 if reverse:
                     traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)

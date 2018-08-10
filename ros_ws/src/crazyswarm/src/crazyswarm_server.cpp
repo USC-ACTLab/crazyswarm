@@ -373,7 +373,7 @@ public:
   {
     ROS_INFO("[%s] Start trajectory", m_frame.c_str());
 
-    m_cf.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.groupMask);
+    m_cf.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask);
 
     return true;
   }

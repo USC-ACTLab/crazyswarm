@@ -29,3 +29,10 @@ struct poly4d* malloc_poly4d(int size)
     return (struct poly4d*)malloc(sizeof(struct poly4d) * size);
 }
 %}
+
+%extend vec {
+    %pythoncode %{
+        def __repr__(self):
+            return "({}, {}, {})".format(self.x, self.y, self.z)
+    %}
+};

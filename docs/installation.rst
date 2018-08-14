@@ -13,7 +13,7 @@ Simulation Only
 
 You can install just the components required for the simulation by doing the following::
 
-    $ sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib
+    $ sudo apt install git make gcc swig libpython-dev python-numpy python-yaml python-matplotlib
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
     $ ./buildSimOnly.sh

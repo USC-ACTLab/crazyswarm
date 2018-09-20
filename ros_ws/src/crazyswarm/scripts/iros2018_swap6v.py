@@ -6,20 +6,20 @@ from pycrazyswarm import *
 import pycrazyswarm.cfsim.cffirmware as firm
 import uav_trajectory
 
-TIMESCALE = 0.8
+TIMESCALE = 0.5
 
 POSITIONS = [
-    [0,0.8,1.2],
-    [0.25,0.4,1.9],
-    [0.25,-0.4,1.9],
+    [0,0.7,1.2],
+    [0.25,0.4,1.8],
+    [0.25,-0.4,1.8],
     [-0.25,0.4,0.5],
     [-0.25,-0.4,0.5],
-    [0,-0.8,1.2]
+    [0,-0.7,1.2]
 ]
 
 OFFSET = [0.0, 0.0, 0.0]
 
-TRAJMAPPING = {15: 1, 16: 2, 17: 3, 18: 4, 19: 5, 20: 6}
+TRAJMAPPING = {1: 4, 2: 5, 3: 6, 4: 1, 5: 2, 6: 3}
 
 if __name__ == "__main__":
     swarm = Crazyswarm()

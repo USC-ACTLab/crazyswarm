@@ -9,7 +9,7 @@ import uav_trajectory
 TIMESCALE = 0.8
 OFFSET = [0.0, 0.0, 0.0]
 
-TRAJMAPPING = {15: 1, 16: 2, 17: 3, 18: 4, 19: 5, 20: 6}
+TRAJMAPPING = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6}
 
 REPEAT = 1
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         traj1.loadcsv(fname)
         cf.uploadTrajectory(0, 0, traj1)
         T1 = max(T1, traj1.duration)
-        
+
         traj2 = uav_trajectory.Trajectory()
         fname = '{0}/c_to_f/cf{1}.csv'.format(root, TRAJMAPPING[cf.id])
         traj2.loadcsv(fname)

@@ -49,8 +49,8 @@ class Crazyflie:
         self.goToService = rospy.ServiceProxy(prefix + "/go_to", GoTo)
         rospy.wait_for_service(prefix + "/upload_trajectory")
         self.uploadTrajectoryService = rospy.ServiceProxy(prefix + "/upload_trajectory", UploadTrajectory)
-        # rospy.wait_for_service(prefix + "/start_trajectory")
-        # self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
+        rospy.wait_for_service(prefix + "/start_trajectory")
+        self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
         rospy.wait_for_service(prefix + "/update_params")
         self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
 

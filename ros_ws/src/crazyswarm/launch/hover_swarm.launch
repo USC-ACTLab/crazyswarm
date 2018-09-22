@@ -10,8 +10,9 @@
       firmware: "crazyswarm" # one of "crazyswarm", "bitcraze"
       broadcast_address: "FFE7E7E7E7"
       world_frame: "/world"
-      genericLogTopics: ["log1"]
-      genericLogTopicFrequencies: [10]
+      genericLogTopics: ["power"]
+      genericLogTopicFrequencies: [1000]
+      genericLogTopic_power_Variables: ["pm.vbat", "pm.chargeCurrent", "pm.state", "pm.batteryLevel"]
       # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
       # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
       # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
@@ -50,7 +51,9 @@
       write_csvs: False
       force_no_cache: False
       enable_parameters: True
-      enable_logging: False
+      enable_logging: True
+      broadcasting_num_repeats: 30
+      broadcasting_delay_between_repeats_ms: 1
     </rosparam>
   </node>
 
@@ -58,10 +61,7 @@
     <param name="dev" value="$(arg joy_dev)" />
   </node>
 
-  <node pkg="crazyswarm" type="crazyswarm_teleop" name="crazyswarm_teleop" output="screen">
-    <param name="csv_file" value="$(find crazyswarm)/launch/figure8_smooth.csv" />
-    <param name="timescale" value="0.8" />
-  </node>
+  <node pkg="crazyswarm" type="crazyswarm_teleop" name="crazyswarm_teleop" output="screen"/>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
 

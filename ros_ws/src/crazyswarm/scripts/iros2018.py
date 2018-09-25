@@ -45,7 +45,7 @@ class IROS2018_PowerCheck:
       if cf.power.vbat < IROS2018_PowerCheck.VBAT_MAX:
         allCharged = False
         print("CF{} not ready to fly ({} V)".format(cf.id, cf.power.vbat))
-    return True #allCharged
+    return allCharged
 
 
   # one battery below VBAT_MIN

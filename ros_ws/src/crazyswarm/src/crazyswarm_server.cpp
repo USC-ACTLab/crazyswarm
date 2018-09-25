@@ -995,11 +995,12 @@ private:
     // Turn all CFs on
     for (const auto& config : cfConfigs) {
       Crazyflie cf(config.uri);
-      cf.syson();
+      cf.reboot();
       for (size_t i = 0; i < 50; ++i) {
         cf.sendPing();
       }
     }
+    std::this_thread::sleep_for(std::chrono::seconds(2));
 
     ros::NodeHandle nl("~");
     bool enableLogging;

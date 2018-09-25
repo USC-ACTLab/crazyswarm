@@ -6,6 +6,7 @@ import yaml
 import rospy
 import numpy as np
 import time
+import os
 from std_srvs.srv import Empty
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece
@@ -121,7 +122,8 @@ class CrazyflieServer:
         # rospy.wait_for_service("/update_params")
         # self.updateParamsService = rospy.ServiceProxy("/update_params", UpdateParams)
 
-        with open("../launch/crazyflies.yaml", 'r') as ymlfile:
+        filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../launch/crazyflies.yaml")
+        with open(filename, 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
 
         self.tf = TransformListener()

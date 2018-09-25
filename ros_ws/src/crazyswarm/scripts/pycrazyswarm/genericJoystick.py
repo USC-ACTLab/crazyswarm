@@ -50,18 +50,18 @@ class Joystick:
     # def clearButtonPressed(self):
     #     self.buttonWasPressed = False
 
-    def checkIfButtonIsPressed(self):
+    def checkIfButtonIsPressed(self, buttonId = 5):
         if self.hasJoystick:
             state = self.js.read(0)
-            return state[1][5] == 1
+            return state[1][buttonId] == 1
         else:
             return False
 
-    def waitUntilButtonPressed(self):
+    def waitUntilButtonPressed(self, buttonId = 5):
         if self.hasJoystick:
-            while not self.checkIfButtonIsPressed():
+            while not self.checkIfButtonIsPressed(buttonId):
                 self.timeHelper.sleep(0.01)
-            while self.checkIfButtonIsPressed():
+            while self.checkIfButtonIsPressed(buttonId):
                 self.timeHelper.sleep(0.01)
         else:
             with keyboard.KeyPoller() as keyPoller:

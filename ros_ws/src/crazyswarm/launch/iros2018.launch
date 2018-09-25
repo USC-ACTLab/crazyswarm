@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <rosparam command="load" file="$(find crazyswarm)/launch/crazyflieTypes.yaml" />
+  <rosparam command="load" file="$(find crazyswarm)/launch/crazyflies.yaml" />
+
+  <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
+    <rosparam>
+      firmware: "crazyswarm" # one of "crazyswarm", "bitcraze"
+      broadcast_address: "FFE7E7E7E7"
+      world_frame: "/world"
+      genericLogTopics: ["power"]
+      genericLogTopicFrequencies: [1000]
+      genericLogTopic_power_Variables: ["pm.vbat", "pm.chargeCurrent", "pm.state", "pm.batteryLevel"]
+      # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
+      # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
+      # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
+      # genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld"]
+      genericLogTopic_log1_Variables: ["ctrlStat.edist"]
+      # genericLogTopic_log1_Variables: ["stateEstimate.yaw", "ctrltarget.yaw", "stateEstimate.x", "ctrltarget.x"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
+      firmwareParams: # for all (independent of type)
+        commander:
+          enHighLevel: 1
+        stabilizer:
+          estimator: 3 # 1: complementary, 2: kalman, 3: kalmanUSC (only crazyswarm firmware)
+          controller: 2 # 1: PID, 2: mellinger
+        ring:
+          effect: 16 # 6: double spinner, 7: solid color, 16: packetRate
+          solidBlue: 255 # if set to solid color
+          solidGreen: 0 # if set to solid color
+          solidRed: 0 # if set to solid color
+          headlightEnable: 0
+        #ekf:
+        #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
+        #  ext_var_vel: 2e-4 # 2e-4
+        #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
+        #  gyro_var_xy: 0.2e-2 # 0.2e-4
+        #  gyro_var_z: 0.2e-2 # 0.2e-4
+        #  acc_var_xyz: 2.4e-3 # 2.4e-3
+      # tracking
+      motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys
+      object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
+      vicon_host_name: "vicon"
+      # optitrack_local_ip: "localhost"
+      # optitrack_server_ip: "optitrack"
+      # qualisys_host_name: "10.0.5.219"
+      # qualisys_base_port: 22222
+      save_point_clouds: ~/pointCloud.ot
+      print_latency: False
+      write_csvs: False
+      force_no_cache: False
+      enable_parameters: True
+      enable_logging: True
+      broadcasting_num_repeats: 30
+      broadcasting_delay_between_repeats_ms: 1
+    </rosparam>
+  </node>
+
+  <node name="joy" pkg="joy" type="joy_node" output="screen">
+    <param name="dev" value="$(arg joy_dev)" />
+  </node>
+
+  <node pkg="crazyswarm" type="crazyswarm_teleop" name="crazyswarm_teleop" output="screen"/>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
+
+  <node pkg="crazyswarm" type="iros2018.py" name="iros2018" output="screen"/>
+
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_power" args="-e /cf15/power/values[0] /cf16/power/values[0] /cf17/power/values[0] /cf18/power/values[0] /cf19/power/values[0] /cf20/power/values[0]"/> -->
+  <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/> -->
+
+</launch>

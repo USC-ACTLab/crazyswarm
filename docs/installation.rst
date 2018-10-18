@@ -21,7 +21,7 @@ You can install just the components required for the simulation by doing the fol
 To test the installation, run one of the examples::
 
     $ cd ros_ws/src/crazyswarm/scripts
-    $ python figure8_canned.py --sim
+    $ python figure8_csv.py --sim
 
 More details on the usage can be found in the :ref:`usage` section.
 

@@ -199,7 +199,8 @@ def checkVersion():
 
 scriptButtons = Tkinter.Frame(top)
 mkbutton(scriptButtons, "battery", checkBattery)
-mkbutton(scriptButtons, "version", checkVersion)
+# currently not supported
+# mkbutton(scriptButtons, "version", checkVersion)
 mkbutton(scriptButtons, "sysOff", sysOff)
 mkbutton(scriptButtons, "reboot", reboot)
 mkbutton(scriptButtons, "flash (STM)", flashSTM)

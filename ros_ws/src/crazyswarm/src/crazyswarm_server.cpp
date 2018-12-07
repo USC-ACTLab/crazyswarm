@@ -49,6 +49,9 @@
 #ifdef ENABLE_QUALISYS
 #include <libmotioncapture/qualisys.h>
 #endif
+#ifdef ENABLE_VRPN
+#include <libmotioncapture/vrpn.h>
+#endif
 
 // Object tracker
 #include <libobjecttracker/object_tracker.h>
@@ -1333,6 +1336,15 @@ public:
         /*enableObjects*/ true,
         /*enablePointcloud*/ true);
     }
+#endif
+#ifdef ENABLE_VRPN
+  else if (motionCaptureType == "vrpn")
+  {
+    std::string hostname;
+    int port;
+    nl.getParam("vrpn_host_name", hostname);
+    mocap = new libmotioncapture::MotionCaptureVrpn(hostname);
+  }
 #endif
     else {
       throw std::runtime_error("Unknown motion capture type!");

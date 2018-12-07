@@ -16,6 +16,9 @@
 #ifdef ENABLE_QUALISYS
 #include <libmotioncapture/qualisys.h>
 #endif
+#ifdef ENABLE_VRPN
+#include <libmotioncapture/vrpn.h>
+#endif
 
 int main(int argc, char **argv)
 {
@@ -73,6 +76,15 @@ int main(int argc, char **argv)
     mocap = new libmotioncapture::MotionCaptureQualisys(hostname, port,
       /*enableObjects*/ true,
       /*enablePointcloud*/ true);
+  }
+#endif
+#ifdef ENABLE_VRPN
+  else if (motionCaptureType == "vrpn")
+  {
+    std::string hostname;
+    int port;
+    nl.getParam("vrpn_host_name", hostname);
+    mocap = new libmotioncapture::MotionCaptureVrpn(hostname);
   }
 #endif
   else {

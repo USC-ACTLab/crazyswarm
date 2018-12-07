@@ -148,6 +148,9 @@ endif()
 if (ENABLE_QUALISYS)
   add_definitions(-DENABLE_QUALISYS)
 endif()
+if (ENABLE_VRPN)
+  add_definitions(-DENABLE_VRPN)
+endif()
 
 
 # message(${CMAKE_BINARY_DIR}/crazyflie_ros/externalDependencies/libobjecttracker)

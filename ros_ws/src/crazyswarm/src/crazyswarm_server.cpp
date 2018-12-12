@@ -15,7 +15,10 @@
 #include "crazyflie_driver/GoTo.h"
 #include "crazyflie_driver/StartTrajectory.h"
 #include "crazyflie_driver/SetGroupMask.h"
+#include "crazyflie_driver/FullState.h"
+#include "crazyflie_driver/Position.h"
 #include "std_srvs/Empty.h"
+#include <std_msgs/Empty.h>
 #include "geometry_msgs/Twist.h"
 #include "sensor_msgs/Imu.h"
 #include "sensor_msgs/Temperature.h"
@@ -199,6 +202,10 @@ public:
     m_serviceLand = n.advertiseService(tf_prefix + "/land", &CrazyflieROS::land, this);
     m_serviceGoTo = n.advertiseService(tf_prefix + "/go_to", &CrazyflieROS::goTo, this);
     m_serviceSetGroupMask = n.advertiseService(tf_prefix + "/set_group_mask", &CrazyflieROS::setGroupMask, this);
+
+    m_subscribeCmdPosition = n.subscribe(tf_prefix + "/cmd_position", 1, &CrazyflieROS::cmdPositionSetpoint, this);
+    m_subscribeCmdFullState = n.subscribe(tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
+    m_subscribeCmdStop = n.subscribe(m_tf_prefix + "/cmd_stop", 1, &CrazyflieROS::cmdStop, this);
 
     if (m_enableLogging) {
       m_logFile.open("logcf" + std::to_string(id) + ".csv");
@@ -425,6 +432,65 @@ public:
     return true;
   }
 
+  void cmdPositionSetpoint(
+    const crazyflie_driver::Position::ConstPtr& msg)
+  {
+    // if(!m_isEmergency) {
+      float x = msg->x;
+      float y = msg->y;
+      float z = msg->z;
+      float yaw = msg->yaw;
+
+      m_cf.sendPositionSetpoint(x, y, z, yaw);
+      // m_sentSetpoint = true;
+    // }
+  }
+
+  void cmdFullStateSetpoint(
+    const crazyflie_driver::FullState::ConstPtr& msg)
+  {
+    //ROS_INFO("got a full state setpoint");
+    // if (!m_isEmergency) {
+      float x = msg->pose.position.x;
+      float y = msg->pose.position.y;
+      float z = msg->pose.position.z;
+      float vx = msg->twist.linear.x;
+      float vy = msg->twist.linear.y;
+      float vz = msg->twist.linear.z;
+      float ax = msg->acc.x;
+      float ay = msg->acc.y;
+      float az = msg->acc.z;
+
+      float qx = msg->pose.orientation.x;
+      float qy = msg->pose.orientation.y;
+      float qz = msg->pose.orientation.z;
+      float qw = msg->pose.orientation.w;
+      float rollRate = msg->twist.angular.x;
+      float pitchRate = msg->twist.angular.y;
+      float yawRate = msg->twist.angular.z;
+
+      m_cf.sendFullStateSetpoint(
+        x, y, z,
+        vx, vy, vz,
+        ax, ay, az,
+        qx, qy, qz, qw,
+        rollRate, pitchRate, yawRate);
+      // m_sentSetpoint = true;
+      //ROS_INFO("set a full state setpoint");
+    // }
+  }
+
+  void cmdStop(
+    const std_msgs::Empty::ConstPtr& msg)
+  {
+     //ROS_INFO("got a stop setpoint");
+    // if (!m_isEmergency) {
+      m_cf.sendStop();
+      // m_sentSetpoint = true;
+      //ROS_INFO("set a stop setpoint");
+    // }
+  }
+
   void run(
     ros::CallbackQueue& queue)
   {
@@ -594,6 +660,10 @@ private:
   ros::ServiceServer m_serviceLand;
   ros::ServiceServer m_serviceGoTo;
   ros::ServiceServer m_serviceSetGroupMask;
+
+  ros::Subscriber m_subscribeCmdPosition;
+  ros::Subscriber m_subscribeCmdFullState;
+  ros::Subscriber m_subscribeCmdStop;
 
   std::vector<crazyflie_driver::LogBlock> m_logBlocks;
   std::vector<ros::Publisher> m_pubLogDataGeneric;

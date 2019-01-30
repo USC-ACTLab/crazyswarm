@@ -28,17 +28,22 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
       #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
       #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
 
-
 #. Upgrade the firmware of you Crazyradios with the provided firmware.
 
   - Option 1: follow the instructions in the ``crazyradio-firmware`` folder to install the self-compiled version.
   - Option 2: Use the prebuilt binary:
 
       #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
-      #. ``python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
+      #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
       #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan``, which should report ``Found Crazyradio with version 99.55``.
 
-Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
+  - Note: Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
+
+#. Set up PC permissions to use the USB Radio without being root.
+
+  - Option 1: follow the instructions in the ``crazyflie-lib-python`` folder or look at `here <https://github.com/bitcraze/crazyflie-lib-python#platform-notes>`_.
+  - Option 2: Use the script: ``./pc_permissions.sh``
+
 
 Adjust Configuration Files
 --------------------------
@@ -174,7 +179,7 @@ If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need
 .. image:: markerConfigurationExample.jpg
 
 #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
-#. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``.
+#. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
 #. Update ``crazyflieTypes.yaml``, see the example above.
 
 
@@ -185,9 +190,11 @@ A simple GUI is available to enable/disable a subset of the CFs, check the batte
 The tool reads the ``ros_ws/src/crazyswarm/launch/all49.yaml`` file.
 You can execute it using::
 
-    ros_ws/src/crazyswarm/scripts
+    cd ros_ws/src/crazyswarm/scripts
     python chooser.py
 
+Also, make sure you have ``pyyaml`` installed before using this tool.
+You can check it by ``pip3 install pyyaml``.
 An example screenshot is given below:
 
 .. image:: chooser.png

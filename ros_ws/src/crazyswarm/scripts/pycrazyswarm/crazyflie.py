@@ -132,6 +132,19 @@ class Crazyflie:
     def cmdStop(self):
         self.cmdStopPublisher.publish(std_msgs.msg.Empty())
 
+    #
+    # wrappers around the parameter setting system for common cases
+    #
+
+    # - this is a blocking command, so it may cause stability problems
+    #   for large swarms and/or high-frequency changes
+    # - parameter ring/effect must be set to 7 (solid color) to have any effect!
+    # - input should be floats in range [0, 1]
+    def setLEDColor(self, r, g, b):
+        self.setParam("ring/solidRed", int(r * 255))
+        self.setParam("ring/solidGreen", int(g * 255))
+        self.setParam("ring/solidBlue", int(b * 255))
+
 
 class CrazyflieServer:
     def __init__(self):

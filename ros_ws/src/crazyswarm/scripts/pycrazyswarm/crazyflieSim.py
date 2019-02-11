@@ -70,6 +70,9 @@ class Crazyflie:
         self.groupMask = 0
         self.trajectories = dict()
 
+        # for visualization - default to blueish-grey
+        self.ledRGB = (0.5, 0.5, 1)
+
     def setGroupMask(self, groupMask):
         self.groupMask = groupMask
 
@@ -138,6 +141,12 @@ class Crazyflie:
 
     def setParams(self, params):
         print("WARNING: setParams not implemented in simulation!")
+
+    # - this is a part of the param system on the real crazyflie,
+    #   but we implement it in simulation too for debugging
+    # - is a blocking command on real CFs, so may cause stability problems
+    def setLEDColor(self, r, g, b):
+        self.ledRGB = (r, g, b)
 
     # simulation only functions
     def yaw(self):

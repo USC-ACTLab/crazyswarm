@@ -151,6 +151,8 @@ class Crazyflie:
     # simulation only functions
     def yaw(self):
         ev = firm.plan_current_goal(self.planner, self.time())
+        if not firm.is_traj_eval_valid(ev):
+            return 0.0
         return ev.yaw
 
     def acceleration(self):

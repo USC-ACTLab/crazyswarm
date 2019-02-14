@@ -9,7 +9,7 @@ class Crazyswarm:
         parser.add_argument("--vis", help="(sim only) Visualization backend [mpl]", choices=['mpl', 'vispy'], default="mpl")
         parser.add_argument("--dt", help="(sim only) dt [0.1s]", type=float, default=0.1)
         parser.add_argument("--writecsv", help="Enable CSV output (only available in simulation)", action="store_true")
-        args = parser.parse_args()
+        args, unknown = parser.parse_known_args()
 
         if args.sim:
             import crazyflieSim

@@ -35,6 +35,7 @@ class Crazyflie:
     def __init__(self, id, initialPosition, tf):
         self.id = id
         prefix = "/cf" + str(id)
+        self.prefix = prefix
         self.initialPosition = np.array(initialPosition)
 
         self.tf = tf

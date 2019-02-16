@@ -65,6 +65,7 @@ class Crazyflie:
         self.time = lambda: timeHelper.time()
 
         self.planner = firm.planner()
+        self.cmdHighLevel = True
         firm.plan_init(self.planner)
         self.planner.lastKnownPosition = arr2vec(initialPosition)
         self.groupMask = 0
@@ -179,6 +180,11 @@ class Crazyflie:
             roll = math.atan2(y_body[2], z_body[2])
             return (roll, pitch, yaw)
 
+    def cmdFullState(self, pos, vel, acc, yaw, omega):
+        self.planner.lastKnownPosition = pos
+        self.cmdHighLevel = False
+        # TODO store other state variables
+
     # "private" methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
@@ -186,7 +192,7 @@ class Crazyflie:
     def _vposition(self):
         # TODO this should be implemented in C
         # print(self.id, self.planner, self.planner.state)
-        if self.planner.state == firm.TRAJECTORY_STATE_IDLE:
+        if (not self.cmdHighLevel) or self.planner.state == firm.TRAJECTORY_STATE_IDLE:
             return self.planner.lastKnownPosition
         else:
             ev = firm.plan_current_goal(self.planner, self.time())

@@ -158,8 +158,8 @@ class CrazyflieServer:
         self.landService = rospy.ServiceProxy("/land", Land)
         # rospy.wait_for_service("/stop")
         # self.stopService = rospy.ServiceProxy("/stop", Stop)
-        # rospy.wait_for_service("/go_to")
-        # self.goToService = rospy.ServiceProxy("/go_to", GoTo)
+        rospy.wait_for_service("/go_to")
+        self.goToService = rospy.ServiceProxy("/go_to", GoTo)
         rospy.wait_for_service("/start_trajectory");
         self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", StartTrajectory)
         # rospy.wait_for_service("/update_params")
@@ -191,9 +191,9 @@ class CrazyflieServer:
     # def stop(self, groupMask = 0):
     #     self.stopService(groupMask)
 
-    # def goTo(self, goal, yaw, duration, groupMask = 0):
-    #     gp = arrayToGeometryPoint(goal)
-    #     self.goToService(groupMask, True, gp, yaw, rospy.Duration.from_sec(duration))
+    def goTo(self, goal, yaw, duration, groupMask = 0):
+        gp = arrayToGeometryPoint(goal)
+        self.goToService(groupMask, True, gp, yaw, rospy.Duration.from_sec(duration))
 
     def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)

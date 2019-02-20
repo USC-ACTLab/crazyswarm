@@ -887,6 +887,14 @@ public:
     // }
   }
 
+  void goTo(float x, float y, float z, float yaw, float duration, uint8_t groupMask)
+  {
+    // for (size_t i = 0; i < 10; ++i) {
+      m_cfbc.goTo(x, y, z, yaw, duration, groupMask);
+      // std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    // }
+  }
+
   void startTrajectory(
     uint8_t trajectoryId,
     float timescale,
@@ -1219,6 +1227,7 @@ public:
     , m_serviceStartTrajectory()
     , m_serviceTakeoff()
     , m_serviceLand()
+    , m_serviceGoTo()
     , m_serviceNextPhase()
     , m_lastInteractiveObjectPosition(-10, -10, 1)
     , m_broadcastingNumRepeats(15)
@@ -1231,6 +1240,7 @@ public:
     m_serviceStartTrajectory = nh.advertiseService("start_trajectory", &CrazyflieServer::startTrajectory, this);
     m_serviceTakeoff = nh.advertiseService("takeoff", &CrazyflieServer::takeoff, this);
     m_serviceLand = nh.advertiseService("land", &CrazyflieServer::land, this);
+    m_serviceGoTo = nh.advertiseService("go_to", &CrazyflieServer::goTo, this);
 
     m_serviceNextPhase = nh.advertiseService("next_phase", &CrazyflieServer::nextPhase, this);
     // m_serviceUpdateParams = nh.advertiseService("update_params", &CrazyflieServer::updateParams, this);
@@ -1697,6 +1707,22 @@ private:
     return true;
   }
 
+  bool goTo(
+    crazyflie_driver::GoTo::Request& req,
+    crazyflie_driver::GoTo::Response& res)
+  {
+    ROS_INFO("GoTo!");
+
+    for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
+      for (auto& group : m_groups) {
+        group->goTo(req.goal.x, req.goal.y, req.goal.z, req.yaw, req.duration.toSec(), req.groupMask);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
+    }
+
+    return true;
+  }
+
   bool startTrajectory(
     crazyflie_driver::StartTrajectory::Request& req,
     crazyflie_driver::StartTrajectory::Response& res)
@@ -1818,6 +1844,7 @@ private:
   ros::ServiceServer m_serviceStartTrajectory;
   ros::ServiceServer m_serviceTakeoff;
   ros::ServiceServer m_serviceLand;
+  ros::ServiceServer m_serviceGoTo;
   ros::ServiceServer m_serviceNextPhase;
   ros::ServiceServer m_serviceUpdateParams;
 

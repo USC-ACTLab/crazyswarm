@@ -85,5 +85,5 @@ before_install:
   - rosdep update
 
 script:
-  - buildSimOnly.sh
-  - build.sh
+  - ./buildSimOnly.sh
+  - ./build.sh

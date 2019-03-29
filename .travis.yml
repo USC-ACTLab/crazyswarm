@@ -84,7 +84,11 @@ before_install:
   - sudo rosdep init
   - rosdep update
   # install other system dependencies
-  - sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib gcc-arm-none-eabi libpcl-dev libusb-1.0-0-dev sdcc
+  - sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib libpcl-dev libusb-1.0-0-dev sdcc
+  # install compiler for firmware
+  - sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
+  - sudo apt-get update
+  - sudo apt install gcc-arm-embedded
 
 script:
   - ./buildSimOnly.sh

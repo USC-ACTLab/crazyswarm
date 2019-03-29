@@ -85,7 +85,7 @@ before_install:
   - rosdep update
   # install other system dependencies
   - sudo apt install -y git swig libpython-dev python-numpy python-yaml python-matplotlib libpcl-dev libusb-1.0-0-dev sdcc
-  - sudo apt install -y ros-$ROS_DISTRO-vrpn ros-$ROS_DISTRO-tf
+  - sudo apt install -y ros-$ROS_DISTRO-vrpn ros-$ROS_DISTRO-tf ros-$ROS_DISTRO-tf-conversions
   # install compiler for firmware
   - sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
   - sudo apt-get update

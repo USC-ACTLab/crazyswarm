@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import argparse
 import os
 import os.path
+import rospy
 
 import numpy as np
+import csv
 
 from pycrazyswarm import *
 import uav_trajectory
+
+import pycrazyswarm.cfsim.cffirmware as firm
 
 
 def main():
@@ -17,12 +23,42 @@ def main():
             "each of which contains numbered <n>.csv files for each formation change")
     args, unknown = parser.parse_known_args()
 
-    # load trajectory sequences
+    #
+    # DATA LOADING
+    #
+    folder_path = os.path.split(args.path)[0]
+    print("folder_path:", folder_path)
+
+    # ...capability matrices...
+    with open(os.path.join(folder_path, "Capability_matrices.csv")) as f:
+        read_data = csv.reader(f, delimiter=",")
+        data = list(read_data)
+        C_matrices = np.array(data).astype("int")
+
+    # ...simulation parameters...
+    with open(os.path.join(folder_path, "sim_parameter.txt")) as f:
+        lines = [line.rstrip('\n') for line in f]
+        n = int(lines[0])
+        r = int(lines[1])
+
+    # ...trajectory sequences...
     root = args.path
     robot_dirs = sorted(os.listdir(root), key=int)
     seqs = [load_all_csvs(os.path.join(root, d)) for d in robot_dirs]
     N = len(robot_dirs)
     steps = len(seqs[0])
+    assert C_matrices.shape[0] == steps + 2, "capabilities / trajs mismatch"
+
+    print("loading complete")
+
+    #
+    # DATA VALIDATION / PROCESSING
+    #
+
+    # transpose / reshape capabilities to (time, robot, capability)
+    C_matrices = C_matrices.reshape((r, n, -1)).transpose([2, 1, 0])
+    # lower brightness
+    C_matrices = 0.6 * C_matrices
 
     # validate sequences w.r.t. each other
     assert all(len(seq) == steps for seq in seqs)
@@ -31,12 +67,25 @@ def main():
         assert all(agent_lens == agent_lens[0])
     step_lens = [t.duration for t in seqs[0]]
 
-    # initialize crazyswarm
+    print("validation complete")
+
+    #
+    # CRAZYSWARM INITIALIZATION
+    #
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
     crazyflies = allcfs.crazyflies
-    assert len(crazyflies) == N
+
+    # support trials on <N robots
+    if len(crazyflies) < N:
+        N = len(crazyflies)
+        seqs = seqs[:N]
+        C_matrices = C_matrices[:,:N,:]
+    print("using", N, "crazyflies")
+
+    # transposed copy - by timestep instead of robot
+    seqs_t = zip(*seqs)
 
     # check that crazyflies.yaml initial positions match sequences.
     # only compare xy positions.
@@ -50,30 +99,149 @@ def main():
     errnorms = np.linalg.norm(errs[:,:2], axis=1)
     assert not np.any(np.abs(errnorms) > 0.1)
 
-    # upload the trajectories
-    for cf, seq in zip(crazyflies, seqs):
-        for i, traj in enumerate(seq):
-            cf.uploadTrajectory(i, 0, traj)
+    # planners for takeoff and landing
+    planners = [firm.planner() for cf in crazyflies]
+    for p in planners:
+        firm.plan_init(p)
 
-    # take off - get height from trajectories - must be all same
+    #
+    # ASSORTED OTHER SETUP
+    #
+
+    # local helper fn to set colors
+    def set_colors(i):
+        for cf, color in zip(crazyflies, C_matrices[i]):
+            cf.setLEDColor(*color)
+
+    # timing parameters
+    timescale = 1.0
+    pause_between = 1.5
+    takeoff_time = 3.0
+    land_time = 4.0
+
+    #
+    # RUN DEMO
+    #
+
+    print("validation complete")
+
+    # takeoff
+    print("takeoff")
     z_init = traj_starts[0,2]
-    assert np.all(traj_starts[:,2] == z_init)
-    t_takeoff = max(2.0, 2.0 * z_init)
-    allcfs.takeoff(targetHeight=z_init, duration=t_takeoff)
-    timeHelper.sleep(t_takeoff + 1.0)
 
-    # execute the trajectory sequence
-    timescale = 0.3
-    pause_between = 2.0
+    for cf, p in zip(crazyflies, planners):
+        p.lastKnownPosition = cf.position()
+        vposition = firm.mkvec(*p.lastKnownPosition)
+        firm.plan_takeoff(p, vposition, 0.0, z_init, takeoff_time, 0.0)
+
+    poll_planners(crazyflies, timeHelper, planners, takeoff_time)
+    end_pos = np.stack([cf.position() for cf in crazyflies])
+
+    # set to full capability colors
+    set_colors(0)
+
+    # pause - all is well...
+    hover(crazyflies, timeHelper, end_pos, pause_between)
+
+    # set colors first capability loss
+    set_colors(1)
+
+    # pause - reacting to capability loss
+    hover(crazyflies, timeHelper, end_pos, pause_between)
+
+    # main loop!
     for step in range(steps):
-        allcfs.startTrajectory(step, timescale=timescale)
-        timeHelper.sleep(step_lens[step] * timescale + pause_between)
+
+        # move - new configuration after capability loss
+        print("executing trajectory", step, "/", steps)
+        poll_trajs(crazyflies, timeHelper, seqs_t[step], timescale)
+        end_pos = np.stack([cf.position() for cf in crazyflies])
+
+        # done with this step's trajs - hover for a few sec
+        hover(crazyflies, timeHelper, end_pos, pause_between)
+
+        # change the LEDs - another capability loss
+        if step < steps - 1:
+            set_colors(step + 2)
+
+        # hover some more
+        hover(crazyflies, timeHelper, end_pos, pause_between)
 
     # land
-    allcfs.land(targetHeight=0.06, duration=t_takeoff)
-    timeHelper.sleep(t_takeoff + 1.0)
+    print("landing")
 
+    end_pos = np.stack([cf.position() for cf in crazyflies])
+    for cf, p, pos in zip(crazyflies, planners, end_pos):
+        vposition = firm.mkvec(*pos)
+        firm.plan_land(p, vposition, 0.0, 0.06, land_time, 0.0)
+
+    poll_planners(crazyflies, timeHelper, planners, land_time)
+
+    # cut power
     print("sequence complete.")
+    allcfs.emergency()
+
+
+def poll_trajs(crazyflies, timeHelper, trajs, timescale):
+    duration = trajs[0].duration
+    start_time = rospy.Time.now()
+    rate = rospy.Rate(100) # hz
+    while not rospy.is_shutdown():
+        t = (rospy.Time.now() - start_time).to_sec() / timescale
+        if t > duration:
+            break
+        for cf, traj in zip(crazyflies, trajs):
+            ev = traj.eval(t)
+            cf.cmdFullState(
+                ev.pos,
+                ev.vel,
+                ev.acc,
+                ev.yaw,
+                ev.omega)
+        rate.sleep()
+        #timeHelper.sleep(1e-6)
+
+
+def poll_planners(crazyflies, timeHelper, planners, duration):
+    start_time = rospy.Time.now()
+    rate = rospy.Rate(100) # hz
+    while not rospy.is_shutdown():
+        t = (rospy.Time.now() - start_time).to_sec()
+        if t > duration:
+            break
+        for cf, planner in zip(crazyflies, planners):
+            ev = firm.plan_current_goal(planner, t)
+            cf.cmdFullState(
+                firm2arr(ev.pos),
+                firm2arr(ev.vel),
+                firm2arr(ev.acc),
+                ev.yaw,
+                firm2arr(ev.omega))
+        rate.sleep()
+        #timeHelper.sleep(1e-6)
+
+
+def hover(crazyflies, timeHelper, positions, duration):
+    start_time = rospy.Time.now()
+    rate = rospy.Rate(100) # hz
+    zero = np.zeros(3)
+    while not rospy.is_shutdown():
+        t = (rospy.Time.now() - start_time).to_sec()
+        if t > duration:
+            break
+        for cf, pos in zip(crazyflies, positions):
+            cf.cmdFullState(
+                pos,
+                zero,
+                zero,
+                0.0,
+                zero)
+        rate.sleep()
+        #timeHelper.sleep(1e-6)
+
+
+def firm2arr(vec):
+    return np.array([vec.x, vec.y, vec.z])
 
 
 def load_all_csvs(path):

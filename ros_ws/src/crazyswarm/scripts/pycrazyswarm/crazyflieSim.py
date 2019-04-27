@@ -132,7 +132,9 @@ class Crazyflie:
 
     def position(self):
         pos = self._vposition()
-        return np.array([pos.x, pos.y, pos.z])
+        if not type(pos) is np.ndarray:
+            return np.array([pos.x, pos.y, pos.z])
+        return pos
 
     def getParam(self, name):
         print("WARNING: getParam not implemented in simulation!")

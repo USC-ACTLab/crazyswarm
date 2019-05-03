@@ -1386,11 +1386,9 @@ public:
 #ifdef ENABLE_OPTITRACK
     else if (motionCaptureType == "optitrack")
     {
-      std::string localIP;
-      std::string serverIP;
-      nl.getParam("optitrack_local_ip", localIP);
-      nl.getParam("optitrack_server_ip", serverIP);
-      mocap = new libmotioncapture::MotionCaptureOptitrack(localIP, serverIP);
+      std::string hostName;
+      nl.getParam("optitrack_host_name", hostName);
+      mocap = new libmotioncapture::MotionCaptureOptitrack(hostName);
     }
 #endif
 #ifdef ENABLE_PHASESPACE

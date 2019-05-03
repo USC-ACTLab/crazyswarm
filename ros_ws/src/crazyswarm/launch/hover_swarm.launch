@@ -41,8 +41,7 @@
       motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       vicon_host_name: "vicon"
-      # optitrack_local_ip: "localhost"
-      # optitrack_server_ip: "optitrack"
+      # optitrack_host_name: "optitrack"
       # qualisys_host_name: "10.0.5.219"
       # qualisys_base_port: 22222
       # vrpn_host_name: "vicon"

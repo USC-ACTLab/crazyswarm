@@ -175,8 +175,11 @@ public:
     const std::vector<crazyflie_driver::LogBlock>& log_blocks,
     ros::CallbackQueue& queue,
     bool force_no_cache)
-    : m_cf(link_uri, rosLogger)
-    , m_tf_prefix(tf_prefix)
+    : m_tf_prefix(tf_prefix)
+    , m_cf(
+      link_uri,
+      rosLogger,
+      std::bind(&CrazyflieROS::onConsole, this, std::placeholders::_1))
     , m_frame(frame)
     , m_worldFrame(worldFrame)
     , m_enableParameters(enable_parameters)
@@ -226,7 +229,7 @@ public:
   {
     m_logBlocks.clear();
     m_logBlocksGeneric.clear();
-    m_cf.trySysOff();
+    // m_cf.trySysOff();
     m_logFile.close();
   }
 
@@ -592,6 +595,17 @@ public:
       }
   }
 
+  void onConsole(const char* msg) {
+    static std::string messageBuffer;
+    messageBuffer += msg;
+    size_t pos = messageBuffer.find('\n');
+    if (pos != std::string::npos) {
+      messageBuffer[pos] = 0;
+      ROS_INFO_NAMED(m_tf_prefix, "CF Console: %s", messageBuffer.c_str());
+      messageBuffer.erase(0, pos+1);
+    }
+  }
+
   void onLogCustom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
 
     ros::Publisher* pub = reinterpret_cast<ros::Publisher*>(userData);
@@ -644,8 +658,8 @@ public:
   }
 
 private:
-  Crazyflie m_cf;
   std::string m_tf_prefix;
+  Crazyflie m_cf;
   std::string m_frame;
   std::string m_worldFrame;
   bool m_enableParameters;

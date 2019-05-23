@@ -650,8 +650,18 @@ public:
     m_cf.setParam<uint8_t>(entry->id, 1);
 
     // kalmanUSC might not be part of the firmware
-    entry = m_cf.getParamTocEntry("kalmanUSC", "rstWithExtPos");
+    entry = m_cf.getParamTocEntry("kalmanUSC", "resetEstimation");
     if (entry) {
+      m_cf.startSetParamRequest();
+      entry = m_cf.getParamTocEntry("kalmanUSC", "initialX");
+      m_cf.addSetParam(entry->id, x);
+      entry = m_cf.getParamTocEntry("kalmanUSC", "initialY");
+      m_cf.addSetParam(entry->id, y);
+      entry = m_cf.getParamTocEntry("kalmanUSC", "initialZ");
+      m_cf.addSetParam(entry->id, z);
+      m_cf.setRequestedParams();
+
+      entry = m_cf.getParamTocEntry("kalmanUSC", "resetEstimation");
       m_cf.setParam<uint8_t>(entry->id, 1);
     }
 

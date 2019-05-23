@@ -1074,7 +1074,8 @@ private:
         nGlobal.getParam("crazyflieTypes/" + type + "/markerConfiguration", markerConfigurationIdx);
         int dynamicsConfigurationIdx;
         nGlobal.getParam("crazyflieTypes/" + type + "/dynamicsConfiguration", dynamicsConfigurationIdx);
-        objects.push_back(libobjecttracker::Object(markerConfigurationIdx, dynamicsConfigurationIdx, m));
+        std::string name = "cf" + std::to_string(id);
+        objects.push_back(libobjecttracker::Object(markerConfigurationIdx, dynamicsConfigurationIdx, m, name));
 
         std::stringstream sstr;
         sstr << std::setfill ('0') << std::setw(2) << std::hex << id;

@@ -25,10 +25,12 @@ def main():
         uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
         if args.nrf51:
             print("Flash NRF51 FW to {}".format(uri))
-            subprocess.call(["../crazyflie-clients-python/bin/cfloader -w " + uri + " flash ../crazyflie2-nrf-firmware/cf2_nrf.bin nrf51-fw"], shell=True)
+            # subprocess.call(["../crazyflie-clients-python/bin/cfloader -w " + uri + " flash ../crazyflie2-nrf-firmware/cf2_nrf.bin nrf51-fw"], shell=True)
+            subprocess.call(["rosrun crazyflie_tools flash --uri " + uri + " --target nrf51 --filename ../crazyflie2-nrf-firmware/cf2_nrf.bin"], shell=True)
         if args.stm32:
             print("Flash STM32 FW to {}".format(uri))
-            subprocess.call(["../crazyflie-clients-python/bin/cfloader -w " + uri + " flash ../crazyflie-firmware/cf2.bin stm32-fw"], shell=True)
+            # subprocess.call(["../crazyflie-clients-python/bin/cfloader -w " + uri + " flash ../crazyflie-firmware/cf2.bin stm32-fw"], shell=True)
+            subprocess.call(["rosrun crazyflie_tools flash --uri " + uri + " --target stm32 --filename ../crazyflie-firmware/cf2.bin"], shell=True)
 
 
 if __name__ == "__main__":

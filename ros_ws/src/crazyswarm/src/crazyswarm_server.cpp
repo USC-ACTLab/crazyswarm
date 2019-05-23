@@ -777,7 +777,10 @@ public:
 
     if (m_useMotionCaptureObjectTracking) {
       for (auto cf : m_cfs) {
-        publishRigidBody(cf->frame(), cf->id(), states);
+        bool found = publishRigidBody(cf->frame(), cf->id(), states);
+        if (found) {
+          cf->initializePositionIfNeeded(states.back().x, states.back().y, states.back().z);
+        }
       }
     } else {
       // run object tracker
@@ -989,7 +992,7 @@ public:
 
 private:
 
-  void publishRigidBody(const std::string& name, uint8_t id, std::vector<CrazyflieBroadcaster::externalPose> &states)
+  bool publishRigidBody(const std::string& name, uint8_t id, std::vector<CrazyflieBroadcaster::externalPose> &states)
   {
     bool found = false;
     for (const auto& rigidBody : *m_pMocapObjects) {
@@ -1019,7 +1022,7 @@ private:
         transform.setRotation(q);
         m_br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", name));
         found = true;
-        break;
+        return true;
       }
 
     }
@@ -1027,6 +1030,7 @@ private:
     if (!found) {
       ROS_WARN("No updated pose for motion capture object %s", name.c_str());
     }
+    return false;
   }
 
 

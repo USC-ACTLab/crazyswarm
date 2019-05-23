@@ -40,6 +40,7 @@
 #include <csignal> // or C++ style alternative
 
 // Motion Capture
+#include "libmotioncapture/testmocap.h"
 #ifdef ENABLE_VICON
 #include "libmotioncapture/vicon.h"
 #endif
@@ -1387,6 +1388,20 @@ public:
     libmotioncapture::MotionCapture* mocap = nullptr;
     if (motionCaptureType == "none")
     {
+    } else if (motionCaptureType == "test")
+    {
+        std::vector<libmotioncapture::Object> objects;
+        pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZ>);
+        pointCloud->push_back(pcl::PointXYZ(-0.5, 1.0, 0.0));
+        pointCloud->push_back(pcl::PointXYZ(-0.5, 0.5, 0.0));
+        pointCloud->push_back(pcl::PointXYZ(-0.5, 0.0, 0.0));
+        pointCloud->push_back(pcl::PointXYZ(-0.5, -0.5, 0.0));
+        pointCloud->push_back(pcl::PointXYZ(-0.5, -1.0, 0.0));
+
+        mocap = new libmotioncapture::MotionCaptureTest(
+          0.01,
+          objects,
+          pointCloud);
     }
 #ifdef ENABLE_VICON
     else if (motionCaptureType == "vicon")

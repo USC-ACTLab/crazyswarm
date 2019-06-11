@@ -896,6 +896,7 @@ public:
 
   void emergency()
   {
+    m_cfbc.emergencyStop();
     m_isEmergency = true;
   }
 
@@ -1709,8 +1710,12 @@ private:
     std_srvs::Empty::Response& res)
   {
     ROS_FATAL("Emergency requested!");
-    for (auto& group : m_groups) {
-      group->emergency();
+
+    for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
+      for (auto& group : m_groups) {
+        group->emergency();
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
     }
     m_isEmergency = true;
 

@@ -1217,8 +1217,14 @@ private:
             double b = value;
             nGlobal.setParam(cf->frame() + "/" + group + "/" + param, b);
             std::cout << "update " << group + "/" + param << " to " << b << std::endl;
+          } else if (value.getType() == XmlRpc::XmlRpcValue::TypeString) {
+            // "1e-5" is not recognize as double; convert manually here
+            std::string value_str = value;
+            double value = std::stod(value_str);
+            nGlobal.setParam(cf->frame() + "/" + group + "/" + param, value);
+            std::cout << "update " << group + "/" + param << " to " << value << std::endl;
           } else {
-            ROS_WARN("No known type for %s.%s!", group.c_str(), param.c_str());
+            ROS_ERROR("No known type for %s.%s! (type: %d)", group.c_str(), param.c_str(), value.getType());
           }
           request.params.push_back(group + "/" + param);
 

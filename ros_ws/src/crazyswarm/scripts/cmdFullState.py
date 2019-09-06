@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 
 import numpy as np
-import rospy
 
 from pycrazyswarm import *
 import uav_trajectory
 
-def executeTrajectory(file, reverse = False, rate = 100, offset=np.array([0,0,0])):
+def executeTrajectory(timeHelper, file, reverse = False, rate = 100, offset=np.array([0,0,0])):
     traj = uav_trajectory.Trajectory()
     traj.loadcsv(file)
-    rate = rospy.Rate(rate)
 
-    start_time = rospy.Time.now()
-    while not rospy.is_shutdown():
-        t = (rospy.Time.now() - start_time).to_sec()
+    start_time = timeHelper.time()
+    while not timeHelper.isShutdown():
+        t = timeHelper.time() - start_time
         print(t)
         if t > traj.duration:
             break
@@ -30,7 +28,8 @@ def executeTrajectory(file, reverse = False, rate = 100, offset=np.array([0,0,0]
                 e.yaw,
                 e.omega)
 
-        rate.sleep()
+        timeHelper.sleepForRate(rate)
+
 
 if __name__ == "__main__":
     swarm = Crazyswarm()
@@ -39,9 +38,9 @@ if __name__ == "__main__":
 
     rate = 100
 
-    executeTrajectory("takeoff.csv", False, rate)
-    executeTrajectory("figure8.csv", False, rate, np.array([0,0,0.5]))
-    executeTrajectory("takeoff.csv", True, rate)
+    executeTrajectory(timeHelper, "takeoff.csv", False, rate)
+    executeTrajectory(timeHelper, "figure8.csv", False, rate, np.array([0, 0, 0.5]))
+    executeTrajectory(timeHelper, "takeoff.csv", True, rate)
 
     for i in range(0, 100):
         for cf in allcfs.crazyflies:

@@ -44,6 +44,15 @@ class TimeHelper:
                 self.output.update(t, self.crazyflies)
             self.step(self.dt)
 
+    # Mock for abstraction of rospy.Rate.sleep().
+    def sleepForRate(self, rate):
+        # TODO: account for rendering time, or is it worth the complexity?
+        self.sleep(1.0 / rate)
+
+    # Mock for abstraction of rospy.is_shutdown().
+    def isShutdown(self):
+        return False
+
     def nextPhase(self):
         if self.output:
             self.output.nextPhase()

@@ -20,12 +20,23 @@ class TimeHelper:
     def __init__(self):
         rospy.wait_for_service("/next_phase")
         self.nextPhase = rospy.ServiceProxy("/next_phase", Empty)
+        self.rosRate = None
+        self.rateHz = None
 
     def time(self):
-        return time.time()
+        return rospy.Time.now().to_sec()
 
     def sleep(self, duration):
-        time.sleep(duration)
+        rospy.sleep(duration)
+
+    def sleepForRate(self, rateHz):
+        if self.rosRate = None or self.rateHz != rateHz:
+            self.rosRate = rospy.Rate(rateHz)
+            self.rateHz = rateHz
+        self.rate.sleep()
+
+    def isShutdown(self):
+        return rospy.is_shutdown()
 
     def nextPhase(self):
         self.nextPhase()

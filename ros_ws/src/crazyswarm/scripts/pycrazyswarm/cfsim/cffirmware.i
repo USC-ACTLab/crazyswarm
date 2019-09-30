@@ -1,15 +1,17 @@
 %module cffirmware
+
+// ignore GNU specific compiler attributes
+#define __attribute__(x)
+
 %{
 #include "math3d.h"
 #include "pptraj.h"
 #include "planner.h"
-#include "packetdef.h"
 %}
 
 %include "math3d.h"
 %include "pptraj.h"
 %include "planner.h"
-%include "packetdef.h"
 
 %inline %{
 void poly4d_set(struct poly4d *poly, int dim, int coef, float val)

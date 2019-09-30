@@ -936,17 +936,6 @@ public:
     // }
   }
 
-  void nextPhase()
-  {
-      for (size_t i = 0; i < m_outputCSVs.size(); ++i) {
-        auto& file = *m_outputCSVs[i];
-        file.close();
-        file.open("cf" + std::to_string(m_cfs[i]->id()) + "_phase" + std::to_string(m_phase + 1) + ".csv");
-        file << "t,x,y,z,roll,pitch,yaw\n";
-      }
-      m_phase += 1;
-      m_phaseStart = std::chrono::system_clock::now();
-  }
 #if 0
   template<class T, class U>
   void updateParam(uint8_t group, uint8_t id, Crazyflie::ParamType type, const std::string& ros_param) {
@@ -1265,7 +1254,6 @@ public:
     , m_serviceTakeoff()
     , m_serviceLand()
     , m_serviceGoTo()
-    , m_serviceNextPhase()
     , m_lastInteractiveObjectPosition(-10, -10, 1)
     , m_broadcastingNumRepeats(15)
     , m_broadcastingDelayBetweenRepeatsMs(1)
@@ -1279,7 +1267,6 @@ public:
     m_serviceLand = nh.advertiseService("land", &CrazyflieServer::land, this);
     m_serviceGoTo = nh.advertiseService("go_to", &CrazyflieServer::goTo, this);
 
-    m_serviceNextPhase = nh.advertiseService("next_phase", &CrazyflieServer::nextPhase, this);
     // m_serviceUpdateParams = nh.advertiseService("update_params", &CrazyflieServer::updateParams, this);
 
     m_pubPointCloud = nh.advertise<sensor_msgs::PointCloud>("pointCloud", 1);
@@ -1792,17 +1779,6 @@ private:
     return true;
   }
 
-  bool nextPhase(
-    std_srvs::Empty::Request& req,
-    std_srvs::Empty::Response& res)
-  {
-    ROS_INFO("NextPhase!");
-    for (auto& group : m_groups) {
-      group->nextPhase();
-    }
-
-    return true;
-  }
 #if 0
   bool updateParams(
     crazyflie_driver::UpdateParams::Request& req,
@@ -1898,7 +1874,6 @@ private:
   ros::ServiceServer m_serviceTakeoff;
   ros::ServiceServer m_serviceLand;
   ros::ServiceServer m_serviceGoTo;
-  ros::ServiceServer m_serviceNextPhase;
   ros::ServiceServer m_serviceUpdateParams;
 
   ros::Publisher m_pubPointCloud;

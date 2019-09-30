@@ -44,10 +44,6 @@ class TimeHelper:
                 self.output.update(t, self.crazyflies)
             self.step(self.dt)
 
-    def nextPhase(self):
-        if self.output:
-            self.output.nextPhase()
-
     def addObserver(self, observer):
         self.observers.append(observer)
 

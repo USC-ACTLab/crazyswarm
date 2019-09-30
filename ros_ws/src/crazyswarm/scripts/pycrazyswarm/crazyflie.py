@@ -18,17 +18,13 @@ def arrayToGeometryPoint(a):
 
 class TimeHelper:
     def __init__(self):
-        rospy.wait_for_service("/next_phase")
-        self.nextPhase = rospy.ServiceProxy("/next_phase", Empty)
+        pass
 
     def time(self):
         return time.time()
 
     def sleep(self, duration):
         time.sleep(duration)
-
-    def nextPhase(self):
-        self.nextPhase()
 
 
 class Crazyflie:

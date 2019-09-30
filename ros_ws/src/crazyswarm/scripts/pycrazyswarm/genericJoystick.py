@@ -69,7 +69,6 @@ class Joystick:
                     self.timeHelper.sleep(0.01)
                 while keyPoller.poll() is not None:
                     self.timeHelper.sleep(0.01)
-        self.timeHelper.nextPhase()
 
 
     def checkIfAnyButtonIsPressed(self):
@@ -91,4 +90,3 @@ class Joystick:
             while self.checkIfAnyButtonIsPressed() is not None:
                 self.timeHelper.sleep(0.01)
             return buttons
-        self.timeHelper.nextPhase()

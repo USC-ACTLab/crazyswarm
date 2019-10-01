@@ -1191,22 +1191,31 @@ private:
     // char dummy;
     // std::cin >> dummy;
 
-    // update global and type-specific parameters
-    std::vector<std::string> paramLocations;
-    paramLocations.push_back("firmwareParams");
-    paramLocations.push_back("crazyflieTypes/" + cf->type() + "/firmwareParams");
+    // update global, type-specific, and CF-specific parameters
+    std::vector<XmlRpc::XmlRpcValue> firmwareParamsVec(2);
+    n.getParam("firmwareParams", firmwareParamsVec[0]);
+    nGlobal.getParam("crazyflieTypes/" + cf->type() + "/firmwareParams", firmwareParamsVec[1]);
+
+    XmlRpc::XmlRpcValue crazyflies;
+    nGlobal.getParam("crazyflies", crazyflies);
+    ROS_ASSERT(crazyflies.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    for (int32_t i = 0; i < crazyflies.size(); ++i) {
+      ROS_ASSERT(crazyflies[i].getType() == XmlRpc::XmlRpcValue::TypeStruct);
+      XmlRpc::XmlRpcValue crazyflie = crazyflies[i];
+      int id = crazyflie["id"];
+      if (id == cf->id()) {
+        if (crazyflie.hasMember("firmwareParams")) {
+          firmwareParamsVec.push_back(crazyflie["firmwareParams"]);
+        }
+        break;
+      }
+    }
+
 
     crazyflie_driver::UpdateParams::Request request;
     crazyflie_driver::UpdateParams::Response response;
 
-    for (const auto& paramLocation : paramLocations) {
-      XmlRpc::XmlRpcValue firmwareParams;
-      if (paramLocation == "firmwareParams") {
-        n.getParam(paramLocation, firmwareParams);
-      } else {
-        nGlobal.getParam(paramLocation, firmwareParams);
-      }
-
+    for (auto& firmwareParams : firmwareParamsVec) {
       // ROS_ASSERT(firmwareParams.getType() == XmlRpc::XmlRpcValue::TypeArray);
       auto iter = firmwareParams.begin();
       for (; iter != firmwareParams.end(); ++iter) {

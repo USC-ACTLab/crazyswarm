@@ -60,6 +60,8 @@ class Crazyflie:
 
         self.cmdStopPublisher = rospy.Publisher(prefix + "/cmd_stop", std_msgs.msg.Empty, queue_size=1)
 
+        self.cmdVelPublisher = rospy.Publisher(prefix + "/cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
+
     def setGroupMask(self, groupMask):
         self.setGroupMaskService(groupMask)
 
@@ -128,6 +130,14 @@ class Crazyflie:
 
     def cmdStop(self):
         self.cmdStopPublisher.publish(std_msgs.msg.Empty())
+
+    def cmdVel(self, roll, pitch, yawrate, thrust):
+        msg = geometry_msgs.msg.Twist()
+        msg.linear.x = pitch
+        msg.linear.y = roll
+        msg.angular.z = yawrate
+        msg.linear.z = thrust
+        self.cmdVelPublisher.publish(msg)
 
     #
     # wrappers around the parameter setting system for common cases

@@ -207,6 +207,7 @@ public:
     m_serviceGoTo = n.advertiseService(tf_prefix + "/go_to", &CrazyflieROS::goTo, this);
     m_serviceSetGroupMask = n.advertiseService(tf_prefix + "/set_group_mask", &CrazyflieROS::setGroupMask, this);
 
+    m_subscribeCmdVel = n.subscribe(tf_prefix + "/cmd_vel", 1, &CrazyflieROS::cmdVelChanged, this);
     m_subscribeCmdPosition = n.subscribe(tf_prefix + "/cmd_position", 1, &CrazyflieROS::cmdPositionSetpoint, this);
     m_subscribeCmdFullState = n.subscribe(tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
     m_subscribeCmdStop = n.subscribe(m_tf_prefix + "/cmd_stop", 1, &CrazyflieROS::cmdStop, this);
@@ -434,6 +435,21 @@ public:
     m_cf.setGroupMask(req.groupMask);
 
     return true;
+  }
+
+  void cmdVelChanged(
+    const geometry_msgs::Twist::ConstPtr& msg)
+  {
+    // if (!m_isEmergency) {
+      float roll = msg->linear.y;
+      float pitch = -msg->linear.x;
+      float yawrate = msg->angular.z;
+      uint16_t thrust = (uint16_t)msg->linear.z;
+
+      m_cf.sendSetpoint(roll, pitch, yawrate, thrust);
+      // ROS_INFO("cmdVel %f %f %f %d (%f)", roll, pitch, yawrate, thrust, msg->linear.z);
+      // m_sentSetpoint = true;
+    // }
   }
 
   void cmdPositionSetpoint(
@@ -688,6 +704,7 @@ private:
   ros::ServiceServer m_serviceGoTo;
   ros::ServiceServer m_serviceSetGroupMask;
 
+  ros::Subscriber m_subscribeCmdVel;
   ros::Subscriber m_subscribeCmdPosition;
   ros::Subscriber m_subscribeCmdFullState;
   ros::Subscriber m_subscribeCmdStop;

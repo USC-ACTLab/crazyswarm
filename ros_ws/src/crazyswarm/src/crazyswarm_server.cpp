@@ -771,6 +771,9 @@ public:
     m_tracker->setLogWarningCallback(logWarn);
     if (writeCSVs) {
       m_outputCSVs.resize(m_cfs.size());
+      for (auto& output : m_outputCSVs) {
+        output.reset(new std::ofstream);
+      }
     }
   }
 
@@ -1792,7 +1795,7 @@ private:
       for (auto& group : m_groups) {
         group->startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.groupMask);
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(3));
+      std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
     }
 
     return true;

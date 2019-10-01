@@ -218,7 +218,7 @@ class CrazyflieServer:
         self.timeHelper.crazyflies = self.crazyflies
 
     def emergency(self):
-        print("WARNING: setParams not implemented in simulation!")
+        print("WARNING: emergency not implemented in simulation!")
 
     def takeoff(self, targetHeight, duration, groupMask = 0):
         for crazyflie in self.crazyflies:
@@ -239,3 +239,6 @@ class CrazyflieServer:
     def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         for crazyflie in self.crazyflies:
             crazyflie.startTrajectory(trajectoryId, timescale, reverse, relative, groupMask)
+
+    def setParam(self, name, value):
+        print("WARNING: setParam not implemented in simulation!")

@@ -509,6 +509,7 @@ public:
 
     m_cf.logReset();
 
+    int numParams = 0;
     if (m_enableParameters)
     {
       ROS_INFO("[%s] Requesting parameters...", m_frame.c_str());
@@ -539,6 +540,7 @@ public:
             ros::param::set(paramName, m_cf.getParam<float>(entry.id));
             break;
         }
+        ++numParams;
       }
       ros::NodeHandle n;
       n.setCallbackQueue(&queue);
@@ -546,7 +548,7 @@ public:
     }
     auto end1 = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsedSeconds1 = end1-start;
-    ROS_INFO("[%s] reqParamTOC: %f s", m_frame.c_str(), elapsedSeconds1.count());
+    ROS_INFO("[%s] reqParamTOC: %f s (%d params)", m_frame.c_str(), elapsedSeconds1.count(), numParams);
 
     // Logging
     if (m_enableLogging) {
@@ -936,50 +938,50 @@ public:
     // }
   }
 
-#if 0
+
+
   template<class T, class U>
-  void updateParam(uint8_t group, uint8_t id, Crazyflie::ParamType type, const std::string& ros_param) {
+  void updateParam(const char* group, const char* name, const std::string& ros_param) {
       U value;
       ros::param::get(ros_param, value);
-      m_cfbc.setParam<T>(group, id, type, (T)value);
+      m_cfbc.setParam<T>(group, name, (T)value);
   }
 
   void updateParams(
-    uint8_t group,
     const std::vector<std::string>& params)
   {
     for (const auto& p : params) {
-      std::string ros_param = "/cfgroup" + std::to_string((int)group) + "/" + p;
+      std::string ros_param = "/allcfs/" + p;
       size_t pos = p.find("/");
       std::string g(p.begin(), p.begin() + pos);
       std::string n(p.begin() + pos + 1, p.end());
 
-      // TODO: this assumes that all IDs are identically
-      //       should use byName lookup instead!
+      // This assumes that we can find the variable in the TOC of the first
+      // CF to find the type (the actual update is done by name)
       auto entry = m_cfs.front()->getParamTocEntry(g, n);
       if (entry)
       {
         switch (entry->type) {
           case Crazyflie::ParamTypeUint8:
-            updateParam<uint8_t, int>(group, entry->id, entry->type, ros_param);
+            updateParam<uint8_t, int>(g.c_str(), n.c_str(), ros_param);
             break;
           case Crazyflie::ParamTypeInt8:
-            updateParam<int8_t, int>(group, entry->id, entry->type, ros_param);
+            updateParam<int8_t, int>(g.c_str(), n.c_str(), ros_param);
             break;
           case Crazyflie::ParamTypeUint16:
-            updateParam<uint16_t, int>(group, entry->id, entry->type, ros_param);
+            updateParam<uint16_t, int>(g.c_str(), n.c_str(), ros_param);
             break;
           case Crazyflie::ParamTypeInt16:
-            updateParam<int16_t, int>(group, entry->id, entry->type, ros_param);
+            updateParam<int16_t, int>(g.c_str(), n.c_str(), ros_param);
             break;
           case Crazyflie::ParamTypeUint32:
-            updateParam<uint32_t, int>(group, entry->id, entry->type, ros_param);
+            updateParam<uint32_t, int>(g.c_str(), n.c_str(), ros_param);
             break;
           case Crazyflie::ParamTypeInt32:
-            updateParam<int32_t, int>(group, entry->id, entry->type, ros_param);
+            updateParam<int32_t, int>(g.c_str(), n.c_str(), ros_param);
             break;
           case Crazyflie::ParamTypeFloat:
-            updateParam<float, float>(group, entry->id, entry->type, ros_param);
+            updateParam<float, float>(g.c_str(), n.c_str(), ros_param);
             break;
         }
       }
@@ -988,7 +990,6 @@ public:
       }
     }
   }
-#endif
 
 private:
 
@@ -1267,7 +1268,7 @@ public:
     m_serviceLand = nh.advertiseService("land", &CrazyflieServer::land, this);
     m_serviceGoTo = nh.advertiseService("go_to", &CrazyflieServer::goTo, this);
 
-    // m_serviceUpdateParams = nh.advertiseService("update_params", &CrazyflieServer::updateParams, this);
+    m_serviceUpdateParams = nh.advertiseService("update_params", &CrazyflieServer::updateParams, this);
 
     m_pubPointCloud = nh.advertise<sensor_msgs::PointCloud>("pointCloud", 1);
 
@@ -1779,7 +1780,6 @@ private:
     return true;
   }
 
-#if 0
   bool updateParams(
     crazyflie_driver::UpdateParams::Request& req,
     crazyflie_driver::UpdateParams::Response& res)
@@ -1788,14 +1788,14 @@ private:
 
     for (size_t i = 0; i < m_broadcastingNumRepeats; ++i) {
       for (auto& group : m_groups) {
-        group->updateParams(req.group, req.params);
+        group->updateParams(req.params);
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(m_broadcastingDelayBetweenRepeatsMs));
     }
 
     return true;
   }
-#endif
+
 //
   void readMarkerConfigurations(
     std::vector<libobjecttracker::MarkerConfiguration>& markerConfigurations)

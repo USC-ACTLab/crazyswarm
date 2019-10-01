@@ -158,8 +158,8 @@ class CrazyflieServer:
         self.goToService = rospy.ServiceProxy("/go_to", GoTo)
         rospy.wait_for_service("/start_trajectory");
         self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", StartTrajectory)
-        # rospy.wait_for_service("/update_params")
-        # self.updateParamsService = rospy.ServiceProxy("/update_params", UpdateParams)
+        rospy.wait_for_service("/update_params")
+        self.updateParamsService = rospy.ServiceProxy("/update_params", UpdateParams)
 
         with open("../launch/crazyflies.yaml", 'r') as ymlfile:
             cfg = yaml.load(ymlfile)
@@ -194,6 +194,6 @@ class CrazyflieServer:
     def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
 
-    # def setParam(self, name, value, group = 0):
-    #     rospy.set_param("/cfgroup" + str(group) + "/" + name, value)
-    #     self.updateParamsService(group, [name])
+    def setParam(self, name, value):
+        rospy.set_param("/allcfs/" + name, value)
+        self.updateParamsService([name])

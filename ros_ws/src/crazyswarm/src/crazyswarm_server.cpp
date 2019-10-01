@@ -615,15 +615,15 @@ public:
   }
 
   void onConsole(const char* msg) {
-    static std::string messageBuffer;
-    messageBuffer += msg;
-    size_t pos = messageBuffer.find('\n');
+    m_messageBuffer += msg;
+    size_t pos = m_messageBuffer.find('\n');
     if (pos != std::string::npos) {
-      messageBuffer[pos] = 0;
-      ROS_INFO_NAMED(m_tf_prefix, "CF Console: %s", messageBuffer.c_str());
-      messageBuffer.erase(0, pos+1);
+      m_messageBuffer[pos] = 0;
+      ROS_INFO("[%s] %s", m_frame.c_str(), m_messageBuffer.c_str());
+      m_messageBuffer.erase(0, pos+1);
     }
   }
+
 
   void onLogCustom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
 
@@ -718,6 +718,7 @@ private:
   std::ofstream m_logFile;
   bool m_forceNoCache;
   bool m_initializedPosition;
+  std::string m_messageBuffer;
 };
 
 

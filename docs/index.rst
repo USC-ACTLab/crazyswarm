@@ -8,7 +8,7 @@ Welcome to Crazyswarm's documentation!
 
 The Crazyswarm projects allows you to fly a swarm of quadcopters (using Bitcraze Crazyflie 2.0 directly or as control boards)
 in tight, synchronized formations.
-A motion capture system is required (VICON, OptiTrack, Qualisy, PhaseSpace are supported). We successfully flew 49
+A motion capture system is recommended (VICON, OptiTrack, Qualisy, PhaseSpace are supported). We successfully flew 49
 Crazyflies using three Crazyradios. An example video for what you can do is shown below:
 
 .. raw:: html

@@ -144,11 +144,6 @@ Vicon is fully supported and tested with Tracker 3.4.
 OptiTrack
 """""""""
 
-.. warning::
-
-    The OptiTrack support currently has the following limitations:
-      * It is incompatible with Motive 2.0 because it uses NatNet 3.0.1 which has a different bit-steam syntax. Use an older version (Motive 1.10.3 is known to work).
-
 Use the following settings for correct operation:
   * Un-tick the rigid body in Motive so that the point cloud is streamed.
   * Advanced network settings. Up axis: Z
@@ -168,7 +163,7 @@ If using ``libobjecttracker`` as ``object_tracking_type`` and you have setup 6DO
 None
 """"
 
-The usage of a motion capture system can be disabled by selecting ``none``. This is useful for on-board solutions such as the Ultra-Wideband localization system (UWB), or dead-reckoning using the flow-deck.
+The usage of a motion capture system can be disabled by selecting ``none``. This is useful for on-board solutions such as the Ultra-Wideband localization system (UWB), LightHouse, or dead-reckoning using the flow-deck.
 
 
 Configure Marker Arrangement

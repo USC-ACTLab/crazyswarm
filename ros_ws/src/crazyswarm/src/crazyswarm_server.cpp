@@ -739,7 +739,6 @@ public:
     std::vector<libmotioncapture::Object>* pMocapObjects,
     int radio,
     int channel,
-    const std::string broadcastAddress,
     bool useMotionCaptureObjectTracking,
     const std::vector<crazyflie_driver::LogBlock>& logBlocks,
     std::string interactiveObject,
@@ -752,7 +751,7 @@ public:
     , m_pMarkers(pMarkers)
     , m_pMocapObjects(pMocapObjects)
     , m_slowQueue()
-    , m_cfbc("radio://" + std::to_string(radio) + "/" + std::to_string(channel) + "/2M/" + broadcastAddress)
+    , m_cfbc("radio://" + std::to_string(radio) + "/" + std::to_string(channel) + "/2M/FFE7E7E7E7")
     , m_isEmergency(false)
     , m_useMotionCaptureObjectTracking(useMotionCaptureObjectTracking)
     , m_br()
@@ -1355,7 +1354,6 @@ public:
     readDynamicsConfigurations(dynamicsConfigurations);
     readChannels(channels);
 
-    std::string broadcastAddress;
     bool useMotionCaptureObjectTracking;
     std::string logFilePath;
     std::string interactiveObject;
@@ -1368,7 +1366,6 @@ public:
     std::string objectTrackingType;
     nl.getParam("object_tracking_type", objectTrackingType);
     useMotionCaptureObjectTracking = (objectTrackingType == "motionCapture");
-    nl.getParam("broadcast_address", broadcastAddress);
     nl.param<std::string>("save_point_clouds", logFilePath, "");
     nl.param<std::string>("interactive_object", interactiveObject, "");
     nl.getParam("print_latency", printLatency);
@@ -1509,7 +1506,6 @@ public:
                 &mocapObjects,
                 radio,
                 channel,
-                broadcastAddress,
                 useMotionCaptureObjectTracking,
                 logBlocks,
                 interactiveObject,

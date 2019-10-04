@@ -7,17 +7,14 @@
 
   <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
-      broadcast_address: "FFE7E7E7E7"
       world_frame: "/world"
+      # Logging configuration (Use enable_logging to actually enable logging)
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
-      # genericLogTopic_log1_Variables: ["ekfprof.usec_setup", "ekfprof.usec_innov", "ekfprof.usec_gain", "ekfprof.usec_corr", "ekfprof.usec_cov"]
-      # genericLogTopic_log1_Variables: ["profiling.usec_ekf", "profiling.usec_traj", "profiling.usec_ctrl", "profiling.usec_idle"]
-      # genericLogTopic_log1_Variables: ["stabilizer.x", "ctrltarget.x", "vicon.x", "stabilizer.z", "ctrltarget.z", "vicon.z"]
-      # genericLogTopic_log1_Variables: ["stateEstimate.roll", "ctrlMel.rolld"]
-      genericLogTopic_log1_Variables: ["ctrlStat.edist"]
-      # genericLogTopic_log1_Variables: ["stateEstimate.yaw", "ctrltarget.yaw", "stateEstimate.x", "ctrltarget.x"] #, "ctrltarget.x", "stateEstimate.roll", "ctrlMel.rolld"]
-      firmwareParams: # for all (independent of type)
+      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x"]
+      # firmware parameters for all drones (use crazyflieTypes.yaml to set per type, or
+      # allCrazyflies.yaml to set per drone)
+      firmwareParams:
         commander:
           enHighLevel: 1
         stabilizer:
@@ -29,13 +26,6 @@
           solidGreen: 0 # if set to solid color
           solidRed: 0 # if set to solid color
           headlightEnable: 0
-        #ekf:
-        #  ext_var_xy: 1.5e-7 # 1e-7 # 1.5e-7
-        #  ext_var_vel: 2e-4 # 2e-4
-        #  ext_var_q: 4.5e-3 # 2e-3 # 4.5e-3
-        #  gyro_var_xy: 0.2e-2 # 0.2e-4
-        #  gyro_var_z: 0.2e-2 # 0.2e-4
-        #  acc_var_xyz: 2.4e-3 # 2.4e-3
       # tracking
       motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker

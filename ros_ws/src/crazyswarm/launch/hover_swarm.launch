@@ -18,7 +18,7 @@
         commander:
           enHighLevel: 1
         stabilizer:
-          estimator: 3 # 1: complementary, 2: kalman, 3: kalmanUSC (only crazyswarm firmware)
+          estimator: 2 # 1: complementary, 2: kalman
           controller: 2 # 1: PID, 2: mellinger
         ring:
           effect: 16 # 6: double spinner, 7: solid color, 16: packetRate

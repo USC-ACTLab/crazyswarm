@@ -7,7 +7,6 @@
 
   <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
-      firmware: "crazyswarm" # one of "crazyswarm", "bitcraze"
       broadcast_address: "FFE7E7E7E7"
       world_frame: "/world"
       genericLogTopics: ["log1"]
@@ -40,6 +39,7 @@
       # tracking
       motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
+      send_position_only: False # set to False to send position+orientation; set to True to send position only
       vicon_host_name: "vicon"
       # optitrack_host_name: "optitrack"
       # qualisys_host_name: "10.0.5.219"

@@ -1377,16 +1377,7 @@ public:
 
     nl.param<int>("broadcasting_num_repeats", m_broadcastingNumRepeats, 15);
     nl.param<int>("broadcasting_delay_between_repeats_ms", m_broadcastingDelayBetweenRepeatsMs, 1);
-
-    std::string firmware;
-    nl.param<std::string>("firmware", firmware, "crazyswarm");
-    if (firmware == "crazyswarm") {
-      sendPositionOnly = false;
-    } else if (firmware == "bitcraze") {
-      sendPositionOnly = true;
-    } else {
-      ROS_ERROR("Unknown firmware parameter (%s)!", firmware.c_str());
-    }
+    nl.param<bool>("send_position_only", sendPositionOnly, false);
 
     // tilde-expansion
     wordexp_t wordexp_result;

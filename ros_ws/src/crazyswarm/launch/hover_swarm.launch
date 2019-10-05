@@ -26,6 +26,12 @@
           solidGreen: 0 # if set to solid color
           solidRed: 0 # if set to solid color
           headlightEnable: 0
+        locSrv:
+          extPosStdDev: 1e-3
+          extQuatStdDev: 0.5e-1
+        kalman:
+          pNAcc_xy: 1.0
+          pNAcc_z: 2.0
       # tracking
       motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker

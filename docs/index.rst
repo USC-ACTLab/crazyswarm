@@ -8,7 +8,7 @@ Welcome to Crazyswarm's documentation!
 
 The Crazyswarm projects allows you to fly a swarm of quadcopters (using Bitcraze Crazyflie 2.0 directly or as control boards)
 in tight, synchronized formations.
-A motion capture system is recommended (VICON, OptiTrack, Qualisy, PhaseSpace are supported). We successfully flew 49
+A motion capture system is recommended (VICON, OptiTrack, Qualisy are supported). We successfully flew 49
 Crazyflies using three Crazyradios. An example video for what you can do is shown below:
 
 .. raw:: html
@@ -18,11 +18,12 @@ Crazyflies using three Crazyradios. An example video for what you can do is show
     </div>
 
 
-
-Our contributed code is licensed under the permissive MIT license, however some of the parts (such as the firmware) are licensed under their respective license.
-
 The Crazyswarm architecture, including some motivation for the design decisions, is described in
 `our paper <http://usc-actlab.github.io/publications/Preiss_ICRA2017.pdf>`_ [pdf].
+
+A talk at the `Aerial Swarms Workshop <https://lis2.epfl.ch/iros2019swarms/index.html>`_ at IROS 2019 includes a primer on how to use the Crazyswarm and a bibliography of papers using the Crazyswarm: `Slides <https://drive.google.com/file/d/15favAyrLLpC_O6nrAp-eIbZijFUMLgwV/view?usp=sharing>`_ [pdf].
+
+
 If you use our work in academic research, please cite us:
 
 .. code-block:: none
@@ -41,6 +42,9 @@ If you use our work in academic research, please cite us:
       doi       = {10.1109/ICRA.2017.7989376},
       note      = {Software available at \url{https://github.com/USC-ACTLab/crazyswarm}},
     }
+
+
+Our contributed code is licensed under the permissive MIT license, however some of the parts (such as the firmware) are licensed under their respective license.
 
 Contents:
 

@@ -10,7 +10,7 @@ import tf_conversions
 from std_srvs.srv import Empty
 import std_msgs
 from crazyflie_driver.srv import *
-from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState
+from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position
 from tf import TransformListener
 
 def arrayToGeometryPoint(a):
@@ -61,6 +61,11 @@ class Crazyflie:
         self.cmdStopPublisher = rospy.Publisher(prefix + "/cmd_stop", std_msgs.msg.Empty, queue_size=1)
 
         self.cmdVelPublisher = rospy.Publisher(prefix + "/cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
+
+        self.cmdPositionPublisher = rospy.Publisher(prefix + "/cmd_position", Position, queue_size=1)
+        self.cmdPositionMsg = Position()
+        self.cmdPositionMsg.header.seq = 0
+        self.cmdPositionMsg.header.frame_id = "/world"
 
     def setGroupMask(self, groupMask):
         self.setGroupMaskService(groupMask)
@@ -138,6 +143,15 @@ class Crazyflie:
         msg.angular.z = yawrate
         msg.linear.z = thrust
         self.cmdVelPublisher.publish(msg)
+
+    def cmdPosition(self, pos, yaw = 0):
+        self.cmdPositionMsg.header.stamp = rospy.Time.now()
+        self.cmdPositionMsg.header.seq += 1
+        self.cmdPositionMsg.x   = pos[0]
+        self.cmdPositionMsg.y   = pos[1]
+        self.cmdPositionMsg.z   = pos[2]
+        self.cmdPositionMsg.yaw = yaw
+        self.cmdPositionPublisher.publish(self.cmdPositionMsg)
 
     #
     # wrappers around the parameter setting system for common cases

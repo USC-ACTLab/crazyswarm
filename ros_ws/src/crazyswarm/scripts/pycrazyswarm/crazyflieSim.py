@@ -183,6 +183,15 @@ class Crazyflie:
         self.cmdHighLevel = False
         # TODO store other state variables
 
+    def cmdStop(self):
+        pass
+
+    def cmdPosition(self, pos, yaw = 0):
+        self.planner.lastKnownPosition = pos
+        self.cmdHighLevel = False
+        # TODO store other state variables
+
+
     # "private" methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0

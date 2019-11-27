@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 
-import sys
 import yaml
 import rospy
 import numpy as np
-import time
 import tf_conversions
 from std_srvs.srv import Empty
 import std_msgs
@@ -19,7 +17,7 @@ def arrayToGeometryPoint(a):
 class TimeHelper:
     def __init__(self):
         rospy.wait_for_service("/next_phase")
-        self.nextPhase = rospy.ServiceProxy("/next_phase", Empty)
+        self._nextPhase = rospy.ServiceProxy("/next_phase", Empty)
         self.rosRate = None
         self.rateHz = None
 
@@ -30,7 +28,7 @@ class TimeHelper:
         rospy.sleep(duration)
 
     def sleepForRate(self, rateHz):
-        if self.rosRate = None or self.rateHz != rateHz:
+        if self.rosRate == None or self.rateHz != rateHz:
             self.rosRate = rospy.Rate(rateHz)
             self.rateHz = rateHz
         self.rate.sleep()
@@ -39,7 +37,7 @@ class TimeHelper:
         return rospy.is_shutdown()
 
     def nextPhase(self):
-        self.nextPhase()
+        self._nextPhase()
 
 
 class Crazyflie:

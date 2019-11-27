@@ -1,0 +1,10 @@
+name: crazyswarm
+dependencies:
+  - python=2.7
+  - numpy
+  - matplotlib
+  - vispy
+  - pyyaml
+  - swig
+  - sphinx
+  - sphinx_rtd_theme

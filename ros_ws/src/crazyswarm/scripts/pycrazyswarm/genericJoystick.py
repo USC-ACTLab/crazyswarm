@@ -1,7 +1,6 @@
 import time
 import copy
 # import pyglet
-from . import linuxjsdev
 from . import keyboard
 
 # class JoyStickHandler:
@@ -29,15 +28,19 @@ class Joystick:
         # self.buttonWasPressed = False
         # joystick.push_handlers(self)
         self.timeHelper = timeHelper
+        self.hasJoystick = False
 
-        self.js = linuxjsdev.Joystick()
-        dummy = self.js.devices()
-        if len(dummy) == 0:
-            print("Warning: No joystick found!")
-            self.hasJoystick = False
-        else:
-            self.hasJoystick = True
-            self.js.open(0)
+        try:
+            from . import linuxjsdev
+            self.js = linuxjsdev.Joystick()
+            dummy = self.js.devices()
+            if len(dummy) == 0:
+                print("Warning: No joystick found!")
+            else:
+                self.hasJoystick = True
+                self.js.open(0)
+        except ImportError:
+            print("Warning: Joystick only supported on Linux.")
 
     # def on_joybutton_press(joystick, button):
         # print(button)
@@ -65,8 +68,10 @@ class Joystick:
                 self.timeHelper.sleep(0.01)
         else:
             with keyboard.KeyPoller() as keyPoller:
+                # Wait until a key is pressed.
                 while keyPoller.poll() is None:
                     self.timeHelper.sleep(0.01)
+                # Wait until the key is released.
                 while keyPoller.poll() is not None:
                     self.timeHelper.sleep(0.01)
 

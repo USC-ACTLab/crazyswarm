@@ -36,7 +36,7 @@ import struct
 import sys
 
 if not sys.platform.startswith('linux'):
-    raise Exception("Only supported on Linux")
+    raise ImportError("Only supported on Linux")
 
 try:
     import fcntl

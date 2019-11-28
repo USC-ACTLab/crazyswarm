@@ -1,34 +1,69 @@
 Installation
 ============
 
-We assume that you have Ubuntu 16.04. Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
+For real hardware operation, we assume that you have **Ubuntu 16.04**.
+Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
+
+For simulation-only operation, **MacOS** is also supported.
 
 .. warning::
 
     Using ubuntu in `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/about>`_ is not supported since WSL does not have USB support and so Crazyradio will not work.
     You must install Ubuntu either directly on the computer or in a VM.
 
+
 Simulation Only
 ---------------
 
-You can install just the components required for the simulation by doing the following::
+It is possible to write/debug ``pycrazyswarm`` scripts and selected firmware modules
+on a machine that does not have ROS or the ARM cross-compilation toolchain installed.
+You can install just the components required for the simulation by doing the following:
+
+----
+
+Linux or MacOS with Anaconda
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First, install `Anaconda Python 2.7 version <https://www.anaconda.com/distribution>`_.
+We have tested on version ``2019.10``.
+Next, clone the Crazyswsarm repo and build the Anaconda environment::
+
+    $ git clone https://github.com/USC-ACTLab/crazyswarm.git
+    $ cd crazyswarm
+    $ conda env create -f conda_env.yaml
+
+Activate the Anaconda environment and run the build script::
+
+    $ conda activate crazyswarm
+    $ ./buildSimOnly.sh
+
+----
+
+Linux without Anaconda
+~~~~~~~~~~~~~~~~~~~~~~
+
+Install the dependencies and run the build script::
 
     $ sudo apt install git make gcc swig libpython-dev python-numpy python-yaml python-matplotlib
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
     $ ./buildSimOnly.sh
 
-To test the installation, run one of the examples::
+----
+
+In either case, to test the installation, run one of the examples::
 
     $ cd ros_ws/src/crazyswarm/scripts
     $ python figure8_csv.py --sim
 
-More details on the usage can be found in the :ref:`usage` section.
+More details on the usage can be found in the :ref:`Usage` section.
+
 
 Simulation and Physical Robots
 ------------------------------
 
-We assume that you have ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
+For real hardware operation, we assume that you have **Ubuntu 16.04**
+with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
 
 Install the dependencies and clone the repository::
 

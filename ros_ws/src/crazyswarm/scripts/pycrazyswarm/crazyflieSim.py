@@ -219,9 +219,20 @@ class Crazyflie:
 
 
 class CrazyflieServer:
-    def __init__(self, timeHelper):
-        with open("../launch/crazyflies.yaml", 'r') as ymlfile:
-            cfg = yaml.load(ymlfile)
+    def __init__(self, timeHelper, crazyflies_yaml="../launch/crazyflies.yaml"):
+        """Initialize the server.
+
+        Args:
+            timeHelper (TimeHelper): TimeHelper instance.
+            crazyflies_yaml (str): If ends in ".yaml", interpret as a path and load
+                from file. Otherwise, interpret as YAML string and parse
+                directly from string.
+        """
+        if crazyflies_yaml.endswith(".yaml"):
+            with open(crazyflies_yaml, 'r') as ymlfile:
+                cfg = yaml.load(ymlfile)
+        else:
+            cfg = yaml.load(crazyflies_yaml)
 
         self.crazyflies = []
         self.crazyfliesById = dict()

@@ -38,7 +38,7 @@ class TimeHelper:
 
     def sleepForRate(self, rateHz):
 	"""Sleeps so that, if called in a loop, executes at specified rate."""
-        if self.rosRate = None or self.rateHz != rateHz:
+        if self.rosRate is None or self.rateHz != rateHz:
             self.rosRate = rospy.Rate(rateHz)
             self.rateHz = rateHz
         self.rate.sleep()

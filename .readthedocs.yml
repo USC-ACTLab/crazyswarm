@@ -13,3 +13,9 @@ sphinx:
 submodules:
   include: []
   recursive: false
+
+# Add a nonstandard Sphinx extension
+python:
+  version: 2.7
+  install:
+    - requirements: docs/requirements.txt

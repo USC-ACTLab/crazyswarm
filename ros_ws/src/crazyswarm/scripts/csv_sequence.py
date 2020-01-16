@@ -5,7 +5,6 @@ from __future__ import print_function
 import argparse
 import os
 import os.path
-import rospy
 
 import numpy as np
 import csv
@@ -181,13 +180,13 @@ def main():
     print("sequence complete.")
     allcfs.emergency()
 
+POLL_RATE = 100 # Hz
 
 def poll_trajs(crazyflies, timeHelper, trajs, timescale):
     duration = trajs[0].duration
-    start_time = rospy.Time.now()
-    rate = rospy.Rate(100) # hz
-    while not rospy.is_shutdown():
-        t = (rospy.Time.now() - start_time).to_sec() / timescale
+    start_time = timeHelper.time()
+    while not timeHelper.isShutdown():
+        t = (timeHelper.time() - start_time) / timescale
         if t > duration:
             break
         for cf, traj in zip(crazyflies, trajs):
@@ -198,15 +197,13 @@ def poll_trajs(crazyflies, timeHelper, trajs, timescale):
                 ev.acc,
                 ev.yaw,
                 ev.omega)
-        rate.sleep()
-        #timeHelper.sleep(1e-6)
+        timeHelper.sleepForRate(POLL_RATE)
 
 
 def poll_planners(crazyflies, timeHelper, planners, duration):
-    start_time = rospy.Time.now()
-    rate = rospy.Rate(100) # hz
-    while not rospy.is_shutdown():
-        t = (rospy.Time.now() - start_time).to_sec()
+    start_time = timeHelper.time()
+    while not timeHelper.isShutdown():
+        t = timeHelper.time() - start_time
         if t > duration:
             break
         for cf, planner in zip(crazyflies, planners):
@@ -217,16 +214,14 @@ def poll_planners(crazyflies, timeHelper, planners, duration):
                 firm2arr(ev.acc),
                 ev.yaw,
                 firm2arr(ev.omega))
-        rate.sleep()
-        #timeHelper.sleep(1e-6)
+        timeHelper.sleepForRate(POLL_RATE)
 
 
 def hover(crazyflies, timeHelper, positions, duration):
-    start_time = rospy.Time.now()
-    rate = rospy.Rate(100) # hz
+    start_time = timeHelper.time()
     zero = np.zeros(3)
-    while not rospy.is_shutdown():
-        t = (rospy.Time.now() - start_time).to_sec()
+    while not timeHelper.isShutdown():
+        t = timeHelper.time() - start_time
         if t > duration:
             break
         for cf, pos in zip(crazyflies, positions):
@@ -236,8 +231,7 @@ def hover(crazyflies, timeHelper, positions, duration):
                 zero,
                 0.0,
                 zero)
-        rate.sleep()
-        #timeHelper.sleep(1e-6)
+        timeHelper.sleepForRate(POLL_RATE)
 
 
 def firm2arr(vec):

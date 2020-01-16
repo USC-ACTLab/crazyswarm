@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import numpy as np
 
 def normalize(v):
@@ -103,6 +104,6 @@ class Trajectory:
 
     current_t = 0.0
     for p in self.polynomials:
-      if t < current_t + p.duration:
+      if t <= current_t + p.duration:
         return p.eval(t - current_t)
       current_t = current_t + p.duration

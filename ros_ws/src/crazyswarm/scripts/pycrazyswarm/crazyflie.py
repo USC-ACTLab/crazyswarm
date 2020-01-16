@@ -25,15 +25,27 @@ class TimeHelper:
     The simulation equivalent does not depend on ROS.
     """
     def __init__(self):
-        pass
+        self.rosRate = None
+        self.rateHz = None
 
     def time(self):
         """Returns the current time in seconds."""
-        return time.time()
+        return rospy.Time.now().to_sec()
 
     def sleep(self, duration):
         """Sleeps for the provided duration in seconds."""
-        time.sleep(duration)
+        rospy.sleep(duration)
+
+    def sleepForRate(self, rateHz):
+	"""Sleeps so that, if called in a loop, executes at specified rate."""
+        if self.rosRate = None or self.rateHz != rateHz:
+            self.rosRate = rospy.Rate(rateHz)
+            self.rateHz = rateHz
+        self.rate.sleep()
+
+    def isShutdown(self):
+	"""Returns true if the script should abort, e.g. from Ctrl-C."""
+        return rospy.is_shutdown()
 
 
 class Crazyflie:

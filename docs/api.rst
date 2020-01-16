@@ -1,64 +1,50 @@
-Python API
-==========
+Python Scripting API
+====================
 
-You can use the Python API like this::
+The module ``pycrazyswarm``, contained in ``/ros_ws/src/crazyswarm/scripts``,
+is the main high-level interface to the Crazyswarm platform.
 
-    from pycrazyswarm import *
-    swarm = Crazyswarm()
-    timeHelper = swarm.timeHelper
-    allcfs = swarm.allcfs
+The goal of the Crazyswarm project is to reach a state where many diverse
+multi-quadrotor research projects can be implemented without going any "deeper"
+than writing a ``pycrazyswarm`` script and modifying configuration files.
+New projects should try this approach first. If it becomes necessary to
+modify Crazyswarm or its submodules, we encourage users to contribute those
+changes back via Github pull request.
 
-The ``swarm`` object gives you access to a time helper (that works in both real execution and simulation) and the CrazyflieServer (``allcfs``).
+All classes in ``pycrazyswarm.crazyflie`` are mirrored by an identically named
+class in ``pycrazyswarm.crazyflieSim``. The ``Sim`` version allows testing
+``pycrazyswarm`` scripts in simulation with a 3D visualization before running
+anything on real hardware. Since the APIs are identical, the documentation
+only refers to the non-``Sim`` versions.
 
-The CrazyflieServer object allows you to
-  - Send broadcasts to a group of Crazyflies
-  - Access individual Crazyflies
 
-Broadcasts
-----------
+``Crazyflie`` class
+-------------------
+.. autoclass:: pycrazyswarm.crazyflie.Crazyflie
+   :members:
 
-- ``allcfs.emergency(self)``
-    Cut power to motors of all CFs
-- ``allcfs.takeoff(self, targetHeight, duration, groupMask = 0)``
-    Take-off of given Crazyflie group to specified hight within the specified duration.
-- ``allcfs.land(self, targetHeight, duration, groupMask = 0)``
-    Land given Crazyflie group to specified hight within the specified duration.
-- ``allcfs.stop(self, groupMask = 0)``
-    Stops (i.e., turns off motors) for given Crazyflie group.
-- ``goTo(self, goal, yaw, duration, groupMask = 0)``
-    Moves each Crazyflie relative to its current position/yaw by the specified goal/yaw offset and reaches that location after the specified duration.
-- ``startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0)``
-    Starts executing the specified trajectory. Trajectory can be scaled in time (larger number = slower), or executed in reverse.
+``CrazyflieServer`` class
+-------------------------
+.. autoclass:: pycrazyswarm.crazyflie.CrazyflieServer
+   :members:
 
-Access Crazyflies
------------------
-
-- ``cf = allcfs.crazyflies[idx]``
-  Array that contains all Crazyflies
-- ``cf = allcfs.crazyfliesById["42"]``
-  Dictionary that contains crazyflies by their ids
-
-Individual Crazyflie
+``TimeHelper`` class
 --------------------
+.. autoclass:: pycrazyswarm.crazyflie.TimeHelper
+   :members:
 
-- ``cf.id``
-   ID of the crazyflie
-- ``cf.initialPosition``
-   Initial position (as defined in ``crazyflies.yaml``)
-- ``cf.setGroupMask(self, groupMask)``
-    Assign this Crazyflies to be part of the given groups (all CFs are part of group 0)
-- ``cf.takeoff(self, targetHeight, duration, groupMask = 0)``
-- ``cf.land(self, targetHeight, duration, groupMask = 0)``
-- ``cf.stop(self, groupMask = 0)``
-- ``cf.goTo(self, goal, yaw, duration, relative = False, groupMask = 0)``
-    Move to the specified goal (position) and yaw angle in the specified time.
-- ``cf.uploadTrajectory(self, trajectoryId, pieceOffset, trajectory)``
-- ``cf.startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0)``
-- ``cf.position(self)``
-    Returns the current position of the Crazyflie
-- ``cf.getParam(self, name)``
-- ``cf.setParam(self, name, value)``
-- ``cf.setParams(self, params)``
+
+Switching between simulation and real hardware
+----------------------------------------------
+Correct ``pycrazyswarm`` scripts should be able to run in both simulation
+and on real hardware without modification. Enable simulation and control the
+simulation parameters with the command-line flags listed below.
+
+.. argparse::
+   :module: pycrazyswarm.crazyswarm
+   :func: build_argparser
+   :prog: python2 <my_crazyswarm_script.py>
+
 
 Examples
 --------
@@ -90,4 +76,3 @@ niceHover.py::
     # Land
     allcfs.land(targetHeight=0.02, duration=2.0)
     timeHelper.sleep(2.0)
-

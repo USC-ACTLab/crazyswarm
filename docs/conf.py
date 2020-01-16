@@ -20,6 +20,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../ros_ws/src/crazyswarm/scripts'))
 
 import sphinx_rtd_theme
 
@@ -34,6 +35,9 @@ needs_sphinx = '1.4'
 # ones.
 extensions = [
     'sphinx.ext.imgmath',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
+    'sphinxarg.ext',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -341,3 +345,19 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
+
+# -- Options for Autodoc -------------------------------------------------
+
+# List class members in the order they appear in the file,
+# instead of alphabetically.
+autodoc_member_order = 'bysource'
+
+# Do not try to import ROS modules so we can build on more machines easily.
+autodoc_mock_imports = [
+    'rospy',
+    'std_msgs',
+    'std_srvs',
+    'tf',
+    'tf_conversions',
+    'crazyflie_driver',
+]

@@ -37,14 +37,14 @@ class TimeHelper:
         rospy.sleep(duration)
 
     def sleepForRate(self, rateHz):
-	"""Sleeps so that, if called in a loop, executes at specified rate."""
+        """Sleeps so that, if called in a loop, executes at specified rate."""
         if self.rosRate is None or self.rateHz != rateHz:
             self.rosRate = rospy.Rate(rateHz)
             self.rateHz = rateHz
-        self.rate.sleep()
+        self.rosRate.sleep()
 
     def isShutdown(self):
-	"""Returns true if the script should abort, e.g. from Ctrl-C."""
+        """Returns true if the script should abort, e.g. from Ctrl-C."""
         return rospy.is_shutdown()
 
 
@@ -445,9 +445,15 @@ class CrazyflieServer:
         crazyfliesById (Dict[int, Crazyflie]): Index to the same Crazyflie
             objects by their ID number (last byte of radio address).
     """
-    def __init__(self):
-        """Constructor. Waits for all ROS services before returning."""
+    def __init__(self, crazyflies_yaml="../launch/crazyflies.yaml"):
+        """Initialize the server. Waits for all ROS services before returning.
 
+        Args:
+            timeHelper (TimeHelper): TimeHelper instance.
+            crazyflies_yaml (str): If ends in ".yaml", interpret as a path and load
+                from file. Otherwise, interpret as YAML string and parse
+                directly from string.
+        """
         rospy.init_node("CrazyflieAPI", anonymous=False)
         rospy.wait_for_service("/emergency")
         self.emergencyService = rospy.ServiceProxy("/emergency", Empty)
@@ -464,8 +470,11 @@ class CrazyflieServer:
         rospy.wait_for_service("/update_params")
         self.updateParamsService = rospy.ServiceProxy("/update_params", UpdateParams)
 
-        with open("../launch/crazyflies.yaml", 'r') as ymlfile:
-            cfg = yaml.load(ymlfile)
+        if crazyflies_yaml.endswith(".yaml"):
+            with open(crazyflies_yaml, 'r') as ymlfile:
+                cfg = yaml.load(ymlfile)
+        else:
+            cfg = yaml.load(crazyflies_yaml)
 
         self.tf = TransformListener()
 

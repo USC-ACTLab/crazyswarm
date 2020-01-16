@@ -16,7 +16,7 @@ crazyflies:
 """
 
 if __name__ == "__main__":
-    swarm = Crazyswarm(launch_yaml=crazyflies_yaml)
+    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml)
     timeHelper = swarm.timeHelper
     cfs = swarm.allcfs.crazyflies
     byId = swarm.allcfs.crazyfliesById

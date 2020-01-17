@@ -12,7 +12,7 @@ import std_msgs
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position
 from tf import TransformListener
-from visualizer import VisNull
+from visualizer import visNull
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
@@ -33,7 +33,7 @@ class TimeHelper:
     def __init__(self):
         self.rosRate = None
         self.rateHz = None
-        self.visualizer = VisNull()
+        self.visualizer = visNull.VisNull()
 
     def time(self):
         """Returns the current time in seconds."""

@@ -12,6 +12,7 @@ import std_msgs
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position
 from tf import TransformListener
+from visualizer import VisNull
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])
@@ -23,10 +24,16 @@ class TimeHelper:
     faster or slower than realtime) simulation with the same script.
     When running on real hardware, this class uses ROS time functions.
     The simulation equivalent does not depend on ROS.
+
+    Attributes:
+        visualizer: No-op object conforming to the Visualizer API used in
+            simulation scripts. Maintains the property that scripts should not
+            know/care if they are running in simulation or not.
     """
     def __init__(self):
         self.rosRate = None
         self.rateHz = None
+        self.visualizer = VisNull()
 
     def time(self):
         """Returns the current time in seconds."""

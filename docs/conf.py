@@ -34,8 +34,9 @@ needs_sphinx = '1.4'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.imgmath',
     'sphinx.ext.autodoc',
+    'sphinx.ext.imgmath',
+    'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinxarg.ext',
 ]

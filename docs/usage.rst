@@ -171,7 +171,7 @@ Configure Marker Arrangement
 
 If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration. An example marker configuration using four markers is shown below:
 
-.. image:: markerConfigurationExample.jpg
+.. image:: images/markerConfigurationExample.jpg
 
 #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
 #. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
@@ -192,7 +192,7 @@ Also, make sure you have ``pyyaml`` installed before using this tool.
 You can check it by ``pip3 install pyyaml``.
 An example screenshot is given below:
 
-.. image:: chooser.png
+.. image:: images/chooser.png
 
 :Clear:   Disables all CFs
 :Fill:    Enables all CFs

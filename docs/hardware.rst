@@ -28,7 +28,7 @@ Prices and links as of summer 2017.
 Medium Quadrotor
 ----------------
 
-.. image:: medium.jpg
+.. image:: images/medium.jpg
 
 Prices and links as of March 2018.
 
@@ -48,7 +48,7 @@ Prices and links as of March 2018.
 Large Quadrotor
 ----------------
 
-.. image:: large.jpg
+.. image:: images/large.jpg
 
 Prices and links as of March 2018.
 

@@ -15,7 +15,7 @@ of the Crazyswarm system, including the onboard firmware.
 	The onboard feedback controller tries to achieve the states specified by the setpoint.
 
 	In comparison, in a high-level control mode, the PC sends instructions like
-	piecewise polynomial trajectory plans over the radio, and the onboard firmware
+	:term:`piecewise polynomial` trajectory plans over the radio, and the onboard firmware
 	uses the stored plan to compute a new control setpoint in every iteration of
 	the main loop.
 
@@ -124,7 +124,8 @@ In the remainder of the struct we have 29 bytes left for the setpoint value.
 	The macro ``CHECKSIZE`` on the final line uses a ``static_assert``
 	to ensure at compile time that the struct is small enough to fit in a radio packet.
 
-Note that our example has used 16-bit fixed-point numbers and advanced quaternion compression
+Note that our example has used 16-bit fixed-point numbers and advanced
+`quaternion <https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation>`_ compression
 to fit a lot of values in one packet. Most setpoint types contain fewer values
 and fit in the packet without as much compression.
 All CRTP structs in ``crtp.h`` should have a constructor that accepts uncompressed types,

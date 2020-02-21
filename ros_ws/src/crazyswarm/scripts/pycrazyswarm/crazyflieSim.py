@@ -263,7 +263,7 @@ class CrazyflieServer:
 
     def goTo(self, goal, yaw, duration, groupMask = 0):
         for crazyflie in self.crazyflies:
-            crazyflie.goTo(goal, yaw, duration, False, groupMask)
+            crazyflie.goTo(goal, yaw, duration, relative=True, groupMask=groupMask)
 
     def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         for crazyflie in self.crazyflies:

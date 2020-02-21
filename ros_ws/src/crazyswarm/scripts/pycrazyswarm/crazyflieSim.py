@@ -11,7 +11,7 @@ import cfsim.cffirmware as firm
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self, vis, dt, writecsv):
+    def __init__(self, vis, dt, writecsv, disturbanceSize):
         if vis == "mpl":
             import visualizer.visMatplotlib
             self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
@@ -23,6 +23,7 @@ class TimeHelper:
         self.t = 0.0
         self.dt = dt
         self.crazyflies = []
+        self.disturbanceSize = disturbanceSize
         if writecsv:
             import output
             self.output = output.Output()
@@ -34,6 +35,8 @@ class TimeHelper:
 
     def step(self, duration):
         self.t += duration
+        for cf in self.crazyflies:
+            cf.integrate(duration, self.disturbanceSize)
 
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
@@ -75,6 +78,8 @@ class Crazyflie:
         self.planner.lastKnownPosition = arr2vec(initialPosition)
         self.groupMask = 0
         self.trajectories = dict()
+        self.currentVelocity = None
+        self.velocityMode = False
 
         # for visualization - default to blueish-grey
         self.ledRGB = (0.5, 0.5, 1)
@@ -192,6 +197,11 @@ class Crazyflie:
         self.cmdHighLevel = False
         # TODO store other state variables
 
+    def cmdVelocityWorld(self, vel, yawRate):
+        self.currentVelocity = vel
+        self.cmdHighLevel = False
+        self.velocityMode = True
+
     def cmdStop(self):
         pass
 
@@ -199,6 +209,12 @@ class Crazyflie:
         self.planner.lastKnownPosition = pos
         self.cmdHighLevel = False
         # TODO store other state variables
+
+    def integrate(self, time, disturbanceSize):
+        if self.velocityMode:
+            disturbance = disturbanceSize * np.random.normal(size=3)
+            self.planner.lastKnownPosition = self.position() + time * (self.currentVelocity + disturbance)
+            self.velocityMode = False
 
 
     # "private" methods

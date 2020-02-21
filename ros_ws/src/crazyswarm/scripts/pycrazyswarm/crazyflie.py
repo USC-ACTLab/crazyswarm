@@ -10,7 +10,7 @@ import tf_conversions
 from std_srvs.srv import Empty
 import std_msgs
 from crazyflie_driver.srv import *
-from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position
+from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
 from tf import TransformListener
 from visualizer import visNull
 
@@ -110,6 +110,11 @@ class Crazyflie:
         self.cmdPositionMsg = Position()
         self.cmdPositionMsg.header.seq = 0
         self.cmdPositionMsg.header.frame_id = "/world"
+
+        self.cmdVelocityWorldPublisher = rospy.Publisher(prefix + "/cmd_velocity_world", VelocityWorld, queue_size=1)
+        self.cmdVelocityWorldMsg = VelocityWorld()
+        self.cmdVelocityWorldMsg.header.seq = 0
+        self.cmdVelocityWorldMsg.header.frame_id = "/world"
 
     def setGroupMask(self, groupMask):
         """Sets the group mask bits for this robot.
@@ -351,6 +356,30 @@ class Crazyflie:
         self.cmdFullStateMsg.twist.angular.y    = omega[1]
         self.cmdFullStateMsg.twist.angular.z    = omega[2]
         self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
+
+     def cmdVelocityWorld(self, vel, yawRate):
+        """Sends a streaming velocity-world controller setpoint command.
+
+        In this mode, the PC specifies desired velocity vector and yaw rate.
+        The onboard controller will try to achive this velocity.
+
+        Sending a streaming setpoint of any type will force a change from
+        high-level to low-level command mode. Currently, there is no mechanism
+        to change back, but it is a high-priority feature to implement.
+        This means it is not possible to use e.g. :meth:`land()` or
+        :meth:`goTo()` after a streaming setpoint has been sent.
+
+        Args:
+            vel (array-like of float[3]): Velocity. Meters / second.
+            yawRate (float): Yaw angular velocity. Degrees / second.
+        """
+        self.cmdVelocityWorldMsg.header.stamp = rospy.Time.now()
+        self.cmdVelocityWorldMsg.header.seq += 1
+        self.cmdVelocityWorldMsg.vel.x = vel[0]
+        self.cmdVelocityWorldMsg.vel.y = vel[1]
+        self.cmdVelocityWorldMsg.vel.z = vel[2]
+        self.cmdVelocityWorldMsg.yawRate = yawRate
+        self.cmdVelocityWorldPublisher.publish(self.cmdVelocityWorldMsg)
 
     def cmdStop(self):
         """Interrupts any high-level command to stop and cut motor power.

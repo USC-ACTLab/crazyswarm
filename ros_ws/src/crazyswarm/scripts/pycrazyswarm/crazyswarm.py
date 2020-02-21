@@ -12,6 +12,7 @@ def build_argparser():
     parser.add_argument("--vis", help="(sim only) Visualization backend.", choices=['mpl', 'vispy'], default="mpl")
     parser.add_argument("--dt", help="(sim only) Duration of seconds between rendered visualization frames.", type=float, default=0.1)
     parser.add_argument("--writecsv", help="(sim only) Enable CSV output.", action="store_true")
+    parser.add_argument("--disturbance", help="(sim only) Simulate Gaussian-distributed disturbance when using cmdVelocityWorld.", type=float, default=0.0)
     return parser
 
 
@@ -27,7 +28,7 @@ class Crazyswarm:
 
         if args.sim:
             import crazyflieSim
-            self.timeHelper = crazyflieSim.TimeHelper(args.vis, args.dt, args.writecsv)
+            self.timeHelper = crazyflieSim.TimeHelper(args.vis, args.dt, args.writecsv, args.disturbance)
             self.allcfs = crazyflieSim.CrazyflieServer(self.timeHelper, crazyflies_yaml)
         else:
             import crazyflie

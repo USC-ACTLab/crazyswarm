@@ -9,6 +9,7 @@ fw_include = os.path.join(fw_dir, "src/modules/interface")
 modules = [
     "planner.c",
     "pptraj.c",
+    "pptraj_compressed.c",
 ]
 fw_sources = [os.path.join(fw_dir, "src/modules/src", mod) for mod in modules]
 

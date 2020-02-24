@@ -5,7 +5,7 @@ modsrc = $(firmdir)/src/modules/src
 swig: cffirmware_wrap.c $(modsrc)/*.c
 	python2 setup.py build_ext --inplace
 
-cffirmware_wrap.c: $(modinc)/*.h
+cffirmware_wrap.c: cffirmware.i $(modinc)/*.h
 	swig -python -I$(modinc) cffirmware.i
 
 clean:

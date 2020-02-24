@@ -32,9 +32,26 @@ struct poly4d* malloc_poly4d(int size)
 }
 %}
 
+
+%pythoncode %{
+import numpy as np
+%}
+
 %extend vec {
     %pythoncode %{
         def __repr__(self):
             return "({}, {}, {})".format(self.x, self.y, self.z)
+
+        def __array__(self):
+            return np.array([self.x, self.y, self.z])
+
+        def __len__(self):
+            return 3
+
+        def __getitem__(self, i):
+            if 0 <= i and i < 3:
+                return _cffirmware.vindex(self, i)
+            else:
+                raise IndexError("vec index must be in {0, 1, 2}.")
     %}
 };

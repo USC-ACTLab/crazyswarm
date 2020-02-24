@@ -209,11 +209,11 @@ def poll_planners(crazyflies, timeHelper, planners, duration):
         for cf, planner in zip(crazyflies, planners):
             ev = firm.plan_current_goal(planner, t)
             cf.cmdFullState(
-                firm2arr(ev.pos),
-                firm2arr(ev.vel),
-                firm2arr(ev.acc),
+                ev.pos,
+                ev.vel,
+                ev.acc,
                 ev.yaw,
-                firm2arr(ev.omega))
+                ev.omega)
         timeHelper.sleepForRate(POLL_RATE)
 
 
@@ -232,10 +232,6 @@ def hover(crazyflies, timeHelper, positions, duration):
                 0.0,
                 zero)
         timeHelper.sleepForRate(POLL_RATE)
-
-
-def firm2arr(vec):
-    return np.array([vec.x, vec.y, vec.z])
 
 
 def load_all_csvs(path):

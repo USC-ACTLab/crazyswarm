@@ -140,6 +140,9 @@ class Crazyflie:
                 traj.shift = firm.vzero()
             firm.plan_start_trajectory(self.planner, traj, reverse)
 
+    def notifySetpointsStop(self, remainValidMillisecs=100):
+        self.cmdHighLevel = True
+
     def position(self):
         pos = self._vposition()
         if not type(pos) is np.ndarray:
@@ -195,6 +198,7 @@ class Crazyflie:
     def cmdFullState(self, pos, vel, acc, yaw, omega):
         self.planner.lastKnownPosition = pos
         self.cmdHighLevel = False
+        self.velocityMode = False
         # TODO store other state variables
 
     def cmdVelocityWorld(self, vel, yawRate):
@@ -208,13 +212,13 @@ class Crazyflie:
     def cmdPosition(self, pos, yaw = 0):
         self.planner.lastKnownPosition = pos
         self.cmdHighLevel = False
+        self.velocityMode = False
         # TODO store other state variables
 
     def integrate(self, time, disturbanceSize):
-        if self.velocityMode:
+        if (not self.cmdHighLevel) and self.velocityMode:
             disturbance = disturbanceSize * np.random.normal(size=3)
             self.planner.lastKnownPosition = self.position() + time * (self.currentVelocity + disturbance)
-            self.velocityMode = False
 
 
     # "private" methods

@@ -67,7 +67,7 @@ with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki
 
 Install the dependencies and clone the repository::
 
-    $ sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib gcc-arm-none-eabi libpcl-dev libusb-1.0-0-dev sdcc ros-kinetic-vrpn-client-ros
+    $ sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-kinetic-vrpn-client-ros
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
 

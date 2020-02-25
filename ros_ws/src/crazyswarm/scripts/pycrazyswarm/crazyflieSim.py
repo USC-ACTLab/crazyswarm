@@ -41,11 +41,13 @@ class TimeHelper:
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
     def sleep(self, duration):
-        for t in np.arange(self.t, self.t + duration, self.dt):
-            self.visualizer.update(t, self.crazyflies)
+        steps = int(duration / self.dt) + 1
+        new_dt = float(duration) / steps
+        for _ in range(steps):
+            self.step(new_dt)
+            self.visualizer.update(self.t, self.crazyflies)
             if self.output:
-                self.output.update(t, self.crazyflies)
-            self.step(self.dt)
+                self.output.update(self.t, self.crazyflies)
 
     # Mock for abstraction of rospy.Rate.sleep().
     def sleepForRate(self, rate):
@@ -214,7 +216,6 @@ class Crazyflie:
         if self.velocityMode:
             disturbance = disturbanceSize * np.random.normal(size=3)
             self.planner.lastKnownPosition = self.position() + time * (self.currentVelocity + disturbance)
-            self.velocityMode = False
 
 
     # "private" methods

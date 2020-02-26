@@ -357,7 +357,7 @@ class Crazyflie:
         self.cmdFullStateMsg.twist.angular.z    = omega[2]
         self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
 
-     def cmdVelocityWorld(self, vel, yawRate):
+    def cmdVelocityWorld(self, vel, yawRate):
         """Sends a streaming velocity-world controller setpoint command.
 
         In this mode, the PC specifies desired velocity vector and yaw rate.

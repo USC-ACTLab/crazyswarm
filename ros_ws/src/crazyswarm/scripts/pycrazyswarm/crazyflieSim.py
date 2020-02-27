@@ -60,11 +60,6 @@ class TimeHelper:
         self.observers.append(observer)
 
 
-# helper func to convert python/numpy arrays to firmware 3d vector type.
-def arr2vec(a):
-    return firm.mkvec(a[0], a[1], a[2])
-
-
 class Crazyflie:
 
     def __init__(self, id, initialPosition, timeHelper):
@@ -75,7 +70,7 @@ class Crazyflie:
         self.planner = firm.planner()
         self.cmdHighLevel = True
         firm.plan_init(self.planner)
-        self.planner.lastKnownPosition = arr2vec(initialPosition)
+        self.planner.lastKnownPosition = firm.mkvec(*initialPosition)
         self.groupMask = 0
         self.trajectories = dict()
         self.currentVelocity = None
@@ -103,7 +98,8 @@ class Crazyflie:
 
     def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
         if self._isGroup(groupMask):
-            firm.plan_go_to(self.planner, relative, arr2vec(goal), yaw, duration, self.time())
+            self.velocityMode = False
+            firm.plan_go_to(self.planner, relative, firm.mkvec(*goal), yaw, duration, self.time())
 
     def uploadTrajectory(self, trajectoryId, pieceOffset, trajectory):
         traj = firm.piecewise_traj()
@@ -196,7 +192,7 @@ class Crazyflie:
             return (roll, pitch, yaw)
 
     def cmdFullState(self, pos, vel, acc, yaw, omega):
-        self.planner.lastKnownPosition = pos
+        self.planner.lastKnownPosition = firm.mkvec(*pos)
         self.cmdHighLevel = False
         self.velocityMode = False
         # TODO store other state variables
@@ -210,7 +206,7 @@ class Crazyflie:
         pass
 
     def cmdPosition(self, pos, yaw = 0):
-        self.planner.lastKnownPosition = pos
+        self.planner.lastKnownPosition = firm.mkvec(*pos)
         self.cmdHighLevel = False
         self.velocityMode = False
         # TODO store other state variables
@@ -218,7 +214,8 @@ class Crazyflie:
     def integrate(self, time, disturbanceSize):
         if (not self.cmdHighLevel) and self.velocityMode:
             disturbance = disturbanceSize * np.random.normal(size=3)
-            self.planner.lastKnownPosition = self.position() + time * (self.currentVelocity + disturbance)
+            pos = self.position() + time * (self.currentVelocity + disturbance)
+            self.planner.lastKnownPosition = firm.mkvec(*pos)
 
 
     # "private" methods

@@ -1,4 +1,6 @@
 name: crazyswarm
+channels:
+  - omnia  # For package quadprog.
 dependencies:
   - python=2.7
   - numpy
@@ -9,3 +11,5 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pyqt
+  - quadprog
+  - scipy

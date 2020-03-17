@@ -2,13 +2,17 @@ import os
 import math
 import numpy as np
 
-from vispy import scene, app, io
+from vispy import scene, app, io, geometry
 from vispy.color import Color
 from vispy.visuals import transforms
 from vispy.scene.cameras import TurntableCamera
 
+from .. import util as util
+
 
 CF_MESH_PATH = os.path.join(os.path.dirname(__file__), "crazyflie2.obj.gz")
+ELLIPSOID_COLOR_OK = Color("#11FF22", alpha=0.1)
+ELLIPSOID_COLOR_COLLISION  = Color("#FF0000", alpha=0.1)
 
 
 class VisVispy:
@@ -32,7 +36,7 @@ class VisVispy:
         # add a colored 3D axis for orientation
         axis = scene.visuals.XYZAxis(parent=self.view.scene)
         self.cfs = []
-        self.color_cache = []
+        self.led_color_cache = []
 
         ground = scene.visuals.Plane(
             32.0, 32.0, direction="+z", color=self.plane_color, parent=self.view.scene
@@ -42,6 +46,10 @@ class VisVispy:
         self.graph_edges = None
         self.graph_lines = None
         self.graph = None
+
+        # Lazy-constructed vispy objects for collision ellipsoids.
+        self.ellipsoids = None
+        self.ellipsoid_radii = None
 
     def setGraph(self, edges):
         """Set edges of graph visualization - sequence of (i,j) tuples."""
@@ -63,6 +71,9 @@ class VisVispy:
                 antialias=True,
             )
 
+    def showEllipsoids(self, radii):
+        self.ellipsoid_radii = np.array(radii)
+
     def update(self, t, crazyflies):
         if len(self.cfs) == 0:
             verts, faces, normals, nothin = io.read_mesh(CF_MESH_PATH)
@@ -80,7 +91,24 @@ class VisVispy:
                 mesh.ambient_light_color = [0.5] * 3
                 mesh.transform = transforms.MatrixTransform()
                 self.cfs.append(mesh)
-                self.color_cache.append(color)
+                self.led_color_cache.append(color)
+
+        if self.ellipsoid_radii is not None and self.ellipsoids is None:
+            sphere_mesh = geometry.create_sphere(radius=1.0)
+            self.ellipsoids = [
+                scene.visuals.Mesh(
+                    parent=self.view.scene,
+                    meshdata=sphere_mesh,
+                    color=ELLIPSOID_COLOR_OK,
+                    shading="smooth",
+                )
+                for _ in self.cfs
+            ]
+            for ell in self.ellipsoids:
+                ell.light_dir = (0.1, 0.1, 1.0)
+                ell.shininess = 0.0
+                ell.ambient_light_color = [0.5] * 3
+                ell.transform = transforms.MatrixTransform()
 
         positions = np.stack(cf.position() for cf in crazyflies)
 
@@ -96,8 +124,8 @@ class VisVispy:
             self.cfs[i].transform.translate(positions[i])
             # vispy does not do this check
             color = crazyflies[i].ledRGB
-            if color != self.color_cache[i]:
-                self.color_cache[i] = color
+            if color != self.led_color_cache[i]:
+                self.led_color_cache[i] = color
                 self.cfs[i].color = color  # sets dirty flag
 
         # Update graph line segments to match new Crazyflie positions.
@@ -106,5 +134,18 @@ class VisVispy:
                 self.graph_lines[2 * k, :] = positions[i]
                 self.graph_lines[2 * k + 1, :] = positions[j]
             self.graph.set_data(self.graph_lines)
+
+        # Update collsiion ellipsoids.
+        if self.ellipsoids is not None:
+            colliding = util.check_ellipsoid_collisions(positions, self.ellipsoid_radii)
+            for i, pos in enumerate(positions):
+                ell = self.ellipsoids[i]
+                tf = ell.transform
+                tf.reset()
+                tf.scale(self.ellipsoid_radii)
+                tf.translate(pos)
+                new_color = ELLIPSOID_COLOR_COLLISION if colliding[i] else ELLIPSOID_COLOR_OK
+                if not (new_color == ell.color):  # vispy Color lacks != override.
+                    ell.color = new_color
 
         self.canvas.app.process_events()

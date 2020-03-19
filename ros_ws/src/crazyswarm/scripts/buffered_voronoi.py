@@ -28,24 +28,52 @@ RATE = 10
 
 
 class BVCController:
-    def __init__(self, goal, radii):
+    def __init__(self, goal, radii, bbox_min, bbox_max):
         self.goal = goal
         self.radii = radii
+        self.bbox_min = bbox_min
+        self.bbox_max = bbox_max
+        self.dt = 1.0 / RATE
+        self.lastVelocity = np.zeros(3)
 
     def cmdVel(self, pos, other_positions, horizon):
         """Computes the velocity setpoint for the low-level controller."""
         to_goal = self.goal - pos
-        dist_goal = np.linalg.norm(to_goal)
-        to_goal_unit = to_goal / dist_goal
-        speed = min(MAX_SPEED, KP_POS * dist_goal)
-        vref = speed * to_goal_unit
+        goal_dist = np.linalg.norm(to_goal)
+        goal_dir = to_goal / goal_dist
+
+        to_neighbors = other_positions - pos
+        neighbor_dists = np.linalg.norm(to_neighbors, axis=1)
+        neighbor_dirs = to_neighbors / neighbor_dists[:,None]
+
+        inners = np.dot(neighbor_dirs, goal_dir)
+        in_way = (neighbor_dists <= goal_dist) & (inners > 0.0)
+        if np.any(in_way):
+            worst_inner = np.amax(inners[in_way])
+            sidestep = util.normalize(np.cross(goal_dir, np.array([0, 0, 1])))
+            # Allow big sidestep when goal and neighbor are almost collinear.
+            sidestep_amount = worst_inner**4 * max(goal_dist, 2*self.radii[0])
+            to_goal = to_goal + sidestep_amount * sidestep
+
+        # The polytope constraints for my Voronoi cell.
+        Acell, bcell = self._cell_constraints(to_neighbors)
+
+        # Add constraints for the environment bounding box.
+        Abox = np.vstack([np.eye(3), -np.eye(3)])
+        bbox = np.concatenate([(self.bbox_max - pos), -(self.bbox_min - pos)])
+
+        A = np.vstack([Acell, Abox])
+        b = np.concatenate([bcell, bbox])
 
         # Solve the QP for closest velocity that will remain in cell.
-        A, b = self._cell_constraints(other_positions - pos)
-        quad = 2 * np.eye(3)
-        lin = 2 * vref
+        quad = np.eye(3)
+        lin = to_goal
         result = quadprog.solve_qp(quad, lin, -horizon * A.T, -b)
-        return result[0]
+        vel = result[0]
+
+        vel = util.clamp_norm(vel, MAX_SPEED)
+        self.lastVelocity = vel
+        return vel
 
     def _cell_constraints(self, relative_positions):
         """Computes my buffered Voronoi cell in linear inequality form."""
@@ -64,7 +92,7 @@ class BVCController:
 
 
 
-def formationChangeBVC(timeHelper, goals, cfs, radii):
+def formationChangeBVC(timeHelper, goals, cfs, radii, bbox_min, bbox_max):
     """Use BVC collision avoidance to execute formation change.
 
     Args:
@@ -75,7 +103,7 @@ def formationChangeBVC(timeHelper, goals, cfs, radii):
 
     Returns: None.
     """
-    bvcs = [BVCController(goal, radii) for goal in goals]
+    bvcs = [BVCController(goal, radii, bbox_min, bbox_max) for goal in goals]
     n = len(bvcs)
     while True:
         pos = np.stack([cf.position() for cf in cfs])
@@ -152,6 +180,10 @@ def main():
         starts = np.stack([cf.position() for cf in cfs])
         starts[:, 2] += Z
 
+        all_pts = np.vstack([goals, starts])
+        bbox_min = np.amin(all_pts, axis=0) - 4.0 * xy_radius
+        bbox_max = np.amax(all_pts, axis=0) + 4.0 * xy_radius
+
         # Optimal assignment with sum of Euclidean distances objective guarantees
         # no collisions when following straight-line trajectories IF the robots
         # have no volume. If not, collisions may occur, but they are rare in
@@ -175,7 +207,7 @@ def main():
                 cf.goTo(goal, yaw=0.0, duration=DURATION)
             timeHelper.sleep(DURATION)
         else:
-            formationChangeBVC(timeHelper, goals, cfs, radii)
+            formationChangeBVC(timeHelper, goals, cfs, radii, bbox_min, bbox_max)
 
 
 if __name__ == "__main__":

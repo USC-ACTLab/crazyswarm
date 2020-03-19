@@ -5,6 +5,19 @@ import scipy as sp
 import scipy.spatial
 
 
+def normalize(a, axis=None):
+    norms = np.linalg.norm(a, keepdims=True, axis=axis)
+    norms[norms < 1e-20] = 1.0
+    return a / norms
+
+
+def clamp_norm(x, limit):
+    norm = np.linalg.norm(x)
+    if norm > limit:
+        return (limit / norm) * x
+    return x
+
+
 def check_ellipsoid_collisions(positions, radii):
     """Checks for collisions between a set of ellipsoids at given positions.
 

@@ -4,14 +4,26 @@
 #define __attribute__(x)
 
 %{
+#define SWIG_FILE_WITH_INIT
+#include "collision_avoidance.h"
 #include "math3d.h"
 #include "pptraj.h"
 #include "planner.h"
+#include "stabilizer_types.h"
 %}
 
+%include "collision_avoidance.h"
 %include "math3d.h"
 %include "pptraj.h"
 %include "planner.h"
+%include "stabilizer_types.h"
+
+%include "numpy.i"
+
+
+%init %{
+    import_array()
+%}
 
 %inline %{
 void poly4d_set(struct poly4d *poly, int dim, int coef, float val)
@@ -30,7 +42,28 @@ struct poly4d* malloc_poly4d(int size)
 {
     return (struct poly4d*)malloc(sizeof(struct poly4d) * size);
 }
+
+void collisionAvoidanceUpdateSetpointWrap(
+  collision_avoidance_params_t const *params,
+  collision_avoidance_state_t *collisionState,
+  int nOthers,
+  float const *otherPositions,
+  setpoint_t *setpoint, sensorData_t const *sensorData, state_t const *state)
+{
+    nOthers /= 3;
+    float *workspace = malloc(sizeof(float) * 7 * (nOthers + 6));
+    collisionAvoidanceUpdateSetpointWrap(
+        params,
+        collisionState,
+        nOthers,
+        otherPositions,
+        setpoint, sensorData, state
+    );
+    free(workspace);
+}
 %}
+
+%apply (int DIM1, float* IN_ARRAY1) {(int nOthers, float const *otherPositions)}
 
 
 %pythoncode %{

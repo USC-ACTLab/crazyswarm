@@ -65,37 +65,100 @@ def arr2vec(a):
     return firm.mkvec(a[0], a[1], a[2])
 
 
+class CollisionAvoidanceWrapper:
+    def __init__(self, radii, bbox_min, bbox_max, horizon, maxSpeed):
+        self.radii = radii
+        self.bbox_min = bbox_min
+        self.bbox_max = bbox_max
+
+        params = firm.collision_avoidance_params_t()
+        params.ellipsoidRadii = firm.mkvec(*radii)
+        params.bboxMin = firm.mkvec(*bbox_min)
+        params.bboxMax = firm.mkvec(*bbox_max)
+        params.horizonSecs = horizon
+        params.maxSpeed = maxSpeed
+        params.voronoiProjectionTolerance = 1e-4
+        params.voronoiProjectionMaxIters = 1000
+        self.params = params
+
+        state = firm.collision_avoidance_state_t()
+        state.lastFeasibleSetPosition = firm.mkvec(np.nan, np.nan, np.nan)
+        self.state = state
+
+    def updateSetpoint(self, pos, setPos, setVel, otherPositions):
+        state = firm.state_t()
+        state.position.x, state.position.y, state.position.z = pos
+
+        sensorData = firm.sensorData_t()
+
+        setpoint = firm.setpoint_t()
+        setpoint.position.x, setpoint.position.y, setpoint.position.z = setPos
+        setpoint.velocity.x, setpoint.velocity.y, setpoint.velocity.z = setVel
+
+        firm.collisionAvoidanceUpdateSetpointWrap(
+            self.params,
+            self.state,
+            otherPositions.flat.copy(),
+            setpoint,
+            sensorData,
+            state)
+
+        pos = setpoint.position
+        vel = setpoint.velocity
+
+        return np.array(pos.x, pos.y, pos.z), np.array(vel.x, vel.y, vel.z)
+
+
+
 class Crazyflie:
+
+    # Flight modes
+    MODE_IDLE = 0
+    MODE_HIGH_POLY = 1
+    MODE_LOW_POS = 2
+    MODE_LOW_VEL = 3
 
     def __init__(self, id, initialPosition, timeHelper):
         self.id = id
+        self.groupMask = 0
         self.initialPosition = np.array(initialPosition)
         self.time = lambda: timeHelper.time()
+        self.mode = MODE_IDLE
 
         self.planner = firm.planner()
-        self.cmdHighLevel = True
         firm.plan_init(self.planner)
-        self.planner.lastKnownPosition = arr2vec(initialPosition)
-        self.groupMask = 0
         self.trajectories = dict()
+
         self.currentVelocity = None
         self.velocityMode = False
 
         # for visualization - default to blueish-grey
         self.ledRGB = (0.5, 0.5, 1)
 
+        # for collision avoidance
+        self.otherCFs = []
+        self.collisionAvoidance = None
+
     def setGroupMask(self, groupMask):
         self.groupMask = groupMask
 
-    def takeoff(self, targetHeight, duration, groupMask = 0):
+    def enableCollisionAvoidance(self, others):
+        self.otherCFs = others
+        radii = firm.mkvec(0.125, 0.125, 0.375)
+        boxMin = firm.vrepeat(-100.0)
+        boxMax = firm.vrepeat(100.0)
+        self.collisionAvoidance = CollisionAvoidanceWrapper(
+            radii, boxMin, boxMax, horizon=1.0, maxSpeed=5.0)
+
+    def takeoff(self, targetHeight, targetYaw, duration, groupMask = 0):
         if self._isGroup(groupMask):
             firm.plan_takeoff(self.planner,
-                self._vposition(), self.yaw(), targetHeight, duration, self.time())
+                self._vposition(), self.yaw(), targetHeight, targetYaw, duration, self.time())
 
-    def land(self, targetHeight, duration, groupMask = 0):
+    def land(self, targetHeight, targetYaw, duration, groupMask = 0):
         if self._isGroup(groupMask):
             firm.plan_land(self.planner,
-                self._vposition(), self.yaw(), targetHeight, duration, self.time())
+                self._vposition(), self.yaw(), targetHeight, targetYaw, duration, self.time())
 
     def stop(self, groupMask = 0):
         if self._isGroup(groupMask):
@@ -216,22 +279,35 @@ class Crazyflie:
             self.planner.lastKnownPosition = self.position() + time * (self.currentVelocity + disturbance)
             self.velocityMode = False
 
+        if self.collisionAvoidance is not None:
+            assert not self.velocityMode
+            setPos, setVel 
+
 
     # "private" methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
 
     def _vposition(self):
-        # TODO this should be implemented in C
-        # print(self.id, self.planner, self.planner.state)
         if (not self.cmdHighLevel) or self.planner.state == firm.TRAJECTORY_STATE_IDLE:
             return self.planner.lastKnownPosition
         else:
             ev = firm.plan_current_goal(self.planner, self.time())
             self.planner.lastKnownPosition = firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
-            # print(self.id, ev.pos.z)
             # not totally sure why, but if we don't do this, we don't actually return by value
             return firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
+
+    def _vvelocity(self):
+        if (not self.cmdHighLevel) or self.planner.state == firm.TRAJECTORY_STATE_IDLE:
+            pos = self.planner.lastKnownPosition
+            if self.velocityMode:
+                return firm.mkvec(*self.currentVelocity)
+            else:
+                return firm.vzero()
+        else:
+            ev = firm.plan_current_goal(self.planner, self.time())
+            # not totally sure why, but if we don't do this, we don't actually return by value
+            return firm.mkvec(ev.vel.x, ev.vel.y, ev.vel.z)
 
 
 class CrazyflieServer:

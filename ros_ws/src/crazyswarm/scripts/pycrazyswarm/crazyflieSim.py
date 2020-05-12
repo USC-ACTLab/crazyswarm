@@ -245,8 +245,10 @@ class Crazyflie:
 
         elif self.mode == Crazyflie.MODE_LOW_VELOCITY:
             # Simple Euler integration.
-            self.state.pos = firm.vadd(self.state.pos, firm.vscl(time, self.setState.vel))
-            self.state.vel = self.setState.vel
+            disturbance = firm.mkvec(*(disturbanceSize * np.random.normal(size=3)))
+            velocity = firm.vadd(self.setState.vel, disturbance)
+            self.state.pos = firm.vadd(self.state.pos, firm.vscl(time, velocity))
+            self.state.vel = velocity
             self.state.acc = firm.vzero()  # TODO: could compute with finite difference
             self.state.yaw += time * self.setState.omega.z
             self.state.omega = self.setState.omega

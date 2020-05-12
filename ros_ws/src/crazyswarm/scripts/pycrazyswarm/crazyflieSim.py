@@ -60,82 +60,41 @@ class TimeHelper:
         self.observers.append(observer)
 
 
-# helper func to convert python/numpy arrays to firmware 3d vector type.
-def arr2vec(a):
-    return firm.mkvec(a[0], a[1], a[2])
-
-
-class CollisionAvoidanceWrapper:
-    def __init__(self, radii, bbox_min, bbox_max, horizon, maxSpeed):
-        self.radii = radii
-        self.bbox_min = bbox_min
-        self.bbox_max = bbox_max
-
-        params = firm.collision_avoidance_params_t()
-        params.ellipsoidRadii = firm.mkvec(*radii)
-        params.bboxMin = firm.mkvec(*bbox_min)
-        params.bboxMax = firm.mkvec(*bbox_max)
-        params.horizonSecs = horizon
-        params.maxSpeed = maxSpeed
-        params.voronoiProjectionTolerance = 1e-4
-        params.voronoiProjectionMaxIters = 1000
-        self.params = params
-
-        state = firm.collision_avoidance_state_t()
-        state.lastFeasibleSetPosition = firm.mkvec(np.nan, np.nan, np.nan)
-        self.state = state
-
-    def updateSetpoint(self, pos, setPos, setVel, otherPositions):
-        state = firm.state_t()
-        state.position.x, state.position.y, state.position.z = pos
-
-        sensorData = firm.sensorData_t()
-
-        setpoint = firm.setpoint_t()
-        setpoint.position.x, setpoint.position.y, setpoint.position.z = setPos
-        setpoint.velocity.x, setpoint.velocity.y, setpoint.velocity.z = setVel
-
-        firm.collisionAvoidanceUpdateSetpointWrap(
-            self.params,
-            self.state,
-            otherPositions.flat.copy(),
-            setpoint,
-            sensorData,
-            state)
-
-        pos = setpoint.position
-        vel = setpoint.velocity
-
-        return np.array(pos.x, pos.y, pos.z), np.array(vel.x, vel.y, vel.z)
-
-
-
 class Crazyflie:
 
-    # Flight modes
+    # Flight modes.
     MODE_IDLE = 0
     MODE_HIGH_POLY = 1
-    MODE_LOW_POS = 2
-    MODE_LOW_VEL = 3
+    MODE_LOW_FULLSTATE = 2
+    MODE_LOW_POSITION = 3
+    MODE_LOW_VELOCITY = 4
+
 
     def __init__(self, id, initialPosition, timeHelper):
+
+        # Core.
         self.id = id
         self.groupMask = 0
         self.initialPosition = np.array(initialPosition)
         self.time = lambda: timeHelper.time()
-        self.mode = MODE_IDLE
 
+        # Commander.
+        self.mode = Crazyflie.MODE_IDLE
         self.planner = firm.planner()
         firm.plan_init(self.planner)
         self.trajectories = dict()
+        self.setState = firm.traj_eval()
 
-        self.currentVelocity = None
-        self.velocityMode = False
-
-        # for visualization - default to blueish-grey
+        # State. Public np.array-returning getters below for physics state.
+        self.state = firm.traj_eval()
+        self.state.pos = firm.mkvec(*initialPosition)
+        self.state.vel = firm.vzero()
+        self.state.acc = firm.vzero()
+        self.state.yaw = 0.0
+        self.state.omega = firm.vzero()
         self.ledRGB = (0.5, 0.5, 1)
 
-        # for collision avoidance
+        # For collision avoidance.
         self.otherCFs = []
         self.collisionAvoidance = None
 
@@ -150,23 +109,30 @@ class Crazyflie:
         self.collisionAvoidance = CollisionAvoidanceWrapper(
             radii, boxMin, boxMax, horizon=1.0, maxSpeed=5.0)
 
-    def takeoff(self, targetHeight, targetYaw, duration, groupMask = 0):
+    def takeoff(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
+            self.mode = Crazyflie.MODE_HIGH_POLY
             firm.plan_takeoff(self.planner,
-                self._vposition(), self.yaw(), targetHeight, targetYaw, duration, self.time())
+                self._vposition(), self.yaw(), targetHeight, duration, self.time())
 
-    def land(self, targetHeight, targetYaw, duration, groupMask = 0):
+    def land(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
+            self.mode = Crazyflie.MODE_HIGH_POLY
             firm.plan_land(self.planner,
-                self._vposition(), self.yaw(), targetHeight, targetYaw, duration, self.time())
+                self._vposition(), self.yaw(), targetHeight, duration, self.time())
 
     def stop(self, groupMask = 0):
         if self._isGroup(groupMask):
+            self.mode = Crazyflie.MODE_IDLE
             firm.plan_stop(self.planner)
 
     def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
         if self._isGroup(groupMask):
-            firm.plan_go_to(self.planner, relative, arr2vec(goal), yaw, duration, self.time())
+            if self.mode != Crazyflie.MODE_HIGH_POLY:
+                # We need to update to the latest firmware that has go_to_from.
+                raise ValueError("goTo from low-level modes not yet supported.")
+            self.mode = Crazyflie.MODE_HIGH_POLY
+            firm.plan_go_to(self.planner, relative, firm.mkvec(*goal), yaw, duration, self.time())
 
     def uploadTrajectory(self, trajectoryId, pieceOffset, trajectory):
         traj = firm.piecewise_traj()
@@ -187,9 +153,8 @@ class Crazyflie:
 
     def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
         if self._isGroup(groupMask):
+            self.mode = Crazyflie.MODE_HIGH_POLY
             traj = self.trajectories[trajectoryId]
-            # if traj is also current traj, must take pos before changing t_begin.
-            pos = self._vposition()
             traj.t_begin = self.time()
             traj.timescale = timescale
             if relative:
@@ -198,16 +163,13 @@ class Crazyflie:
                     traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)
                 else:
                     traj_init = firm.piecewise_eval(traj, traj.t_begin)
-                traj.shift = firm.vsub(pos, traj_init.pos)
+                traj.shift = firm.vsub(self.state.pos, traj_init.pos)
             else:
                 traj.shift = firm.vzero()
             firm.plan_start_trajectory(self.planner, traj, reverse)
 
     def position(self):
-        pos = self._vposition()
-        if not type(pos) is np.ndarray:
-            return np.array([pos.x, pos.y, pos.z])
-        return pos
+        return np.array(self.state.pos)
 
     def getParam(self, name):
         print("WARNING: getParam not implemented in simulation!")
@@ -226,17 +188,10 @@ class Crazyflie:
 
     # simulation only functions
     def yaw(self):
-        ev = firm.plan_current_goal(self.planner, self.time())
-        if not firm.is_traj_eval_valid(ev):
-            return 0.0
-        return ev.yaw
+        return float(self.state.yaw)
 
     def acceleration(self):
-        if self.planner.state == firm.TRAJECTORY_STATE_IDLE:
-            return np.array([0, 0, 0])
-        else:
-            ev = firm.plan_current_goal(self.planner, self.time())
-            return np.array([ev.acc.x, ev.acc.y, ev.acc.z])
+        return np.array(self.state.acc)
 
     def rpy(self):
         acc = self.acceleration()
@@ -256,32 +211,62 @@ class Crazyflie:
             return (roll, pitch, yaw)
 
     def cmdFullState(self, pos, vel, acc, yaw, omega):
-        self.planner.lastKnownPosition = pos
-        self.cmdHighLevel = False
-        # TODO store other state variables
-
-    def cmdVelocityWorld(self, vel, yawRate):
-        self.currentVelocity = vel
-        self.cmdHighLevel = False
-        self.velocityMode = True
-
-    def cmdStop(self):
-        pass
+        self.mode = Crazyflie.MODE_LOW_FULLSTATE
+        self.setState.pos = firm.mkvec(*pos)
+        self.setState.vel = firm.mkvec(*vel)
+        self.setState.acc = firm.mkvec(*acc)
+        self.setState.yaw = yaw
+        self.setState.omega = firm.mkvec(*omega)
 
     def cmdPosition(self, pos, yaw = 0):
-        self.planner.lastKnownPosition = pos
-        self.cmdHighLevel = False
-        # TODO store other state variables
+        self.mode = Crazyflie.MODE_LOW_POSITION
+        self.setState.pos = firm.mkvec(*pos)
+        self.setState.yaw = yaw
+        # TODO: should we set vel, acc, omega to zero, or rely on modes to not read them?
+
+    def cmdVelocityWorld(self, vel, yawRate):
+        self.mode = Crazyflie.MODE_LOW_VELOCITY
+        self.setState.vel = firm.mkvec(*vel)
+        self.setState.omega = firm.mkvec(0.0, 0.0, yawRate)
+        # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
+
+    def cmdStop(self):
+        # TODO: set mode to MODE_IDLE?
+        pass
 
     def integrate(self, time, disturbanceSize):
-        if self.velocityMode:
-            disturbance = disturbanceSize * np.random.normal(size=3)
-            self.planner.lastKnownPosition = self.position() + time * (self.currentVelocity + disturbance)
-            self.velocityMode = False
 
-        if self.collisionAvoidance is not None:
-            assert not self.velocityMode
-            setPos, setVel 
+        if self.mode == Crazyflie.MODE_IDLE:
+            pass
+
+        elif self.mode == Crazyflie.MODE_HIGH_POLY:
+            self.state = firm.plan_current_goal(self.planner, self.time())
+
+        elif self.mode == Crazyflie.MODE_LOW_FULLSTATE:
+            self.state = self.setState
+
+        elif self.mode == Crazyflie.MODE_LOW_POSITION:
+            # Simple finite difference velocity approxmations.
+            velocity = firm.vdiv(firm.vsub(self.setState.pos, self.state.pos), time)
+            yawRate = (self.setState.yaw - self.state.yaw) / time
+            self.state.pos = self.setState.pos
+            self.state.vel = velocity
+            self.state.acc = firm.vzero()  # TODO: 2nd-order finite difference? Probably useless.
+            self.state.yaw = self.setState.yaw
+            self.state.omega = firm.mkvec(0.0, 0.0, yawRate)
+
+        elif self.mode == Crazyflie.MODE_LOW_VELOCITY:
+            # Simple Euler integration.
+            disturbance = firm.mkvec(*(disturbanceSize * np.random.normal(size=3)))
+            velocity = firm.vadd(self.setState.vel, disturbance)
+            self.state.pos = firm.vadd(self.state.pos, firm.vscl(time, velocity))
+            self.state.vel = velocity
+            self.state.acc = firm.vzero()  # TODO: could compute with finite difference
+            self.state.yaw += time * self.setState.omega.z
+            self.state.omega = self.setState.omega
+
+        else:
+            raise ValueError("Unknown flight mode.")
 
 
     # "private" methods
@@ -289,25 +274,16 @@ class Crazyflie:
         return groupMask == 0 or (self.groupMask & groupMask) > 0
 
     def _vposition(self):
+        # TODO this should be implemented in C
+        # print(self.id, self.planner, self.planner.state)
         if (not self.cmdHighLevel) or self.planner.state == firm.TRAJECTORY_STATE_IDLE:
             return self.planner.lastKnownPosition
         else:
             ev = firm.plan_current_goal(self.planner, self.time())
             self.planner.lastKnownPosition = firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
+            # print(self.id, ev.pos.z)
             # not totally sure why, but if we don't do this, we don't actually return by value
             return firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
-
-    def _vvelocity(self):
-        if (not self.cmdHighLevel) or self.planner.state == firm.TRAJECTORY_STATE_IDLE:
-            pos = self.planner.lastKnownPosition
-            if self.velocityMode:
-                return firm.mkvec(*self.currentVelocity)
-            else:
-                return firm.vzero()
-        else:
-            ev = firm.plan_current_goal(self.planner, self.time())
-            # not totally sure why, but if we don't do this, we don't actually return by value
-            return firm.mkvec(ev.vel.x, ev.vel.y, ev.vel.z)
 
 
 class CrazyflieServer:

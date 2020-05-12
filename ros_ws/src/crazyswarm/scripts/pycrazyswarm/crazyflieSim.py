@@ -65,6 +65,7 @@ def arr2vec(a):
     return firm.mkvec(a[0], a[1], a[2])
 
 
+
 class Crazyflie:
 
     def __init__(self, id, initialPosition, timeHelper):

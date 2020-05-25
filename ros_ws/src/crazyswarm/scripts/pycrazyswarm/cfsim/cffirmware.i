@@ -71,7 +71,19 @@ void collisionAvoidanceUpdateSetpointWrap(
 import numpy as np
 %}
 
+#define COPY_CTOR(structname) \
+structname(struct structname const *x) { \
+    struct structname *y = malloc(sizeof(struct structname)); \
+    *y = *x; \
+    return y; \
+} \
+~structname() { \
+    free($self); \
+} \
+
 %extend vec {
+    COPY_CTOR(vec)
+
     %pythoncode %{
         def __repr__(self):
             return "({}, {}, {})".format(self.x, self.y, self.z)
@@ -106,4 +118,8 @@ import numpy as np
         def __sub__(self, other):
             return _cffirmware.vsub(self, other)
     %}
+};
+
+%extend traj_eval {
+    COPY_CTOR(traj_eval)
 };

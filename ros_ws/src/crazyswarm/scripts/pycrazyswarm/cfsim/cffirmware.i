@@ -53,5 +53,23 @@ import numpy as np
                 return _cffirmware.vindex(self, i)
             else:
                 raise IndexError("vec index must be in {0, 1, 2}.")
+
+        # Unary operator overloads.
+        def __neg__(self):
+            return _cffirmware.vneg(self)
+
+        # Vector-scalar binary operator overloads.
+        def __rmul__(self, s):
+            return _cffirmware.vscl(s, self)
+
+        def __div__(self, s):
+            return _cffirmware.vdiv(self, s)
+
+        # Vector-vector binary operator overloads.
+        def __add__(self, other):
+            return _cffirmware.vadd(self, other)
+
+        def __sub__(self, other):
+            return _cffirmware.vsub(self, other)
     %}
 };

@@ -4,7 +4,7 @@ from . import genericJoystick
 
 # Building the parser in a separate function allows sphinx-argparse to
 # auto-generate the documentation for the command-line flags.
-def build_argparser(parent_parsers):
+def build_argparser(parent_parsers=[]):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=parent_parsers

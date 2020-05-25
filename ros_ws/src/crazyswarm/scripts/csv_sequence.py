@@ -16,10 +16,13 @@ import pycrazyswarm.cfsim.cffirmware as firm
 
 
 def main():
-    parser = argparse.ArgumentParser()
+
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("path",
+        type=str,
         help="directory containing numbered subdirectories for each robot," +
             "each of which contains numbered <n>.csv files for each formation change")
+    swarm = Crazyswarm(parent_parser=parser)
     args, unknown = parser.parse_known_args()
 
     #
@@ -71,7 +74,6 @@ def main():
     #
     # CRAZYSWARM INITIALIZATION
     #
-    swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
     crazyflies = allcfs.crazyflies

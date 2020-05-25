@@ -10,3 +10,4 @@ cffirmware_wrap.c: cffirmware.i $(modinc)/*.h
 
 clean:
 	rm -f cffirmware.py _cffirmware.so *.pyc cffirmware_wrap.c
+	rm -rf build

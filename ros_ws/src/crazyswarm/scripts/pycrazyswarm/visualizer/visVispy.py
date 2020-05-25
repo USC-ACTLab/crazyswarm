@@ -82,7 +82,7 @@ class VisVispy:
                 self.cfs.append(mesh)
                 self.color_cache.append(color)
 
-        positions = np.stack(cf.position() for cf in crazyflies)
+        positions = np.stack([cf.position() for cf in crazyflies])
 
         for i in range(0, len(self.cfs)):
             x, y, z = crazyflies[i].position()

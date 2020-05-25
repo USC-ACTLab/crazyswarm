@@ -274,9 +274,9 @@ class CrazyflieServer:
         """
         if crazyflies_yaml.endswith(".yaml"):
             with open(crazyflies_yaml, 'r') as ymlfile:
-                cfg = yaml.load(ymlfile)
+                cfg = yaml.safe_load(ymlfile)
         else:
-            cfg = yaml.load(crazyflies_yaml)
+            cfg = yaml.safe_load(crazyflies_yaml)
 
         self.crazyflies = []
         self.crazyfliesById = dict()

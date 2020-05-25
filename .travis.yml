@@ -26,11 +26,17 @@ env:
     - ANACONDA=true ROS_DISTRO=
     # TODO: support ROS w/ Anaconda?
 
+
 language: generic
 jobs:
   exclude:
     - env: ANACONDA=false ROS_DISTRO=kinetic
       os: osx
+  allow_failures:
+    - env: ANACONDA=true ROS_DISTRO=
+      os: osx
+    # Something around March 2020 caused the Mac build to start failing.
+    # It seems related to ctypes and/or libffi - the Python standard library?
 
 before_install:
   - |

@@ -5,7 +5,6 @@ import argparse
 import time
 
 import numpy as np
-import quadprog
 import scipy as sp
 import scipy.spatial
 import scipy.optimize

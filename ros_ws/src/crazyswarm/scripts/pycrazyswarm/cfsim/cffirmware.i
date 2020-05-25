@@ -25,6 +25,8 @@
     import_array()
 %}
 
+%apply (int DIM1, float* IN_ARRAY1) {(int nOthers, float const *otherPositions)}
+
 %inline %{
 void poly4d_set(struct poly4d *poly, int dim, int coef, float val)
 {
@@ -52,18 +54,17 @@ void collisionAvoidanceUpdateSetpointWrap(
 {
     nOthers /= 3;
     float *workspace = malloc(sizeof(float) * 7 * (nOthers + 6));
-    collisionAvoidanceUpdateSetpointWrap(
+    collisionAvoidanceUpdateSetpointCore(
         params,
         collisionState,
         nOthers,
         otherPositions,
+        workspace,
         setpoint, sensorData, state
     );
     free(workspace);
 }
 %}
-
-%apply (int DIM1, float* IN_ARRAY1) {(int nOthers, float const *otherPositions)}
 
 
 %pythoncode %{

@@ -1,5 +1,7 @@
 import argparse
 
+import numpy as np
+
 from . import genericJoystick
 
 # Building the parser in a separate function allows sphinx-argparse to
@@ -16,6 +18,8 @@ def build_argparser(parent_parsers=[]):
     group.add_argument("--dt", help="Duration of seconds between rendered visualization frames.", type=float, default=0.1)
     group.add_argument("--writecsv", help="Enable CSV output.", action="store_true")
     group.add_argument("--disturbance", help="Simulate Gaussian-distributed disturbance when using cmdVelocityWorld.", type=float, default=0.0)
+    group.add_argument("--maxvel", help="Limit simulated velocity (meters/sec).", type=float, default=np.inf)
+
     return parser
 
 
@@ -35,7 +39,7 @@ class Crazyswarm:
 
         if args.sim:
             import crazyflieSim
-            self.timeHelper = crazyflieSim.TimeHelper(args.vis, args.dt, args.writecsv, args.disturbance)
+            self.timeHelper = crazyflieSim.TimeHelper(args.vis, args.dt, args.writecsv, disturbanceSize=args.disturbance, maxVel=args.maxvel)
             self.allcfs = crazyflieSim.CrazyflieServer(self.timeHelper, crazyflies_yaml)
         else:
             import crazyflie

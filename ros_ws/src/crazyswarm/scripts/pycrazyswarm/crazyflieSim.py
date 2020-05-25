@@ -113,13 +113,13 @@ class Crazyflie:
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
             firm.plan_takeoff(self.planner,
-                self._vposition(), self.yaw(), targetHeight, duration, self.time())
+                self.state.pos, self.state.yaw, targetHeight, duration, self.time())
 
     def land(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
             firm.plan_land(self.planner,
-                self._vposition(), self.yaw(), targetHeight, duration, self.time())
+                self.state.pos, self.state.yaw, targetHeight, duration, self.time())
 
     def stop(self, groupMask = 0):
         if self._isGroup(groupMask):
@@ -273,18 +273,6 @@ class Crazyflie:
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
 
-    def _vposition(self):
-        # TODO this should be implemented in C
-        # print(self.id, self.planner, self.planner.state)
-        if (not self.cmdHighLevel) or self.planner.state == firm.TRAJECTORY_STATE_IDLE:
-            return self.planner.lastKnownPosition
-        else:
-            ev = firm.plan_current_goal(self.planner, self.time())
-            self.planner.lastKnownPosition = firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
-            # print(self.id, ev.pos.z)
-            # not totally sure why, but if we don't do this, we don't actually return by value
-            return firm.mkvec(ev.pos.x, ev.pos.y, ev.pos.z)
-
 
 class CrazyflieServer:
     def __init__(self, timeHelper, crazyflies_yaml="../launch/crazyflies.yaml"):
@@ -298,9 +286,9 @@ class CrazyflieServer:
         """
         if crazyflies_yaml.endswith(".yaml"):
             with open(crazyflies_yaml, 'r') as ymlfile:
-                cfg = yaml.load(ymlfile)
+                cfg = yaml.safe_load(ymlfile)
         else:
-            cfg = yaml.load(crazyflies_yaml)
+            cfg = yaml.safe_load(crazyflies_yaml)
 
         self.crazyflies = []
         self.crazyfliesById = dict()

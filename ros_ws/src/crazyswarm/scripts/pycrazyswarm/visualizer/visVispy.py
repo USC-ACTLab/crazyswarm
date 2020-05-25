@@ -110,7 +110,7 @@ class VisVispy:
                 ell.ambient_light_color = [0.5] * 3
                 ell.transform = transforms.MatrixTransform()
 
-        positions = np.stack(cf.position() for cf in crazyflies)
+        positions = np.stack([cf.position() for cf in crazyflies])
 
         for i in range(0, len(self.cfs)):
             x, y, z = crazyflies[i].position()

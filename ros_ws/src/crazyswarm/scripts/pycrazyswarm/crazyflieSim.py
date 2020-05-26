@@ -206,6 +206,11 @@ class Crazyflie:
         state.lastFeasibleSetPosition = firm.mkvec(np.nan, np.nan, np.nan)
         self.collisionAvoidanceState = state
 
+    def disableCollsionAvoidance(self):
+        self.otherCFs = None
+        self.collisionAvoidanceParams = None
+        self.collisionAvoidanceState = None
+
     def takeoff(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
@@ -333,7 +338,6 @@ class Crazyflie:
         pass
 
     def integrate(self, time, disturbanceSize, maxVel):
-
         if self.mode == Crazyflie.MODE_HIGH_POLY:
             self.setState = firm.plan_current_goal(self.planner, self.time())
 

@@ -1,4 +1,6 @@
 name: crazyswarm
+channels:
+  - conda-forge
 dependencies:
   - python=2.7
   - numpy
@@ -10,3 +12,4 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pyqt
+  - sphinx-argparse

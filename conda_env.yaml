@@ -9,3 +9,4 @@ dependencies:
   - sphinx
   - sphinx_rtd_theme
   - pyqt
+  - pytest

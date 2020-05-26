@@ -59,7 +59,7 @@ before_install:
     else
       # assert not TRAVIS_OS_NAME == "osx"
       # Install non-ROS system dependencies.
-      sudo apt install -y git swig libpython-dev python-numpy python-yaml python-matplotlib 
+      sudo apt install -y git swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
       # Install firmware cross-compiler and hardware driver dependencies.
       sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
       sudo apt-get update
@@ -91,3 +91,4 @@ script:
     else
       ./buildSimOnly.sh
     fi
+    pytest ros_ws/src/crazyswarm/scripts

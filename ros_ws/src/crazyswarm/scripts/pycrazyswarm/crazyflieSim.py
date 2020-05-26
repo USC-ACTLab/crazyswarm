@@ -100,14 +100,16 @@ class Crazyflie:
     def takeoff(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
+            targetYaw = 0.0
             firm.plan_takeoff(self.planner,
-                self.state.pos, self.state.yaw, targetHeight, duration, self.time())
+                self.state.pos, self.state.yaw, targetHeight, targetYaw, duration, self.time())
 
     def land(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
+            targetYaw = 0.0
             firm.plan_land(self.planner,
-                self.state.pos, self.state.yaw, targetHeight, duration, self.time())
+                self.state.pos, self.state.yaw, targetHeight, targetYaw, duration, self.time())
 
     def stop(self, groupMask = 0):
         if self._isGroup(groupMask):

@@ -3,20 +3,19 @@
 import numpy as np
 from pycrazyswarm import *
 
-Z = 1.0
+def test_yaml_string_load():
 
-crazyflies_yaml = """
-crazyflies:
-- channel: 100
-  id: 1
-  initialPosition: [1.0, 0.0, 0.0]
-- channel: 100
-  id: 10
-  initialPosition: [0.0, -1.0, 0.0]
-"""
+    crazyflies_yaml = """
+    crazyflies:
+    - channel: 100
+      id: 1
+      initialPosition: [1.0, 0.0, 0.0]
+    - channel: 100
+      id: 10
+      initialPosition: [0.0, -1.0, 0.0]
+    """
 
-if __name__ == "__main__":
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml)
+    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=["--sim", "--vis", "null"])
     timeHelper = swarm.timeHelper
     cfs = swarm.allcfs.crazyflies
     byId = swarm.allcfs.crazyfliesById
@@ -27,5 +26,3 @@ if __name__ == "__main__":
 
     cf10 = byId[10]
     assert np.all(cf10.initialPosition == [0.0, -1.0, 0.0])
-
-    print("Loaded YAML from string OK.")

@@ -19,6 +19,9 @@ class TimeHelper:
         elif vis == "vispy":
             import visualizer.visVispy
             self.visualizer = visualizer.visVispy.VisVispy()
+        elif vis == "null":
+            import visualizer.visNull
+            self.visualizer = visualizer.visNull.VisNull()
         else:
             raise Exception("Unknown visualization backend: {}".format(vis))
         self.t = 0.0

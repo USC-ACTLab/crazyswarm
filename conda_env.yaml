@@ -13,3 +13,4 @@ dependencies:
   - sphinx_rtd_theme
   - pyqt
   - sphinx-argparse
+  - pytest

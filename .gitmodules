@@ -1,7 +1,7 @@
 [submodule "crazyflie-firmware"]
 	path = crazyflie-firmware
-	url = https://github.com/bitcraze/crazyflie-firmware.git
-	branch = master
+	url = https://github.com/jpreiss/crazyflie-firmware.git
+	branch = collision_avoidance_rebase
 [submodule "crazyflie-lib-python"]
 	path = crazyflie-lib-python
 	url = https://github.com/bitcraze/crazyflie-lib-python.git

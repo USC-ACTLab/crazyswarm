@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 import math
 import numpy as np
@@ -29,7 +30,7 @@ class VisVispy:
         self.view = self.canvas.central_widget.add_view()
         self.view.bgcolor = self.bg_color
         self.view.camera = TurntableCamera(
-            fov=30.0, elevation=30.0, azimuth=90.0, center=(0.0, 0.0, 1.25)
+            fov=30.0, elevation=30.0, azimuth=-90.0, center=(0.0, 0.0, 1.25)
         )
         self.cam_state = self.view.camera.get_state()
 
@@ -50,6 +51,10 @@ class VisVispy:
         # Lazy-constructed vispy objects for collision ellipsoids.
         self.ellipsoids = None
         self.ellipsoid_radii = None
+
+        self.keyState = defaultdict(bool)
+        self.canvas.events.key_press.connect(self._onKeyPress)
+        self.canvas.events.key_release.connect(self._onKeyRelease)
 
     def setGraph(self, edges):
         """Set edges of graph visualization - sequence of (i,j) tuples."""
@@ -149,3 +154,10 @@ class VisVispy:
                     ell.color = new_color
 
         self.canvas.app.process_events()
+
+    def _onKeyPress(self, event):
+        self.keyState[event.text] = True
+
+    def _onKeyRelease(self, event):
+        self.keyState[event.text] = False
+

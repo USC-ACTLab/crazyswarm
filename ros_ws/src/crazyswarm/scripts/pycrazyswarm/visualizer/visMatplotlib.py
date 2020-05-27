@@ -1,3 +1,6 @@
+from collections import defaultdict
+import warnings
+
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import matplotlib.pyplot as plt
@@ -24,6 +27,11 @@ class VisMatplotlib:
         self.graph_lines = None
         self.graph = None
 
+        plt.rcParams['keymap.save'].remove('s')
+        self.keyState = defaultdict(bool)
+        self.fig.canvas.mpl_connect("key_press_event", self._onKeyPress)
+        self.fig.canvas.mpl_connect("key_release_event", self._onKeyRelease)
+
     def setGraph(self, edges):
         """Set edges of graph visualization - sequence of (i,j) tuples."""
 
@@ -39,7 +47,7 @@ class VisMatplotlib:
             self.ax.add_collection(self.graph)
 
     def showEllipsoids(self, radii):
-        raise Warning("showEllipsoids not implemented in Matplotlib visualizer.")
+        warnings.warn("showEllipsoids not implemented in Matplotlib visualizer.")
 
     def update(self, t, crazyflies):
         xs = []
@@ -73,3 +81,10 @@ class VisMatplotlib:
 
         self.timeAnnotation.set_text("{} s".format(t))
         plt.pause(0.0001)
+
+    def _onKeyPress(self, event):
+        self.keyState[event.key] = True
+
+    def _onKeyRelease(self, event):
+        self.keyState[event.key] = False
+

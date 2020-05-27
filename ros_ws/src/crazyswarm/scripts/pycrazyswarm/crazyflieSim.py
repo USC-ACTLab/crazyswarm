@@ -362,7 +362,7 @@ class Crazyflie:
         if self.mode in (Crazyflie.MODE_HIGH_POLY, Crazyflie.MODE_LOW_FULLSTATE, Crazyflie.MODE_LOW_POSITION):
             velocity = (setState.pos - self.state.pos) / time
         elif self.mode == Crazyflie.MODE_LOW_VELOCITY:
-            velocity = self.setState.vel
+            velocity = setState.vel
         else:
             raise ValueError("Unknown flight mode.")
 

@@ -15,7 +15,7 @@ def test_yaml_string_load():
       initialPosition: [0.0, -1.0, 0.0]
     """
 
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=["--sim", "--vis", "null"])
+    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null")
     timeHelper = swarm.timeHelper
     cfs = swarm.allcfs.crazyflies
     byId = swarm.allcfs.crazyfliesById

@@ -30,6 +30,8 @@ class Crazyswarm:
         else:
             parents = []
         parser = build_argparser(parents)
+        if isinstance(args, str):
+            args = args.split()
         args, unknown = parser.parse_known_args(args)
 
         if crazyflies_yaml is None:

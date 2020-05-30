@@ -377,6 +377,9 @@ class Crazyflie:
         # feedforward commands. We assume this is not a problem.
 
         velocity = firm.vclampnorm(velocity, maxVel)
+
+        disturbance = disturbanceSize * np.random.normal(size=3)
+        velocity = velocity + firm.mkvec(*disturbance)
         self.backState = firm.traj_eval(setState)
         self.backState.pos = self.state.pos + time * velocity
         self.backState.vel = velocity

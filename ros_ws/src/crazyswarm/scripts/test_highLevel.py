@@ -132,7 +132,7 @@ def test_uploadTrajectory_reverse():
 
     cf.startTrajectory(trajId, reverse=True)
     positionsReverse = _collectRelativePositions(timeHelper, cf, traj.duration)
-    positions2 = np.flip(positionsReverse, axis=0)
+    positions2 = np.flipud(positionsReverse)
 
     # The distance threshold must be large because the trajectory is not
     # symmetrical, not because time/reversing is super sloppy.

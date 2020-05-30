@@ -3,6 +3,7 @@ import sys
 import numpy as np
 
 from pycrazyswarm import *
+from pycrazyswarm.util import check_ellipsoid_collisions
 
 
 crazyflies_yaml = """
@@ -34,6 +35,10 @@ def test_velocityMode_sidestepWorstCase(args=None):
     b.cmdVelocityWorld([-1.0, 0.0, 0.0], yawRate=0.0)
 
     while timeHelper.time() < 10.0:
+        positions = np.stack([a.position(), b.position()])
+        collisions = check_ellipsoid_collisions(positions, RADII)
+        assert not np.any(collisions)
+
         timeHelper.sleep(timeHelper.dt)
         if a.position()[0] > 1.0 and b.position()[0] < -1.0:
             return

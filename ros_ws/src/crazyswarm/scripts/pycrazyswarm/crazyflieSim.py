@@ -180,6 +180,9 @@ class Crazyflie:
     # simulation only functions
     def yaw(self):
         return float(self.state.yaw)
+    
+    def velocity(self):
+        return np.array(self.state.vel)
 
     def acceleration(self):
         return np.array(self.state.acc)

@@ -201,6 +201,7 @@ class Crazyflie:
         params.bboxMax = firm.vrepeat(3.0)
         params.horizonSecs = 1.0
         params.maxSpeed = 2.0
+        params.sidestepThreshold = 0.25
         params.voronoiProjectionTolerance = 1e-5
         params.voronoiProjectionMaxIters = 100
         self.collisionAvoidanceParams = params

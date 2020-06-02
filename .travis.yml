@@ -93,3 +93,4 @@ script:
     fi
     cd ros_ws/src/crazyswarm/scripts
     python -m pytest
+    bash <(curl -s https://codecov.io/bash)

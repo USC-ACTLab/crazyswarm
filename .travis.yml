@@ -92,5 +92,5 @@ script:
       ./buildSimOnly.sh
     fi
     cd ros_ws/src/crazyswarm/scripts
-    python -m pytest
+    python -m pytest --cov
     bash <(curl -s https://codecov.io/bash)

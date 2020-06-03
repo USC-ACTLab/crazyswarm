@@ -108,8 +108,11 @@ structname(struct structname const *x) { \
         def __rmul__(self, s):
             return _cffirmware.vscl(s, self)
 
-        def __div__(self, s):
+        def __truediv__(self, s):
             return _cffirmware.vdiv(self, s)
+
+        def __div__(self, s):
+            return self.__truediv__(s)
 
         # Vector-vector binary operator overloads.
         def __add__(self, other):

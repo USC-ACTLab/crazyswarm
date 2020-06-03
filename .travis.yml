@@ -40,9 +40,9 @@ before_install:
     if "$ANACONDA"; then
       # Install the right Miniconda for the OS.
       if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh -O miniconda.sh;
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh;
       else
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
       fi
       bash miniconda.sh -b -p $HOME/miniconda
       source "$HOME/miniconda/etc/profile.d/conda.sh"
@@ -51,19 +51,18 @@ before_install:
       conda update -q conda
       # Useful for debugging any issues with conda
       conda info -a
-      conda env create -f conda_env.yaml
-      conda activate crazyswarm
+      conda env create -f conda_env_py3.yaml
+      conda activate crazyswarm3
     else
       # assert not TRAVIS_OS_NAME == "osx"
       # Install non-ROS system dependencies.
-      sudo apt install -y git swig libpython-dev python-numpy python-scipy python-yaml python-matplotlib python-pytest
+      sudo apt install -y git swig libpython3-dev python3-numpy python3-scipy python3-yaml python3-matplotlib python3-pytest
       # Install firmware cross-compiler and hardware driver dependencies.
       sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
       sudo apt-get update
       sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
-      # Set the python path manually to include /usr/-/python2.7/dist-packages
-      # as this is where apt-get installs python packages.
-      PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
+      # Set the python path to include where apt-get installs python packages.
+      PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages:/usr/local/lib/python3/dist-packages
     fi
   - |
     if [ "$ROS_DISTRO" != "" ]; then

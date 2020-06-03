@@ -56,7 +56,8 @@ before_install:
     else
       # assert not TRAVIS_OS_NAME == "osx"
       # Install non-ROS system dependencies.
-      sudo apt install -y git swig libpython3-dev python3-numpy python3-scipy python3-yaml python3-matplotlib python3-pytest
+      sudo apt install -y git swig libpython3-dev python3-pip python3-scipy python3-yaml python3-matplotlib python3-pytest
+      sudo pip3 install numpy
       # Install firmware cross-compiler and hardware driver dependencies.
       sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
       sudo apt-get update

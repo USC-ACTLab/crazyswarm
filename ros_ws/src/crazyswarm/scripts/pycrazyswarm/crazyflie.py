@@ -363,6 +363,11 @@ class Crazyflie:
         In this mode, the PC specifies desired velocity vector and yaw rate.
         The onboard controller will try to achive this velocity.
 
+        NOTE: the Mellinger controller is Crazyswarm's default controller, but
+        it has not been tuned (or even tested) for velocity control mode.
+        Switch to the PID controller by changing
+        `firmwareParams.stabilizer.controller` to `1` in your launch file.
+
         Sending a streaming setpoint of any type will force a change from
         high-level to low-level command mode. Currently, there is no mechanism
         to change back, but it is a high-priority feature to implement.

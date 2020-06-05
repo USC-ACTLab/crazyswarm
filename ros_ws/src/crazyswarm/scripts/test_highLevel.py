@@ -157,3 +157,22 @@ def test_uploadTrajectory_broadcast():
         relative = cf1.position() - cf0.position()
         assert np.all(np.isclose(relativeInitial, relative))
         timeHelper.sleep(timeHelper.dt + 1e-6)
+
+def test_setGroupMask():
+    allcfs, timeHelper = setUp()
+    cf0, cf1 = allcfs.crazyflies
+    cf0.setGroupMask(1)
+    cf1.setGroupMask(2)
+    allcfs.takeoff(targetHeight=Z, duration=1.0 + Z, groupMask = 1)
+    timeHelper.sleep(1.5+Z)
+    
+    pos0 = cf0.initialPosition + np.array([0, 0, Z])
+    assert np.all(np.isclose(cf0.position(), pos0, atol=0.0001)) 
+    assert np.all(np.isclose(cf1.position(), cf1.initialPosition, atol=0.0001)) 
+
+    allcfs.takeoff(targetHeight=Z, duration=1.0 + Z, groupMask = 2)
+    timeHelper.sleep(1.5+Z)
+
+    pos1 = cf1.initialPosition + np.array([0, 0, Z])
+    assert np.all(np.isclose(cf0.position(), pos0, atol=0.0001)) 
+    assert np.all(np.isclose(cf1.position(), pos1, atol=0.0001)) 

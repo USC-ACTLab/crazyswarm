@@ -1,7 +1,7 @@
 Installation
 ============
 
-For real hardware operation, we assume that you have **Ubuntu 16.04**.
+For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic**.
 Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
 
 For simulation-only operation, **MacOS** is also supported.
@@ -62,7 +62,7 @@ More details on the usage can be found in the :ref:`Usage` section.
 Simulation and Physical Robots
 ------------------------------
 
-For real hardware operation, we assume that you have **Ubuntu 16.04**
+For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic**.
 with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
 
 Install the dependencies and clone the repository::

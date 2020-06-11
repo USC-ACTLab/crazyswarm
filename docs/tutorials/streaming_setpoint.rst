@@ -1,6 +1,3 @@
-Tutorials
-=========
-
 Creating a new streaming setpoint mode
 --------------------------------------
 

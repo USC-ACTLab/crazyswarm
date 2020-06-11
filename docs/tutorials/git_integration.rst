@@ -36,7 +36,7 @@ similar to the folder structure in the crazyswarm package.
 
 To run `chooser.py`, you can use its optional arguments::
 
-	crazyswarm/ros_ws/crazyswarm/scripts$ python chooser.py --basepath ../../userPackages/neural-swarm-ros-pkg/launch/ --stm32Fw ~/projects/caltech/neural-swarm/hardware/crazyflie-firmware/cf2.bin
+	crazyswarm/ros_ws/crazyswarm/scripts$ python chooser.py --configpath ../../userPackages/my-crazyswarm-pkg/launch/ --stm32Fw /path/to/cf2.bin
 
 To run your own launch file, simply use: ::
 
@@ -45,5 +45,5 @@ To run your own launch file, simply use: ::
 To run your own scripts, you need to adjust the Python package search path so that our
 helper library is found: ::
 
-	neural-swarm-ros-pkg/scripts$ export PYTHONPATH=$PYTHONPATH:/path/to/crazyswarm/ros_ws/src/crazyswarm/scripts
-	neural-swarm-ros-pkg/scripts$ examplescript.py
+	my-crazyswarm-pkg/scripts$ export PYTHONPATH=$PYTHONPATH:/path/to/crazyswarm/ros_ws/src/crazyswarm/scripts
+	my-crazyswarm-pkg/scripts$ examplescript.py

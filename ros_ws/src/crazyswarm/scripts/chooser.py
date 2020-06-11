@@ -10,7 +10,7 @@ import threading
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
-		"--basepath",
+		"--configpath",
 		type=str,
 		default=os.path.join(os.path.dirname(os.path.realpath(__file__)), "../launch/"),
 		help="Path to the configuration *.yaml files")
@@ -26,10 +26,10 @@ if __name__ == '__main__':
 		help="Path to cf2_nrf.bin")
 	args = parser.parse_args()
 
-	if not os.path.exists(os.path.join(args.basepath, "allCrazyflies.yaml")) or \
-		not os.path.exists(os.path.join(args.basepath, "crazyflieTypes.yaml")) or \
-		not os.path.exists(os.path.join(args.basepath, "crazyflies.yaml")):
-		print("ERROR: Could not find all yaml configuration files in basepath ({}).".format(args.basepath))
+	if not os.path.exists(os.path.join(args.configpath, "allCrazyflies.yaml")) or \
+		not os.path.exists(os.path.join(args.configpath, "crazyflieTypes.yaml")) or \
+		not os.path.exists(os.path.join(args.configpath, "crazyflies.yaml")):
+		print("ERROR: Could not find all yaml configuration files in configpath ({}).".format(args.configpath))
 		exit()
 
 	if not os.path.exists(args.stm32Fw):
@@ -54,12 +54,12 @@ if __name__ == '__main__':
 
 	def save():
 		nodes = selected_cfs()
-		with open(os.path.join(args.basepath, "crazyflies.yaml"), 'w') as outfile:
+		with open(os.path.join(args.configpath, "crazyflies.yaml"), 'w') as outfile:
 			yaml.dump({"crazyflies": nodes}, outfile)
 
-	allCrazyflies = read_by_id(os.path.join(args.basepath, "allCrazyflies.yaml"))
-	enabled = read_by_id(os.path.join(args.basepath, "crazyflies.yaml")).keys()
-	with open(os.path.join(args.basepath, "crazyflieTypes.yaml"), 'r') as ymlfile:
+	allCrazyflies = read_by_id(os.path.join(args.configpath, "allCrazyflies.yaml"))
+	enabled = read_by_id(os.path.join(args.configpath, "crazyflies.yaml")).keys()
+	with open(os.path.join(args.configpath, "crazyflieTypes.yaml"), 'r') as ymlfile:
 		data = yaml.load(ymlfile)
 		cfTypes = data["crazyflieTypes"]
 

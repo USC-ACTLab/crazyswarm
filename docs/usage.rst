@@ -182,7 +182,7 @@ Monitor Swarm
 -------------
 
 A simple GUI is available to enable/disable a subset of the CFs, check the battery voltage, reboot and more.
-The tool reads the ``ros_ws/src/crazyswarm/launch/all49.yaml`` file.
+The tool reads the ``ros_ws/src/crazyswarm/launch/allCrazyflies.yaml`` file.
 You can execute it using::
 
     cd ros_ws/src/crazyswarm/scripts

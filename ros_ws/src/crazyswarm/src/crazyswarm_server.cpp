@@ -169,13 +169,10 @@ public:
     const std::string& tf_prefix,
     const std::string& frame,
     const std::string& worldFrame,
-    bool enable_parameters,
-    bool enable_logging,
     int id,
     const std::string& type,
     const std::vector<crazyflie_driver::LogBlock>& log_blocks,
-    ros::CallbackQueue& queue,
-    bool force_no_cache)
+    ros::CallbackQueue& queue)
     : m_tf_prefix(tf_prefix)
     , m_cf(
       link_uri,
@@ -183,8 +180,6 @@ public:
       std::bind(&CrazyflieROS::onConsole, this, std::placeholders::_1))
     , m_frame(frame)
     , m_worldFrame(worldFrame)
-    , m_enableParameters(enable_parameters)
-    , m_enableLogging(enable_logging)
     , m_id(id)
     , m_type(type)
     , m_serviceUpdateParams()
@@ -195,9 +190,14 @@ public:
     , m_serviceGoTo()
     , m_serviceSetGroupMask()
     , m_logBlocks(log_blocks)
-    , m_forceNoCache(force_no_cache)
     , m_initializedPosition(false)
   {
+    ros::NodeHandle nl("~");
+    nl.param("enable_logging", m_enableLogging, false);
+    nl.param("enable_logging_pose", m_enableLoggingPose, false);
+    nl.param("enable_parameters", m_enableParameters, true);
+    nl.param("force_no_cache", m_forceNoCache, false);
+
     ros::NodeHandle n;
     n.setCallbackQueue(&queue);
     m_serviceUploadTrajectory = n.advertiseService(tf_prefix + "/upload_trajectory", &CrazyflieROS::uploadTrajectory, this);
@@ -222,6 +222,10 @@ public:
         }
       }
       m_logFile << std::endl;
+
+      if (m_enableLoggingPose) {
+        m_pubPose = n.advertise<geometry_msgs::PoseStamped>(m_tf_prefix + "/pose", 10);
+      }
     }
 
     // m_subscribeJoy = n.subscribe("/joy", 1, &CrazyflieROS::joyChanged, this);
@@ -598,6 +602,19 @@ public:
       auto end3 = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsedSeconds3 = end3-end2;
       ROS_INFO("[%s] logBlocks: %f s", m_frame.c_str(), elapsedSeconds1.count());
+
+      if (m_enableLoggingPose) {
+        std::function<void(uint32_t, logPose*)> cb = std::bind(&CrazyflieROS::onPoseData, this, std::placeholders::_1, std::placeholders::_2);
+
+        m_logBlockPose.reset(new LogBlock<logPose>(
+          &m_cf,{
+            {"stateEstimate", "x"},
+            {"stateEstimate", "y"},
+            {"stateEstimate", "z"},
+            {"stateEstimateZ", "quat"}
+          }, cb));
+        m_logBlockPose->start(10); // 100ms
+      }
     }
 
     ROS_INFO("Requesting memories...");
@@ -606,40 +623,6 @@ public:
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsedSeconds = end-start;
     ROS_INFO("[%s] Ready. Elapsed: %f s", m_frame.c_str(), elapsedSeconds.count());
-  }
-
-  void onLinkQuality(float linkQuality) {
-      if (linkQuality < 0.7) {
-        ROS_WARN("[%s] Link Quality low (%f)", m_frame.c_str(), linkQuality);
-      }
-  }
-
-  void onConsole(const char* msg) {
-    m_messageBuffer += msg;
-    size_t pos = m_messageBuffer.find('\n');
-    if (pos != std::string::npos) {
-      m_messageBuffer[pos] = 0;
-      ROS_INFO("[%s] %s", m_frame.c_str(), m_messageBuffer.c_str());
-      m_messageBuffer.erase(0, pos+1);
-    }
-  }
-
-
-  void onLogCustom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
-
-    ros::Publisher* pub = reinterpret_cast<ros::Publisher*>(userData);
-
-    crazyflie_driver::GenericLogData msg;
-    msg.header.stamp = ros::Time(time_in_ms/1000.0);
-    msg.values = *values;
-
-    m_logFile << time_in_ms / 1000.0 << ",";
-    for (const auto& value : *values) {
-      m_logFile << value << ",";
-    }
-    m_logFile << std::endl;
-
-    pub->publish(msg);
   }
 
   const Crazyflie::ParamTocEntry* getParamTocEntry(
@@ -687,12 +670,78 @@ public:
   }
 
 private:
+  struct logPose {
+    float x;
+    float y;
+    float z;
+    int32_t quatCompressed;
+  } __attribute__((packed));
+
+private:
+
+  void onLinkQuality(float linkQuality) {
+      if (linkQuality < 0.7) {
+        ROS_WARN("[%s] Link Quality low (%f)", m_frame.c_str(), linkQuality);
+      }
+  }
+
+  void onConsole(const char* msg) {
+    std::cout << "bla " << msg << std::endl;
+    m_messageBuffer += msg;
+    size_t pos = m_messageBuffer.find('\n');
+    if (pos != std::string::npos) {
+      m_messageBuffer[pos] = 0;
+      ROS_INFO("[%s] %s", m_frame.c_str(), m_messageBuffer.c_str());
+      m_messageBuffer.erase(0, pos+1);
+    }
+  }
+
+  void onPoseData(uint32_t time_in_ms, logPose* data) {
+    if (m_enableLoggingPose) {
+      geometry_msgs::PoseStamped msg;
+      msg.header.stamp = ros::Time::now();
+      msg.header.frame_id = "/world";
+
+      msg.pose.position.x = data->x;
+      msg.pose.position.y = data->y;
+      msg.pose.position.z = data->z;
+
+      float q[4];
+      quatdecompress(data->quatCompressed, q);
+      msg.pose.orientation.x = q[0];
+      msg.pose.orientation.y = q[1];
+      msg.pose.orientation.z = q[2];
+      msg.pose.orientation.w = q[3];
+
+      m_pubPose.publish(msg);
+    }
+  }
+
+  void onLogCustom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
+
+    ros::Publisher* pub = reinterpret_cast<ros::Publisher*>(userData);
+
+    crazyflie_driver::GenericLogData msg;
+    msg.header.stamp = ros::Time(time_in_ms/1000.0);
+    msg.values = *values;
+
+    m_logFile << time_in_ms / 1000.0 << ",";
+    for (const auto& value : *values) {
+      m_logFile << value << ",";
+    }
+    m_logFile << std::endl;
+
+    pub->publish(msg);
+  }
+
+private:
   std::string m_tf_prefix;
   Crazyflie m_cf;
   std::string m_frame;
   std::string m_worldFrame;
   bool m_enableParameters;
   bool m_enableLogging;
+  bool m_enableLoggingPose;
   int m_id;
   std::string m_type;
 
@@ -714,6 +763,9 @@ private:
   std::vector<std::unique_ptr<LogBlockGeneric> > m_logBlocksGeneric;
 
   ros::Subscriber m_subscribeJoy;
+
+  ros::Publisher m_pubPose;
+  std::unique_ptr<LogBlock<logPose>> m_logBlockPose;
 
   std::ofstream m_logFile;
   bool m_forceNoCache;
@@ -1123,18 +1175,9 @@ private:
       }
     }
 
-    ros::NodeHandle nl("~");
-    bool enableLogging;
-    bool enableParameters;
-    bool forceNoCache;
-
-    nl.getParam("enable_logging", enableLogging);
-    nl.getParam("enable_parameters", enableParameters);
-    nl.getParam("force_no_cache", forceNoCache);
-
     // add Crazyflies
     for (const auto& config : cfConfigs) {
-      addCrazyflie(config.uri, config.tf_prefix, config.frame, "/world", enableParameters, enableLogging, config.idNumber, config.type, logBlocks, forceNoCache);
+      addCrazyflie(config.uri, config.tf_prefix, config.frame, "/world", config.idNumber, config.type, logBlocks);
 
       auto start = std::chrono::high_resolution_clock::now();
       updateParams(m_cfs.back());
@@ -1149,12 +1192,9 @@ private:
     const std::string& tf_prefix,
     const std::string& frame,
     const std::string& worldFrame,
-    bool enableParameters,
-    bool enableLogging,
     int id,
     const std::string& type,
-    const std::vector<crazyflie_driver::LogBlock>& logBlocks,
-    bool forceNoCache)
+    const std::vector<crazyflie_driver::LogBlock>& logBlocks)
   {
     ROS_INFO("Adding CF: %s (%s, %s)...", tf_prefix.c_str(), uri.c_str(), frame.c_str());
     auto start = std::chrono::high_resolution_clock::now();
@@ -1163,13 +1203,10 @@ private:
       tf_prefix,
       frame,
       worldFrame,
-      enableParameters,
-      enableLogging,
       id,
       type,
       logBlocks,
-      m_slowQueue,
-      forceNoCache);
+      m_slowQueue);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     ROS_INFO("CF ctor: %f s", elapsed.count());

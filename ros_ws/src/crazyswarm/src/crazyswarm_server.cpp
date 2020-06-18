@@ -1114,15 +1114,6 @@ private:
       }
     }
 
-    // Turn all CFs on
-    for (const auto& config : cfConfigs) {
-      Crazyflie cf(config.uri);
-      cf.syson();
-      for (size_t i = 0; i < 50; ++i) {
-        cf.sendPing();
-      }
-    }
-
     ros::NodeHandle nl("~");
     bool enableLogging;
     bool enableParameters;

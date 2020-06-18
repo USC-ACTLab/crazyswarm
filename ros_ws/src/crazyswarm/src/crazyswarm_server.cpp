@@ -686,7 +686,6 @@ private:
   }
 
   void onConsole(const char* msg) {
-    std::cout << "bla " << msg << std::endl;
     m_messageBuffer += msg;
     size_t pos = m_messageBuffer.find('\n');
     if (pos != std::string::npos) {

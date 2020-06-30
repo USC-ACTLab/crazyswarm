@@ -192,7 +192,7 @@ class Crazyflie:
         self.groupMask = groupMask
 
     def enableCollisionAvoidance(self, others, ellipsoidRadii):
-        self.otherCFs = others
+        self.otherCFs = [cf for cf in others if cf is not self]
 
         # TODO: Accept more of these from arguments.
         params = firm.collision_avoidance_params_t()

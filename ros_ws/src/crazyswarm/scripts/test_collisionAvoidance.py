@@ -64,8 +64,6 @@ def test_goToWithoutCA_CheckCollision():
         if np.any(collisions):
             return
         timeHelper.sleep(timeHelper.dt)
-        if cf0.position()[0] > 1.0 - 1e-6 and cf1.position()[0] < -1.0 - 1e-6:
-            break
     assert False
 
 
@@ -84,10 +82,7 @@ def test_goToWithCA_CheckCollision():
         positions = np.stack([cf0.position(), cf1.position()])
         collisions = check_ellipsoid_collisions(positions, RADII)
         assert not np.any(collisions)
-
         timeHelper.sleep(timeHelper.dt)
-        if cf0.position()[0] > 1.0 - 1e-6 and cf1.position()[0] < -1.0 - 1e-6:
-            return
 
 
 def test_goToWithCA_CheckDestination():
@@ -135,8 +130,6 @@ def test_goToWithCA_changeEllipsoid():
         assert not np.any(collisionsNew)
 
         timeHelper.sleep(timeHelper.dt)
-        if cf0.position()[0] > 1.0 - 1e-6 and cf1.position()[0] < -1.0 - 1e-6:
-            return
     assert collisionHappend
 
 
@@ -160,8 +153,8 @@ def test_goToWithCA_Intersection():
         assert not np.any(collisions)
 
         timeHelper.sleep(timeHelper.dt)
-        if cf0.position()[0] > 1.0 - 1e-6 and cf1.position()[0] < -1.0 - 1e-6:
-            return
+    assert np.all(np.isclose(cf0.position(), goal0))
+    assert np.all(np.isclose(cf1.position(), goal1))
 
 
 def test_goToWithoutCA_Intersection():
@@ -183,8 +176,6 @@ def test_goToWithoutCA_Intersection():
             return
 
         timeHelper.sleep(timeHelper.dt)
-        if cf0.position()[0] > 1.0 - 1e-6 and cf1.position()[0] < -1.0 - 1e-6:
-            break
     assert False
 
 
@@ -202,9 +193,10 @@ def test_goToWithCA_random():
 
     cfs = allcfs.crazyflies
 
-    for i, cf in enumerate(cfs):
+    for _, cf in enumerate(cfs):
         cf.enableCollisionAvoidance(cfs, RADII)
 
+    np.random.seed(0)
     xy_radius = 0.125
     for _ in range(5):
         lastTime = timeHelper.time()
@@ -213,17 +205,18 @@ def test_goToWithCA_random():
         goals = np.hstack([goals, goals_z[:, None]])
 
         for goal, cf in zip(goals, cfs):
-            print(goal)
-            cf.goTo(goal, yaw=0.0, duration=1)
-        while timeHelper.time() - lastTime < 2.0:
+            cf.goTo(goal, yaw=0.0, duration=5)
+        while timeHelper.time() - lastTime < 20.0:
             positions = np.stack([cf.position() for cf in cfs])
             timeHelper.sleep(timeHelper.dt)
             collisions = check_ellipsoid_collisions(positions, RADII)
             assert not np.any(collisions)
+        for goal, cf in zip(goals, cfs):
+            assert np.all(np.isclose(cf.position(), goal, atol=1e-4))
 
 
 def test_cmdPosition():
-    args = "--sim --vis null --dt 0.01 --maxvel 1.0"
+    args = "--sim --vis null --maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -231,16 +224,18 @@ def test_cmdPosition():
     cf0.enableCollisionAvoidance([cf1], RADII)
     cf1.enableCollisionAvoidance([cf0], RADII)
 
-    cf0.cmdPosition([1.0, 0.0, 5.0], yaw=0.0)
-    cf1.cmdPosition([-1.0, 0.0, 5.0], yaw=0.0)
+    goal0 = np.array([1.0, 0.0, 2.0])
+    goal1 = np.array([-1.0, 0.0, 2.0])
+    cf0.cmdPosition(goal0, yaw=0.0)
+    cf1.cmdPosition(goal1, yaw=0.0)
     while timeHelper.time() < 10.0:
         positions = np.stack([cf0.position(), cf1.position()])
         collisions = check_ellipsoid_collisions(positions, RADII)
         assert not np.any(collisions)
 
         timeHelper.sleep(timeHelper.dt)
-        if cf0.position()[0] > 1.0 - 1e-6 and cf1.position()[0] < -1.0 - 1e-6:
-            return
+    assert np.all(np.isclose(cf0.position(), goal0))
+    assert np.all(np.isclose(cf1.position(), goal1))
 
 
 if __name__ == "__main__":

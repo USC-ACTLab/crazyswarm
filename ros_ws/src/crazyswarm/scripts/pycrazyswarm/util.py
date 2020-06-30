@@ -22,7 +22,7 @@ def check_ellipsoid_collisions(positions, radii):
     # Do not consider 0 distance to self as a collision!
     n, _ = positions.shape
     dists[range(n), range(n)] = np.inf
-    colliding = np.any(dists < 2.0, axis=1)
+    colliding = np.any(dists < 1.97, axis=1)
     return colliding
 
 

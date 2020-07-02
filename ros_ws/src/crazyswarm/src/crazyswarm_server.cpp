@@ -1165,15 +1165,6 @@ private:
       }
     }
 
-    // Turn all CFs on
-    for (const auto& config : cfConfigs) {
-      Crazyflie cf(config.uri);
-      cf.syson();
-      for (size_t i = 0; i < 50; ++i) {
-        cf.sendPing();
-      }
-    }
-
     // add Crazyflies
     for (const auto& config : cfConfigs) {
       addCrazyflie(config.uri, config.tf_prefix, config.frame, "/world", config.idNumber, config.type, logBlocks);

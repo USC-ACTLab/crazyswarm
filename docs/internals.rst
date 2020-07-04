@@ -19,6 +19,8 @@ to mimic the behavior of a real Crazyflie in simulation mode.
 Debugging firmware modules via bindings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. highlight:: none
+
 The bindings are useful for testing and implementing new Crazyflie firmware modules.
 If the core functionality of the module is written without any dependencies on ARM or FreeRTOS,
 it can be compiled for x86 and tested/debugged on a PC.

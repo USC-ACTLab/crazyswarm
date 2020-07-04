@@ -57,7 +57,9 @@ The most important part is the 4-bit ``port`` value,
 which is used in the Crazyflie firmware to select between different subsystems
 for further processing of the packet. Streaming control setpoints use port ``7``.
 We define the radio protocol for our setpoint by defining C a struct in 
-`crazyflie_cpp/include/crazyflie_cpp/crtp.h <https://github.com/whoenig/crazyflie_cpp/blob/master/include/crazyflie_cpp/crtp.h>`_: ::
+`crazyflie_cpp/include/crazyflie_cpp/crtp.h <https://github.com/whoenig/crazyflie_cpp/blob/master/include/crazyflie_cpp/crtp.h>`_:
+
+.. code-block:: c
 
 	struct crtpFullStateSetpointRequest
 	{
@@ -131,7 +133,9 @@ All CRTP structs in ``crtp.h`` should have a constructor that accepts uncompress
 so the calling code does not need to know about compression tricks or the exact byte layout.
 If there is nontrivial work to be done in the constructor, it can be placed in
 ``crazyflie_cpp/src/crtp.cpp``, otherwise it should be defined inline in ``crtp.h``.
-Our new constructor looks like: ::
+Our new constructor looks like:
+
+.. code-block:: c++
 
 	crtpFullStateSetpointRequest::crtpFullStateSetpointRequest(
 	  float x, float y, float z,
@@ -155,7 +159,9 @@ to integer values in millimeters. (Most of the repetitive code is snipped here.)
 Calling code never constructs ``crtp.h`` packets directly;
 instead, it interacts with the radio via the ``Crazyflie`` class defined in
 `crazyflie_cpp/include/crazyflie_cpp/Crazyflie.h <https://github.com/whoenig/crazyflie_cpp/blob/master/include/crazyflie_cpp/Crazyflie.h>`_.
-We need to add a new method to the class ``Crazyflie``: ::
+We need to add a new method to the class ``Crazyflie``:
+
+.. code-block:: c++
 
   void sendFullStateSetpoint(
     float x, float y, float z,
@@ -166,7 +172,9 @@ We need to add a new method to the class ``Crazyflie``: ::
 
 The implementation should go in
 `crazyflie_cpp/src/Crazyflie.cpp <https://github.com/whoenig/crazyflie_cpp/blob/master/src/Crazyflie.cpp>`_
-and is very simple: ::
+and is very simple:
+
+.. code-block:: c++
 
 	void Crazyflie::sendFullStateSetpoint(
 		float x, float y, float z,
@@ -227,7 +235,9 @@ which are designed specifically for streaming "fire and forget" data.
 Complex setpoint types may require defining a new ROS message type.
 It is always preferable to use standard types if an appropriate type exists.
 For the full quadrotor state, we define a new message
-in `crazyflie_driver/msg/FullState.msg <https://github.com/whoenig/crazyflie_ros/blob/master/crazyflie_driver/msg/FullState.msg>`_: ::
+in `crazyflie_driver/msg/FullState.msg <https://github.com/whoenig/crazyflie_ros/blob/master/crazyflie_driver/msg/FullState.msg>`_:
+
+.. code-block:: none
 
 	Header header
 	geometry_msgs/Pose pose
@@ -245,7 +255,9 @@ There are three main changes: adding a method to handle setpoint messages,
 adding a ``ros::Subscriber`` object to subscribe to those messages,
 and setting up the subscriber in the ``run()`` method.
 We show the basic idea here, abbreviating other methods and repetitive code
-with ``...``: ::
+with ``...``:
+
+.. code-block:: c++
 
 	class CrazyflieROS
 	{
@@ -297,7 +309,9 @@ to the new method.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Finally, we implement the ability to publish the ``FullState`` message in
 ``pycrazyswarm`` Python class. This is another thin wrapper, taking care of
-the ROS publisher object and converting ``numpy`` types into ROS types: ::
+the ROS publisher object and converting ``numpy`` types into ROS types:
+
+.. code-block:: python
 
 	from crazyflie_driver.msg import ..., FullState
 
@@ -375,7 +389,9 @@ We are now finished with the PC part of our implementation.
 We turn our attention to the onboard firmware.
 As mentioned earlier, the first step is to define a packed struct
 for "parsing by casting" of the incoming raw bytes.
-This takes place entirely in ``crazyflie-firmware/src/modules/src/crtp_commander_generic.c``: ::
+This takes place entirely in ``crazyflie-firmware/src/modules/src/crtp_commander_generic.c``:
+
+.. code-block:: c
 
 	struct fullStatePacket_s {
 		int16_t x;         // position - mm
@@ -397,7 +413,9 @@ We then write a decoder that unpacks the (possibly compressed)
 CRTP setpoint packet into the firmware's ``setpoint_t`` struct.
 Critically, the ``setpoint_t`` struct contains members for all data
 that *any* setpoint mode might require, and "mode" tags that inform the
-feedback controller on how it should behave: ::
+feedback controller on how it should behave:
+
+.. code-block:: c
 
 	static void fullStateDecoder(setpoint_t *setpoint, uint8_t type, const void *data, size_t datalen)
 	{
@@ -439,7 +457,9 @@ are ``modeVelocity``, for velocity tracking,
 and ``modeDisable``, meaning the controller should ignore that state completely.
 
 Next, we add our new setpoint to the ``packet_type`` enum
-and map this particular enum value to our decoder via an array of function pointers: ::
+and map this particular enum value to our decoder via an array of function pointers:
+
+.. code-block:: c
 
 	enum packet_type {
 		...
@@ -473,7 +493,9 @@ it is intended to be used with the "Mellinger" controller
 (`crazyflie-firmware/src/modules/src/controller_mellinger.c <https://github.com/bitcraze/crazyflie-firmware/blob/master/src/modules/src/controller_mellinger.c>`_,
 named after the paper by Daniel Mellinger and Vijay Kumar).
 
-A notable snippet of the controller code is the following: ::
+A notable snippet of the controller code is the following:
+
+.. code-block:: c
 
 	if (setpoint->mode.x == modeAbs) {
 		target_thrust.x = g_vehicleMass * setpoint->acceleration.x                       + kp_xy * r_error.x + kd_xy * v_error.x + ki_xy * i_error_x;

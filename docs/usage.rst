@@ -48,7 +48,9 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
 Adjust Configuration Files
 --------------------------
 
-There are three major configuration files. First, we have a config file listing all available (but not necessarily active) CFs::
+There are three major configuration files. First, we have a config file listing all available (but not necessarily active) CFs
+
+.. code-block:: yaml
 
     # ros_ws/src/crazyswarm/launch/allCrazyflies.yaml
     crazyflies:
@@ -63,7 +65,9 @@ There are three major configuration files. First, we have a config file listing 
 
 The file assumes that the address of each CF is set as discussed earlier. The channel can be freely configured. The initial position needs to be known for the frame-by-frame tracking as initial guess. Positions are specified in meters, in the coordinate system of your motion capture device. It is not required that the CFs start exactly at those positions (a few centimeters variation is fine).
 
-The second configuration file defines the possible types::
+The second configuration file defines the possible types:
+
+.. code-block:: yaml
 
     # ros_ws/src/crazyswarm/launch/crazyflieTypes.yaml
     crazyflieTypes:
@@ -120,7 +124,9 @@ The third configuration file is the ROS launch file (``ros_ws/src/crazyswarm/lau
 Select Motion Capture System
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below are the relevant settings for the motion capture system::
+Below are the relevant settings for the motion capture system:
+
+.. code-block:: yaml
 
     # ros_ws/src/crazyswarm/launch/hover_swarm.launch
     # tracking

@@ -191,16 +191,16 @@ class Crazyflie:
     def setGroupMask(self, groupMask):
         self.groupMask = groupMask
 
-    def enableCollisionAvoidance(self, others, ellipsoidRadii):
+    def enableCollisionAvoidance(self, others, ellipsoidRadii, bboxMin=np.repeat(-np.inf, 3), bboxMax=np.repeat(np.inf, 3), horizonSecs=1.0, maxSpeed=2.0):
         self.otherCFs = [cf for cf in others if cf is not self]
 
         # TODO: Accept more of these from arguments.
         params = firm.collision_avoidance_params_t()
         params.ellipsoidRadii = firm.mkvec(*ellipsoidRadii)
-        params.bboxMin = firm.vrepeat(-3.0)
-        params.bboxMax = firm.vrepeat(3.0)
-        params.horizonSecs = 1.0
-        params.maxSpeed = 2.0
+        params.bboxMin = firm.mkvec(*bboxMin)
+        params.bboxMax = firm.mkvec(*bboxMax)
+        params.horizonSecs = horizonSecs
+        params.maxSpeed = maxSpeed
         params.sidestepThreshold = 0.25
         params.voronoiProjectionTolerance = 1e-5
         params.voronoiProjectionMaxIters = 100

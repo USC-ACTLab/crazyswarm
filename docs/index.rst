@@ -54,6 +54,7 @@ Contents:
    installation
    usage
    api
+   internals
    hardware
    tutorials/tutorials
    glossary

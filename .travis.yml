@@ -91,4 +91,5 @@ script:
     else
       ./buildSimOnly.sh
     fi
-    python -m pytest ros_ws/src/crazyswarm/scripts
+    cd ros_ws/src/crazyswarm/scripts
+    python -m pytest

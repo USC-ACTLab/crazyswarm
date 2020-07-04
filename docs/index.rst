@@ -54,8 +54,9 @@ Contents:
    installation
    usage
    api
+   internals
    hardware
-   tutorials/streaming_setpoint
+   tutorials/tutorials
    glossary
    :maxdepth: 2
 

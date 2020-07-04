@@ -1,5 +1,4 @@
-Tutorials
-=========
+.. _tutorial_streaming_setpoint:
 
 Creating a new streaming setpoint mode
 --------------------------------------

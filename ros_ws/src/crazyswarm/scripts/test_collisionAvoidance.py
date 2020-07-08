@@ -265,7 +265,7 @@ def test_boundingBox():
     assert not np.all(np.isclose(cf1.position(), goal1))
 
 
-@pytest.mark.xfail(reason="Bug in firmware")
+#@pytest.mark.xfail(reason="Bug in firmware")
 def test_maxSpeed_zero():
     args = "--sim --vis null --maxvel 1.0"
     allcfs, timeHelper = setUp(args)
@@ -281,8 +281,8 @@ def test_maxSpeed_zero():
     cf1.cmdPosition(goal1, yaw=0.0)
     while timeHelper.time() < 10.0:
         timeHelper.sleep(timeHelper.dt)
-        assert cf0.velocity() == np.zeros(3)
-        assert cf1.velocity() == np.zeros(3)
+        assert np.all(cf0.velocity() == np.zeros(3))
+        assert np.all(cf1.velocity() == np.zeros(3))
 
     assert np.all(np.isclose(cf0.position(), goal1))
     assert np.all(np.isclose(cf1.position(), goal0))

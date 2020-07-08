@@ -174,6 +174,11 @@ class Crazyflie:
         self.state.omega = firm.vzero()
         self.ledRGB = (0.5, 0.5, 1)
 
+        # Double-buffering: Ensure that all CFs observe the same world state
+        # during an integration step, regardless of the order in which their
+        # integrate() methods are called. flip() swaps front and back state.
+        # See http://gameprogrammingpatterns.com/double-buffer.html for more
+        # motivation.
         self.backState = firm.traj_eval(self.state)
 
         # For collision avoidance.
@@ -389,6 +394,8 @@ class Crazyflie:
         # in setState and have been copied.
 
     def flip(self):
+        # Swap double-buffered state. Called at the end of the tick update,
+        # after *all* CFs' integrate() methods have been called.
         self.state, self.backState = self.backState, self.state
 
     # "private" methods

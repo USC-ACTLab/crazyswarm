@@ -67,20 +67,6 @@ class TimeHelper:
         self.observers.append(observer)
 
 
-def svec2vec(sv):
-    """Converts a firmware struct vec to vector_t."""
-    v = firm.vec3_s()
-    v.x = sv.x
-    v.y = sv.y
-    v.z = sv.z
-    return v
-
-
-def vec2svec(v):
-    """Converts a firmware vector_t to struct vec."""
-    return firm.mkvec(v.x, v.y, v.z)
-
-
 def collisionAvoidanceUpdateSetpoint(
     collisionParams, collisionState, mode, state, setState, otherCFs):
     """Modifies a setpoint based on firmware collision-avoidance algorithm.
@@ -105,12 +91,19 @@ def collisionAvoidanceUpdateSetpoint(
             remain close to setState input while ensuring collision avoidance.
     """
 
-    otherPositions = np.row_stack([cf.position() for cf in otherCFs]).astype(np.float32)
+    # This is significantly faster than calling position() on all the other CFs:
+    # 1.2 vs 1.8 seconds in test_collisionAvoidance.py::test_goToWithCA_random.
+    nOthers = len(otherCFs)
+    otherPositions = np.zeros((nOthers, 3), dtype=np.float32)
+    for i, cf in enumerate(otherCFs):
+        otherPositions[i][0] = cf.state.pos.x
+        otherPositions[i][1] = cf.state.pos.y
+        otherPositions[i][2] = cf.state.pos.z
 
     cmdState = firm.state_t()
     # Position and velocity are the only states collision avoidance observes.
-    cmdState.position = svec2vec(state.pos)
-    cmdState.velocity = svec2vec(state.vel)
+    cmdState.position = firm.svec2vec(state.pos)
+    cmdState.velocity = firm.svec2vec(state.vel)
 
     # Dummy - it accepts the input to match the API of SitAw, but it's unused.
     sensorData = firm.sensorData_t()
@@ -120,14 +113,14 @@ def collisionAvoidanceUpdateSetpoint(
         pass
     elif mode in (Crazyflie.MODE_HIGH_POLY, Crazyflie.MODE_LOW_FULLSTATE):
         setpoint.mode.x = firm.modeAbs
-        setpoint.position = svec2vec(setState.pos)
-        setpoint.velocity = svec2vec(setState.vel)
+        setpoint.position = firm.svec2vec(setState.pos)
+        setpoint.velocity = firm.svec2vec(setState.vel)
     elif mode == Crazyflie.MODE_LOW_POSITION:
         setpoint.mode.x = firm.modeAbs
-        setpoint.position = svec2vec(setState.pos)
+        setpoint.position = firm.svec2vec(setState.pos)
     elif mode == Crazyflie.MODE_LOW_VELOCITY:
         setpoint.mode.x = firm.modeVelocity
-        setpoint.velocity = svec2vec(setState.vel)
+        setpoint.velocity = firm.svec2vec(setState.vel)
     else:
         raise ValueError("Unknown flight mode.")
 
@@ -140,8 +133,8 @@ def collisionAvoidanceUpdateSetpoint(
         cmdState)
 
     newSetState = firm.traj_eval_zero()
-    newSetState.pos = vec2svec(setpoint.position)
-    newSetState.vel = vec2svec(setpoint.velocity)
+    newSetState.pos = firm.vec2svec(setpoint.position)
+    newSetState.vel = firm.vec2svec(setpoint.velocity)
     newSetState.yaw = setState.yaw
     newSetState.omega.z = setState.omega[2]
     return newSetState

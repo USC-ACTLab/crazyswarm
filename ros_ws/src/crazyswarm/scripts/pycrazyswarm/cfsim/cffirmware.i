@@ -45,6 +45,17 @@ struct poly4d* malloc_poly4d(int size)
     return (struct poly4d*)malloc(sizeof(struct poly4d) * size);
 }
 
+struct vec vec2svec(struct vec3_s v)
+{
+  return mkvec(v.x, v.y, v.z);
+}
+
+struct vec3_s svec2vec(struct vec v)
+{
+  struct vec3_s vv = { .x = v.x, .y = v.y, .z = v.z, };
+  return vv;
+}
+
 void collisionAvoidanceUpdateSetpointWrap(
   collision_avoidance_params_t const *params,
   collision_avoidance_state_t *collisionState,

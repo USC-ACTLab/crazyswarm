@@ -25,6 +25,10 @@ class TimeHelper:
             raise Exception("Unknown visualization backend: {}".format(vis))
         self.t = 0.0
         self.dt = dt
+        # Since our integration/animation ticks are always the fixed duration
+        # dt, any call to sleep() with a non-multiple of dt will have some
+        # "leftover" time. Keep track of it here and add extra ticks in future.
+        self.sleepResidual = 0.0
         self.crazyflies = []
         self.disturbanceSize = disturbanceSize
         if writecsv:
@@ -44,10 +48,15 @@ class TimeHelper:
     # should be called "animate" or something
     # but called "sleep" for source-compatibility with real-robot scripts
     def sleep(self, duration):
-        for t in np.arange(self.t, self.t + duration, self.dt):
-            self.visualizer.update(t, self.crazyflies)
+        # operator // has unexpected (wrong ?) behavior for this calculation.
+        ticks = math.floor((duration + self.sleepResidual) / self.dt)
+        self.sleepResidual += duration - self.dt * ticks
+        assert 0.0 <= self.sleepResidual < self.dt
+
+        for _ in range(int(ticks)):
+            self.visualizer.update(self.t, self.crazyflies)
             if self.output:
-                self.output.update(t, self.crazyflies)
+                self.output.update(self.t, self.crazyflies)
             self.step(self.dt)
 
     # Mock for abstraction of rospy.Rate.sleep().

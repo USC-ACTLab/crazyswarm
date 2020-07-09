@@ -5,14 +5,14 @@ from pycrazyswarm import *
 
 Z = 1.0
 
-def setUp():
+def setUp(extra_args=""):
     crazyflies_yaml = """
     crazyflies:
     - channel: 100
       id: 1
       initialPosition: [1.0, 0.0, 0.0]
     """
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null")
+    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null " + extra_args)
     timeHelper = swarm.timeHelper
     return swarm.allcfs, timeHelper
 
@@ -75,3 +75,27 @@ def test_cmdVelocityWorld_disturbance():
 
     pos = cf.initialPosition + vel
     assert not np.any(np.isclose(cf.position(), pos))
+
+def test_sleepResidual():
+    """Verify TimeHelper's time() is consistent with its integration steps."""
+    np.random.seed(0)
+    TRIALS = 100
+    for _ in range(TRIALS):
+        dt1 = 10 ** np.random.uniform(-2, 0)
+        dt2 = 10 ** np.random.uniform(-2, 0)
+        allcfs, timeHelper = setUp("--dt {}".format(dt1))
+
+        cf = allcfs.crazyflies[0]
+        vel = np.ones(3)
+        cf.cmdVelocityWorld(vel, yawRate=0)
+        time = 0.0
+        while timeHelper.time() < 1.0:
+            timeHelper.sleep(dt1)
+            time += dt1
+
+        assert time >= timeHelper.time()
+        assert time - timeHelper.time() < dt1
+
+        pos = cf.initialPosition + timeHelper.time() * vel
+        assert np.all(np.isclose(cf.position(), pos))
+

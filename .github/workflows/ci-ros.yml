@@ -20,12 +20,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Conda
-      uses: goanpeca/setup-miniconda@v1
-      with:
-        environment-file: conda_env.yaml
-        activate-environment: crazyswarm
-
     - name: Install Dependencies
       run: |
         # Install non-ROS system dependencies.

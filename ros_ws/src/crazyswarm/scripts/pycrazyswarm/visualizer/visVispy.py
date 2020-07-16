@@ -1,7 +1,9 @@
+from __future__ import print_function
 import os
 import math
-import numpy as np
 
+import ffmpeg
+import numpy as np
 from vispy import scene, app, io, geometry
 from vispy.color import Color
 from vispy.visuals import transforms
@@ -16,9 +18,9 @@ ELLIPSOID_COLOR_COLLISION  = Color("#FF0000", alpha=0.1)
 
 
 class VisVispy:
-    def __init__(self):
+    def __init__(self, show=True):
         self.canvas = scene.SceneCanvas(
-            keys='interactive', size=(1024, 768), show=True, config=dict(samples=4), resizable=True
+            keys='interactive', size=(1024, 768), show=show, config=dict(samples=4), resizable=True
         )
 
         self.plane_color = 0.25 * np.ones((1, 3))
@@ -50,6 +52,34 @@ class VisVispy:
         # Lazy-constructed vispy objects for collision ellipsoids.
         self.ellipsoids = None
         self.ellipsoid_radii = None
+
+        # Optional video output.
+        self.ffmpegProcess = None
+        self.videoPath = None
+        self.videoShape = None
+        self.videoFrames = None
+
+    def startVideoOutput(self, path, dt):
+        frame = self.canvas.render()
+        height, width, channels = frame.shape
+        size_str = "{}x{}".format(width, height)
+        # Use ffmpeg's default encoder for maximum compatibility across platforms.
+        self.ffmpegProcess = (
+            ffmpeg
+            .input("pipe:", format="rawvideo", pix_fmt="rgb24", s=size_str, r=1.0/dt)
+            .output(path, pix_fmt="yuv420p")
+            .overwrite_output()
+            .run_async(pipe_stdin=True)
+        )
+        self.videoPath = path
+        self.videoShape = (height, width)
+        self.videoFrames = 0
+
+    def finishVideoOutput(self):
+        self.ffmpegProcess.stdin.close()
+        self.ffmpegProcess.wait()
+        self.ffmpegProcess = None
+        print("wrote {} frames to {}".format(self.videoFrames, self.videoPath))
 
     def setGraph(self, edges):
         """Set edges of graph visualization - sequence of (i,j) tuples."""
@@ -147,5 +177,20 @@ class VisVispy:
                 new_color = ELLIPSOID_COLOR_COLLISION if colliding[i] else ELLIPSOID_COLOR_OK
                 if not (new_color == ell.color):  # vispy Color lacks != override.
                     ell.color = new_color
+
+        if self.ffmpegProcess is not None:
+            frame = self.canvas.render()
+            # Do not render alpha channel - we always use rgb24 format.
+            if frame.shape[2] == 4:
+                frame = frame[:, :, :3]
+            if frame.shape[:2] != self.videoShape:
+                msg = (
+                    "VisVispy window shape changed after video output started: "
+                    "from {} to {}.".format(self.videoShape, frame.shape[:2])
+                )
+                raise ValueError(msg)
+            framebytes = frame.astype(np.uint8).tobytes()
+            self.ffmpegProcess.stdin.write(framebytes)
+            self.videoFrames += 1
 
         self.canvas.app.process_events()

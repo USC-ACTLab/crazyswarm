@@ -4,6 +4,12 @@ class VisNull:
     def __init__(self):
         pass
 
+    def startVideoOutput(self, path, dt):
+        pass
+
+    def finishVideoOutput(self):
+        pass
+
     def setGraph(self, edges):
         pass
 

@@ -18,6 +18,9 @@ class TimeHelper:
         elif vis == "vispy":
             import visualizer.visVispy
             self.visualizer = visualizer.visVispy.VisVispy()
+        elif vis == "vispy_headless":
+            import visualizer.visVispy
+            self.visualizer = visualizer.visVispy.VisVispy(show=False)
         elif vis == "null":
             import visualizer.visNull
             self.visualizer = visualizer.visNull.VisNull()

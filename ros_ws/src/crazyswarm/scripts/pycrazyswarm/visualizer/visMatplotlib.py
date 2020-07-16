@@ -1,3 +1,5 @@
+import warnings
+
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import matplotlib.pyplot as plt
@@ -23,6 +25,12 @@ class VisMatplotlib:
         self.graph_edges = None
         self.graph_lines = None
         self.graph = None
+
+    def startVideoOutput(self, path, dt):
+        warnings.warn("Video output not supported in VisMatplotlib.")
+
+    def finishVideoOutput(self):
+        pass
 
     def setGraph(self, edges):
         """Set edges of graph visualization - sequence of (i,j) tuples."""

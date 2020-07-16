@@ -12,7 +12,7 @@ def build_argparser(parent_parsers=[]):
     parser.add_argument("--sim", help="Run using simulation.", action="store_true")
 
     group = parser.add_argument_group("Simulation-only", "")
-    group.add_argument("--vis", help="Visualization backend.", choices=['mpl', 'vispy', 'null'], default="mpl")
+    group.add_argument("--vis", help="Visualization backend.", choices=['mpl', 'vispy', 'vispy_headless', 'null'], default="mpl")
     group.add_argument("--dt", help="Duration of seconds between rendered visualization frames.", type=float, default=0.1)
     group.add_argument("--writecsv", help="Enable CSV output.", action="store_true")
     group.add_argument("--disturbance", help="Simulate Gaussian-distributed disturbance when using cmdVelocityWorld.", type=float, default=0.0)

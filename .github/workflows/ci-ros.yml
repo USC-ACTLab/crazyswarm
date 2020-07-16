@@ -1,0 +1,64 @@
+name: Crazyswarm ROS CI
+
+on: [push, pull_request]
+
+env:
+  ROS_CI_DESKTOP: "`lsb_release -cs`"  # e.g. [precise|trusty|...]
+  ROS_PARALLEL_JOBS: "-j8 -l6"
+  ROS_DISTRO: kinetic
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Conda
+      uses: goanpeca/setup-miniconda@v1
+      with:
+        environment-file: conda_env.yaml
+        activate-environment: crazyswarm
+
+    - name: Install Dependencies
+      run:
+        # Install non-ROS system dependencies.
+        sudo apt install -y swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
+        # Install firmware cross-compiler and hardware driver dependencies.
+        sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
+        sudo apt-get update
+        sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
+        # Set the python path manually to include /usr/-/python2.7/dist-packages
+        # as this is where apt-get installs python packages.
+        PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
+
+
+    - name: Install ROS
+        sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
+        sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+        sudo apt-get update -qq
+        sudo apt-get install dpkg
+        sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-ros-base
+        source /opt/ros/$ROS_DISTRO/setup.bash
+        # Prepare rosdep to install dependencies.
+        sudo rosdep init
+        rosdep update
+        sudo apt install -y ros-$ROS_DISTRO-vrpn ros-$ROS_DISTRO-tf ros-$ROS_DISTRO-tf-conversions
+        # Install non-ROS dependencies that only seem to install correctly
+        # in the post-ROS system state. (TODO: figure out why.)
+        sudo apt install -y libpcl-dev
+
+    - name: Build
+      run: |
+        ./build.sh
+
+    - name: Test
+      run: |
+        cd ros_ws/src/crazyswarm/scripts
+        python -m pytest

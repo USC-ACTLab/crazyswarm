@@ -1,0 +1,33 @@
+name: Crazyswarm Sim-Only Conda CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, ubuntu-18.04, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Conda
+      uses: goanpeca/setup-miniconda@v1
+      with:
+        environment-file: conda_env.yaml
+        activate-environment: crazyswarm
+
+    - name: Build
+      shell: bash -l {0}
+      run: |
+        ./buildSimOnly.sh
+
+    - name: Test
+      shell: bash -l {0}
+      run: |
+        cd ros_ws/src/crazyswarm/scripts
+        python -m pytest

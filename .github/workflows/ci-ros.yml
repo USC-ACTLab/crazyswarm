@@ -48,6 +48,7 @@ jobs:
 
     - name: Build
       run: |
+        source /opt/ros/$ROS_DISTRO/setup.bash
         ./build.sh
 
     - name: Test

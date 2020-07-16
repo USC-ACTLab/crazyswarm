@@ -18,15 +18,16 @@ jobs:
     - name: Conda
       uses: goanpeca/setup-miniconda@v1
       with:
-        channels: defaults,conda-forge
         environment-file: conda_env.yaml
         activate-environment: crazyswarm
 
     - name: Build
+      shell: bash -l {0}
       run: |
         ./buildSimOnly.sh
 
     - name: Test
+      shell: bash -l {0}
       run: |
         cd ros_ws/src/crazyswarm/scripts
         python -m pytest

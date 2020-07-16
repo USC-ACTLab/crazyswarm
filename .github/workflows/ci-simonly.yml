@@ -18,6 +18,7 @@ jobs:
     - name: Conda
       uses: goanpeca/setup-miniconda@v1
       with:
+        channels: defaults,conda-forge
         environment-file: conda_env.yaml
         activate-environment: crazyswarm
 

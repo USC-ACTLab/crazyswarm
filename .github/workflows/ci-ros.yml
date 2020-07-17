@@ -13,11 +13,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-16.04
-            env:
-              ROS_DISTRO: kinetic
+            ros: kinetic
           - os: ubuntu-18.04
-            env:
-              ROS_DISTRO: melodic
+            ros: melodic
 
     runs-on: ubuntu-16.04
 
@@ -45,19 +43,19 @@ jobs:
         sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
         sudo apt-get update -qq
         sudo apt-get install dpkg
-        sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-$ROS_DISTRO-ros-base
-        source /opt/ros/$ROS_DISTRO/setup.bash
+        sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-${{ matrix.ros }}-ros-base
+        source /opt/ros/${{ matrix.ros }}/setup.bash
         # Prepare rosdep to install dependencies.
         sudo rosdep init
         rosdep update
-        sudo apt install -y ros-$ROS_DISTRO-vrpn ros-$ROS_DISTRO-tf ros-$ROS_DISTRO-tf-conversions
+        sudo apt install -y ros-${{ matrix.ros }}-vrpn ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
         # Install non-ROS dependencies that only seem to install correctly
         # in the post-ROS system state. (TODO: figure out why.)
         sudo apt install -y libpcl-dev
 
     - name: Build
       run: |
-        source /opt/ros/$ROS_DISTRO/setup.bash
+        source /opt/ros/${{ matrix.ros }}/setup.bash
         ./build.sh
 
     - name: Test

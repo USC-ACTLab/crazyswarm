@@ -1,4 +1,4 @@
-name: Crazyswarm ROS CI
+name: ROS CI
 
 on: [push, pull_request]
 
@@ -24,19 +24,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Install Dependencies
-      run: |
-        # Install non-ROS system dependencies.
-        sudo apt install -y swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
-        # Install firmware cross-compiler and hardware driver dependencies.
-        sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
-        sudo apt-get update
-        sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
-        # Set the python path manually to include /usr/-/python2.7/dist-packages
-        # as this is where apt-get installs python packages.
-        # PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
-
-
     - name: Install ROS
       run: |
         sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
@@ -48,10 +35,14 @@ jobs:
         # Prepare rosdep to install dependencies.
         sudo rosdep init
         rosdep update
+
+    - name: Install Dependencies
+      run: |
         sudo apt install -y ros-${{ matrix.ros }}-vrpn ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
-        # Install non-ROS dependencies that only seem to install correctly
-        # in the post-ROS system state. (TODO: figure out why.)
-        sudo apt install -y libpcl-dev
+        sudo apt install -y libpcl-dev swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
+        sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
+        sudo apt-get update
+        sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
 
     - name: Build
       run: |

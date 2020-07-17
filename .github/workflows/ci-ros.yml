@@ -35,14 +35,23 @@ jobs:
         # Prepare rosdep to install dependencies.
         sudo rosdep init
         rosdep update
+        sudo apt install -y ros-${{ matrix.ros }}-vrpn ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
+        # Install non-ROS dependencies that only seem to install correctly
+        # in the post-ROS system state. (TODO: figure out why.)
+        sudo apt install -y libpcl-dev
+
 
     - name: Install Dependencies
       run: |
-        sudo apt install -y ros-${{ matrix.ros }}-vrpn ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
-        sudo apt install -y libpcl-dev swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
+        # Install non-ROS system dependencies.
+        sudo apt install -y swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
+        # Install firmware cross-compiler and hardware driver dependencies.
         sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
         sudo apt-get update
         sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
+        # Set the python path manually to include /usr/-/python2.7/dist-packages
+        # as this is where apt-get installs python packages.
+        # PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
 
     - name: Build
       run: |

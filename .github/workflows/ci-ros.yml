@@ -13,9 +13,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-16.04
-            ros: kinetic
+            env:
+              ROS_DISTRO: kinetic
           - os: ubuntu-18.04
-            ros: melodic
+            env:
+              ROS_DISTRO: melodic
 
     runs-on: ubuntu-16.04
 

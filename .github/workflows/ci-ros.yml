@@ -3,12 +3,19 @@ name: Crazyswarm ROS CI
 on: [push, pull_request]
 
 env:
-  ROS_CI_DESKTOP: "`lsb_release -cs`"  # e.g. [precise|trusty|...]
+  ROS_CI_DESKTOP: "`lsb_release -cs`"  # gives Ubuntu name, e.g. [precise|trusty|...]
   ROS_PARALLEL_JOBS: "-j8 -l6"
-  ROS_DISTRO: kinetic
 
 jobs:
   build:
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-16.04
+            ros: kinetic
+          - os: ubuntu-18.04
+            ros: melodic
 
     runs-on: ubuntu-16.04
 

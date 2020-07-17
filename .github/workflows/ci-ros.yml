@@ -14,6 +14,9 @@ jobs:
         include:
           - os: ubuntu-16.04
             ros: kinetic
+          # TODO: figure out why package 'ros-melodic-ros-base' cannot be found
+          # even though it should exist according to
+          # http://wiki.ros.org/melodic/Installation/Ubuntu.
           #- os: ubuntu-18.04
             #ros: melodic
 

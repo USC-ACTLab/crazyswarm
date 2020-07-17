@@ -34,7 +34,7 @@ jobs:
         sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
         # Set the python path manually to include /usr/-/python2.7/dist-packages
         # as this is where apt-get installs python packages.
-        PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
+        # PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages:/usr/local/lib/python2.7/dist-packages
 
 
     - name: Install ROS

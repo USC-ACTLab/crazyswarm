@@ -14,8 +14,8 @@ jobs:
         include:
           - os: ubuntu-16.04
             ros: kinetic
-          - os: ubuntu-18.04
-            ros: melodic
+          #- os: ubuntu-18.04
+            #ros: melodic
 
     runs-on: ubuntu-16.04
 

@@ -25,16 +25,19 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install ROS
-      run: |
-        sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
-        sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-        sudo apt-get update -qq
-        sudo apt-get install dpkg
-        sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-${{ matrix.ros }}-ros-base
-        source /opt/ros/${{ matrix.ros }}/setup.bash
-        # Prepare rosdep to install dependencies.
-        sudo rosdep init
-        rosdep update
+      uses: ros-tooling/setup-ros@0.0.16
+      with:
+        required-ros-distributions: ${{ matrix.ros }}
+      #run: |
+        #sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
+        #sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+        #sudo apt-get update -qq
+        #sudo apt-get install dpkg
+        #sudo apt-get install -y python-catkin-pkg python-rosdep python-wstool ros-${{ matrix.ros }}-ros-base
+        #source /opt/ros/${{ matrix.ros }}/setup.bash
+        ## Prepare rosdep to install dependencies.
+        #sudo rosdep init
+        #rosdep update
 
 
     - name: Install Dependencies

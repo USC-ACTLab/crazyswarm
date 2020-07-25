@@ -18,7 +18,8 @@ class TimeHelper:
             self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
         elif vis == "vispy":
             import visualizer.visVispy
-            self.visualizer = visualizer.visVispy.VisVispy()
+            resizable = videopath is None
+            self.visualizer = visualizer.visVispy.VisVispy(resizable=resizable)
         elif vis == "vispy_headless":
             import visualizer.visVispy
             self.visualizer = visualizer.visVispy.VisVispy(show=False)

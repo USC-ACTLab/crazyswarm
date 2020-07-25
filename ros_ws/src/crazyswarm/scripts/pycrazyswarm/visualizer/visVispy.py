@@ -18,9 +18,9 @@ ELLIPSOID_COLOR_COLLISION  = Color("#FF0000", alpha=0.1)
 
 
 class VisVispy:
-    def __init__(self, show=True):
+    def __init__(self, show=True, resizable=True):
         self.canvas = scene.SceneCanvas(
-            keys='interactive', size=(1024, 768), show=show, config=dict(samples=4), resizable=True
+            keys='interactive', size=(1024, 768), show=show, config=dict(samples=4), resizable=resizable
         )
 
         self.plane_color = 0.25 * np.ones((1, 3))

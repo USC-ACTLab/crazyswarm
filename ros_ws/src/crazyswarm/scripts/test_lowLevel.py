@@ -81,20 +81,24 @@ def test_sleepResidual():
     np.random.seed(0)
     TRIALS = 100
     for _ in range(TRIALS):
-        dt1 = 10 ** np.random.uniform(-2, 0)
-        dt2 = 10 ** np.random.uniform(-2, 0)
-        allcfs, timeHelper = setUp("--dt {}".format(dt1))
+        dtTick = 10 ** np.random.uniform(-2, 0)
+        dtSleep = 10 ** np.random.uniform(-2, 0)
+        allcfs, timeHelper = setUp("--dt {}".format(dtTick))
 
         cf = allcfs.crazyflies[0]
         vel = np.ones(3)
         cf.cmdVelocityWorld(vel, yawRate=0)
         time = 0.0
         while timeHelper.time() < 1.0:
-            timeHelper.sleep(dt1)
-            time += dt1
+            timeHelper.sleep(dtSleep)
+            time += dtSleep
 
         assert time >= timeHelper.time()
-        assert time - timeHelper.time() < dt1
+
+        # We don't expect them to be exactly the same because timeHelper.time()
+        # will always be an integer multiple of dtTick. However, we should not
+        # be off by more than a tick.
+        assert time - timeHelper.time() < dtTick
 
         pos = cf.initialPosition + timeHelper.time() * vel
         assert np.all(np.isclose(cf.position(), pos))

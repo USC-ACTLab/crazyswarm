@@ -1,0 +1,49 @@
+name: Crazyswarm ROS CI
+
+on: [push, pull_request]
+
+env:
+  ROS_CI_DESKTOP: "`lsb_release -cs`"  # gives Ubuntu name, e.g. [precise|trusty|...]
+  ROS_PARALLEL_JOBS: "-j8 -l6"
+
+jobs:
+  build:
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-16.04
+            ros: kinetic
+          - os: ubuntu-18.04
+            ros: melodic
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install ROS
+      uses: ros-tooling/setup-ros@0.0.16
+      with:
+        required-ros-distributions: ${{ matrix.ros }}
+
+    - name: Install Dependencies
+      run: |
+        sudo apt install -y ros-${{ matrix.ros }}-vrpn ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
+        sudo apt install -y libpcl-dev
+        sudo apt install -y swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
+        sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
+        sudo apt-get update
+        sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
+
+    - name: Build
+      run: |
+        source /opt/ros/${{ matrix.ros }}/setup.bash
+        ./build.sh
+
+    - name: Test
+      run: |
+        cd ros_ws/src/crazyswarm/scripts
+        python -m pytest

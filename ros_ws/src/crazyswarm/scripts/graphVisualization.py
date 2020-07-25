@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
+"""Demonstrates the graph visualization feature of the 3D visualizer."""
+
 import numpy as np
 
 from pycrazyswarm import *
-import pycrazyswarm.cfsim.cffirmware as firm
 
 crazyflies_yaml = """
 crazyflies:

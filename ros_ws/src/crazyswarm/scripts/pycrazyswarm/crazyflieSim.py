@@ -5,13 +5,14 @@ import math
 import numpy as np
 
 import cfsim.cffirmware as firm
+from videowriter import VideoWriter
 
 # main class of simulation.
 # crazyflies keep reference to this object to ask what time it is.
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self, vis, dt, writecsv, disturbanceSize):
+    def __init__(self, vis, dt, writecsv, disturbanceSize, videopath=None):
         if vis == "mpl":
             import visualizer.visMatplotlib
             self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
@@ -40,6 +41,12 @@ class TimeHelper:
         else:
             self.output = None
 
+        if videopath is not None:
+            frame = self.visualizer.render()
+            self.videoWriter = VideoWriter(videopath, dt, frame.shape[:2])
+        else:
+            self.videoWriter = None
+
     def time(self):
         return self.t
 
@@ -60,6 +67,9 @@ class TimeHelper:
             self.visualizer.update(self.t, self.crazyflies)
             if self.output:
                 self.output.update(self.t, self.crazyflies)
+            if self.videoWriter is not None:
+                frame = self.visualizer.render()
+                self.videoWriter.writeFrame(frame)
             self.step(self.dt)
 
     # Mock for abstraction of rospy.Rate.sleep().
@@ -73,6 +83,10 @@ class TimeHelper:
 
     def addObserver(self, observer):
         self.observers.append(observer)
+
+    def _atexit(self):
+        if self.videoWriter is not None:
+            self.videoWriter.close()
 
 
 class Crazyflie:

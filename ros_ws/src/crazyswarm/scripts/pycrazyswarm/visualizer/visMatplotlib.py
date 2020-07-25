@@ -26,12 +26,6 @@ class VisMatplotlib:
         self.graph_lines = None
         self.graph = None
 
-    def startVideoOutput(self, path, dt):
-        warnings.warn("Video output not supported in VisMatplotlib.")
-
-    def finishVideoOutput(self):
-        pass
-
     def setGraph(self, edges):
         """Set edges of graph visualization - sequence of (i,j) tuples."""
 
@@ -81,3 +75,7 @@ class VisMatplotlib:
 
         self.timeAnnotation.set_text("{} s".format(t))
         plt.pause(0.0001)
+
+    def render(self):
+        warnings.warn("Rendering video not supported in VisMatplotlib yet.")
+        return None

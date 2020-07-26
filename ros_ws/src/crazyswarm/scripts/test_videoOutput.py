@@ -25,7 +25,6 @@ import os
 import subprocess
 import sys
 
-import ffmpeg
 import numpy as np
 import pytest
 
@@ -65,6 +64,7 @@ def test_videoOutput(tmp_path):
     path = str(tmp_path / "crazyswarm_test_video.mp4")
     subprocess.call(["python", __file__, path])
 
+    import ffmpeg
     properties = ffmpeg.probe(path)
     stream = properties["streams"][0]
     file_duration = float(stream["duration"])

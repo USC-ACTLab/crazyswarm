@@ -21,6 +21,8 @@ You can install just the components required for the simulation by doing the fol
 
 ----
 
+.. _anaconda:
+
 Linux or MacOS with Anaconda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

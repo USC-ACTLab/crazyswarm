@@ -5,7 +5,6 @@ import math
 import numpy as np
 
 import cfsim.cffirmware as firm
-from videowriter import VideoWriter
 
 # main class of simulation.
 # crazyflies keep reference to this object to ask what time it is.
@@ -43,6 +42,7 @@ class TimeHelper:
             self.output = None
 
         if videopath is not None:
+            from videowriter import VideoWriter
             frame = self.visualizer.render()
             self.videoWriter = VideoWriter(videopath, dt, frame.shape[:2])
         else:

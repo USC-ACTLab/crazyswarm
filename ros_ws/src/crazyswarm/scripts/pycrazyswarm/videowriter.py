@@ -16,11 +16,12 @@ class VideoWriter:
         """
         height, width = shape
         size_str = "{}x{}".format(width, height)
-        # Use ffmpeg's default encoder for maximum compatibility across platforms.
+        # crf=0 option specifies libx264's lossless mode, which still gives
+        # surprisingly small files.
         self.ffmpegProcess = (
             ffmpeg
             .input("pipe:", format="rawvideo", pix_fmt="rgb24", s=size_str, r=1.0/dt)
-            .output(path, pix_fmt="yuv420p")
+            .output(path, vcodec="libx264", crf=0)
             .overwrite_output()
             .run_async(pipe_stdin=True)
         )

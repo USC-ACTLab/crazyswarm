@@ -4,7 +4,7 @@ import yaml
 import math
 import numpy as np
 
-import cfsim.cffirmware as firm
+from .cfsim import cffirmware as firm
 
 # main class of simulation.
 # crazyflies keep reference to this object to ask what time it is.
@@ -13,14 +13,14 @@ import cfsim.cffirmware as firm
 class TimeHelper:
     def __init__(self, vis, dt, writecsv, disturbanceSize):
         if vis == "mpl":
-            import visualizer.visMatplotlib
-            self.visualizer = visualizer.visMatplotlib.VisMatplotlib()
+            from .visualizer import visMatplotlib
+            self.visualizer = visMatplotlib.VisMatplotlib()
         elif vis == "vispy":
-            import visualizer.visVispy
-            self.visualizer = visualizer.visVispy.VisVispy()
+            from .visualizer import visVispy
+            self.visualizer = visVispy.VisVispy()
         elif vis == "null":
-            import visualizer.visNull
-            self.visualizer = visualizer.visNull.VisNull()
+            from .visualizer import visNull
+            self.visualizer = visNull.VisNull()
         else:
             raise Exception("Unknown visualization backend: {}".format(vis))
         self.t = 0.0
@@ -32,7 +32,7 @@ class TimeHelper:
         self.crazyflies = []
         self.disturbanceSize = disturbanceSize
         if writecsv:
-            import output
+            from . import output
             self.output = output.Output()
         else:
             self.output = None

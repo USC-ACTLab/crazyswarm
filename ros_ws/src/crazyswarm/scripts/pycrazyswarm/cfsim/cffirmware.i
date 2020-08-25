@@ -61,6 +61,9 @@ import numpy as np
         # Vector-scalar binary operator overloads.
         def __rmul__(self, s):
             return _cffirmware.vscl(s, self)
+        
+        def __div__(self, s):
+            return self.__truediv__(s)
 
         def __div__(self, s):
             return _cffirmware.vdiv(self, s)

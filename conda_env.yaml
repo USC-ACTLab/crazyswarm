@@ -1,6 +1,5 @@
 name: crazyswarm
 dependencies:
-  - python=2.7
   - numpy
   - matplotlib=2.1  # VisPy not compatible with newer versions
   - vispy

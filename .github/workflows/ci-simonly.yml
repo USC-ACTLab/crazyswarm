@@ -30,7 +30,7 @@ jobs:
     - name: Build
       shell: bash -l {0}
       run: |
-        ./buildSimOnly.sh ${{ matrix.python.pyVer }}
+        CSW_PYTHON=${{ matrix.python.pyVer }} ./buildSimOnly.sh 
 
     - name: Test
       shell: bash -l {0}

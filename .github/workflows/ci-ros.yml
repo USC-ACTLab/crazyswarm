@@ -15,10 +15,10 @@ jobs:
         include:
           - os: ubuntu-16.04
             ros: kinetic
-            pyVer: python2
+            pyVer: python
           - os: ubuntu-18.04
             ros: melodic
-            pyVer: python2
+            pyVer: python
           - os: ubuntu-20.04
             ros: noetic
             pyVer: python3

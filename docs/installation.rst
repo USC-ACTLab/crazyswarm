@@ -1,7 +1,7 @@
 Installation
 ============
 
-For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic**.
+For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic** or **Ubuntu 20.04 with ROS Noetic** .
 Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
 
 For simulation-only operation, **MacOS** is also supported.
@@ -24,27 +24,27 @@ You can install just the components required for the simulation by doing the fol
 Linux or MacOS with Anaconda
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, install `Anaconda Python 2.7 version <https://www.anaconda.com/distribution>`_.
+First, install `Anaconda Python 2.7 / 3.7 version <https://www.anaconda.com/distribution>`_.
 We have tested on version ``2019.10``.
-Next, clone the Crazyswsarm repo and build the Anaconda environment::
+Next, clone the Crazyswsarm repo and build the Anaconda environment with the specific python version number::
 
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
-    $ conda env create -f conda_env.yaml
+    $ conda env create python=[DESIRED PYTHON VERSION] -f conda_env.yaml
 
-Activate the Anaconda environment and run the build script::
+Activate the Anaconda environment. Set the CSW_PYTHON variable to either python2 or python3 and run the build script::
 
     $ conda activate crazyswarm
-    $ ./buildSimOnly.sh
+    $ CSW_PYTHON=[DESIRED PYTHON COMMAND] ./buildSimOnly.sh
 
 ----
 
 Linux without Anaconda
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Install the dependencies and run the build script::
-
-    $ sudo apt install git make gcc swig libpython-dev python-numpy python-yaml python-matplotlib
+Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and run the build script::
+    $ export CSW_PYTHON=python3
+    $ sudo apt install git make gcc swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
     $ ./buildSimOnly.sh
@@ -62,12 +62,18 @@ More details on the usage can be found in the :ref:`Usage` section.
 Simulation and Physical Robots
 ------------------------------
 
-For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic**.
-with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
+For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic** or **Ubuntu 20.04 with ROS Noetic**.
 
-Install the dependencies and clone the repository::
+- Ubuntu 16.04, ROS Kinetic, Python2
+    with ROS Kinetic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
+- Ubuntu 18.04, ROS Melodic, Python2
+    with ROS Melodic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/melodic/Installation/Ubuntu>`_).
+- Ubuntu 20.04, ROS Noetic, Python3
+    with ROS Noetic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/noetic/Installation/Ubuntu>`_).
 
-    $ sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-kinetic-vrpn-client-ros
+Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and clone the repository::
+    $ export CSW_PYTHON=python3
+    $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-[ROS version]-vrpn
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
 

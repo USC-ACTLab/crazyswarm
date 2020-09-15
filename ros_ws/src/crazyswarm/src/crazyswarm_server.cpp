@@ -17,6 +17,7 @@
 #include "crazyflie_driver/SetGroupMask.h"
 #include "crazyflie_driver/FullState.h"
 #include "crazyflie_driver/Position.h"
+#include "crazyflie_driver/VelocityWorld.h"
 #include "std_srvs/Empty.h"
 #include <std_msgs/Empty.h>
 #include "geometry_msgs/Twist.h"
@@ -210,6 +211,7 @@ public:
     m_subscribeCmdVel = n.subscribe(tf_prefix + "/cmd_vel", 1, &CrazyflieROS::cmdVelChanged, this);
     m_subscribeCmdPosition = n.subscribe(tf_prefix + "/cmd_position", 1, &CrazyflieROS::cmdPositionSetpoint, this);
     m_subscribeCmdFullState = n.subscribe(tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
+    m_subscribeCmdVelocityWorld = n.subscribe(tf_prefix + "/cmd_velocity_world", 1, &CrazyflieROS::cmdVelocityWorldSetpoint, this);
     m_subscribeCmdStop = n.subscribe(m_tf_prefix + "/cmd_stop", 1, &CrazyflieROS::cmdStop, this);
 
     if (m_enableLogging) {
@@ -500,6 +502,23 @@ public:
     // }
   }
 
+  void cmdVelocityWorldSetpoint(
+    const crazyflie_driver::VelocityWorld::ConstPtr& msg)
+  {
+    // ROS_INFO("got a velocity world setpoint");
+    // if (!m_isEmergency) {
+      float x = msg->vel.x;
+      float y = msg->vel.y;
+      float z = msg->vel.z;
+      float yawRate = msg->yawRate;
+
+      m_cf.sendVelocityWorldSetpoint(
+        x, y, z, yawRate);
+      // m_sentSetpoint = true;
+      // ROS_INFO("set a velocity world setpoint");
+    // }
+  }
+
   void cmdStop(
     const std_msgs::Empty::ConstPtr& msg)
   {
@@ -707,6 +726,7 @@ private:
   ros::Subscriber m_subscribeCmdVel;
   ros::Subscriber m_subscribeCmdPosition;
   ros::Subscriber m_subscribeCmdFullState;
+  ros::Subscriber m_subscribeCmdVelocityWorld;
   ros::Subscriber m_subscribeCmdStop;
 
   std::vector<crazyflie_driver::LogBlock> m_logBlocks;

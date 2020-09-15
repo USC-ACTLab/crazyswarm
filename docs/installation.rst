@@ -30,7 +30,8 @@ Next, clone the Crazyswsarm repo and build the Anaconda environment with the spe
 
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
-    $ conda env create python=[DESIRED PYTHON VERSION] -f conda_env.yaml
+    $ conda create --name crazyswarm python=[DESIRED PYTHON VERSION]
+    $ conda env update -f conda_env.yaml
 
 Activate the Anaconda environment. Set the CSW_PYTHON variable to either python2 or python3 and run the build script::
 
@@ -43,6 +44,7 @@ Linux without Anaconda
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and run the build script::
+
     $ export CSW_PYTHON=python3
     $ sudo apt install git make gcc swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
@@ -72,6 +74,7 @@ For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kin
     with ROS Noetic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/noetic/Installation/Ubuntu>`_).
 
 Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and clone the repository::
+
     $ export CSW_PYTHON=python3
     $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-[ROS version]-vrpn
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git

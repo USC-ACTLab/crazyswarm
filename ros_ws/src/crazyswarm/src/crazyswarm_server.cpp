@@ -8,6 +8,7 @@
 #include "crazyflie_driver/GenericLogData.h"
 #include "crazyflie_driver/UpdateParams.h"
 #include "crazyflie_driver/UploadTrajectory.h"
+#include "crazyflie_driver/NotifySetpointsStop.h"
 #undef major
 #undef minor
 #include "crazyflie_driver/Takeoff.h"
@@ -195,6 +196,7 @@ public:
     , m_serviceLand()
     , m_serviceGoTo()
     , m_serviceSetGroupMask()
+    , m_serviceNotifySetpointsStop()
     , m_logBlocks(log_blocks)
     , m_forceNoCache(force_no_cache)
     , m_initializedPosition(false)
@@ -207,6 +209,7 @@ public:
     m_serviceLand = n.advertiseService(tf_prefix + "/land", &CrazyflieROS::land, this);
     m_serviceGoTo = n.advertiseService(tf_prefix + "/go_to", &CrazyflieROS::goTo, this);
     m_serviceSetGroupMask = n.advertiseService(tf_prefix + "/set_group_mask", &CrazyflieROS::setGroupMask, this);
+    m_serviceNotifySetpointsStop = n.advertiseService(tf_prefix + "/notify_setpoints_stop", &CrazyflieROS::notifySetpointsStop, this);
 
     m_subscribeCmdVel = n.subscribe(tf_prefix + "/cmd_vel", 1, &CrazyflieROS::cmdVelChanged, this);
     m_subscribeCmdPosition = n.subscribe(tf_prefix + "/cmd_position", 1, &CrazyflieROS::cmdPositionSetpoint, this);
@@ -392,6 +395,15 @@ public:
 
     m_cf.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask);
 
+    return true;
+  }
+
+  bool notifySetpointsStop(
+    crazyflie_driver::NotifySetpointsStop::Request& req,
+    crazyflie_driver::NotifySetpointsStop::Response& res)
+  {
+    ROS_INFO_NAMED(m_tf_prefix, "NotifySetpointsStop requested");
+    m_cf.notifySetpointsStop(req.remainValidMillisecs);
     return true;
   }
 
@@ -722,6 +734,7 @@ private:
   ros::ServiceServer m_serviceLand;
   ros::ServiceServer m_serviceGoTo;
   ros::ServiceServer m_serviceSetGroupMask;
+  ros::ServiceServer m_serviceNotifySetpointsStop;
 
   ros::Subscriber m_subscribeCmdVel;
   ros::Subscriber m_subscribeCmdPosition;

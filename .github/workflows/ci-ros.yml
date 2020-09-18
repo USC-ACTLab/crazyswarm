@@ -39,9 +39,20 @@ jobs:
       run: |
         sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
         sudo apt install -y libpcl-dev
+        sudo apt install -y libusb-1.0-0-dev sdcc
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-pytest ${{ matrix.pyVer }}-scipy
+
+    - name: Install Embedded GCC for Ubuntu 20
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt install -y gcc-arm-none-eabi
+
+    - name: Install Embedded GCC for Ubuntu <20
+      if: matrix.os != 'ubuntu-20.04'
+      run: |
+        sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
         sudo apt-get update
-        sudo apt install -y gcc-arm-none-eabi libusb-1.0-0-dev sdcc
+        sudo apt install -y gcc-arm-embedded
 
     - name: Build
       run: |

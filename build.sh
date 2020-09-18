@@ -37,7 +37,7 @@ cd $ROOT
 
 # build simulator firmware backend
 cd ros_ws/src/crazyswarm/scripts/pycrazyswarm/cfsim
-make CSW_PYTHON=$1
+make
 cd $ROOT
 
 # ros

@@ -13,17 +13,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
+
           - os: ubuntu-16.04
             ros: kinetic
             pyVer: python
+            CXX: g++-7
+
           - os: ubuntu-18.04
             ros: melodic
             pyVer: python
+            CXX: g++
+
           - os: ubuntu-20.04
             ros: noetic
             pyVer: python3
+            CXX: g++
 
     runs-on: ${{ matrix.os }}
+
+    env:
+      CXX: ${{ matrix.CXX }}
 
     steps:
 
@@ -41,11 +50,6 @@ jobs:
         sudo apt install -y libpcl-dev
         sudo apt install -y libusb-1.0-0-dev sdcc
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-pytest ${{ matrix.pyVer }}-scipy
-
-    - name: Select G++ Version
-      if: matrix.os == 'ubuntu-16.04'
-      run: |
-        sudo update-alternatives --set g++ /usr/bin/g++-7
 
     - name: Install Embedded GCC for Ubuntu 20
       if: matrix.os == 'ubuntu-20.04'

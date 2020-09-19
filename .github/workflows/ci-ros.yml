@@ -16,15 +16,12 @@ jobs:
           - os: ubuntu-16.04
             ros: kinetic
             pyVer: python
-            extraAptPkgs: g++-7
           - os: ubuntu-18.04
             ros: melodic
             pyVer: python
-            extraAptPkgs:
           - os: ubuntu-20.04
             ros: noetic
             pyVer: python3
-            extraAptPkgs:
 
     runs-on: ${{ matrix.os }}
 
@@ -43,8 +40,11 @@ jobs:
         sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
         sudo apt install -y libpcl-dev
         sudo apt install -y libusb-1.0-0-dev sdcc
-        sudo apt install -y ${{ matrix.extraAptPkgs }}
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-pytest ${{ matrix.pyVer }}-scipy
+
+    - name: Print G++ Version
+      run: |
+        g++ --version
 
     - name: Install Embedded GCC for Ubuntu 20
       if: matrix.os == 'ubuntu-20.04'

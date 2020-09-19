@@ -42,9 +42,10 @@ jobs:
         sudo apt install -y libusb-1.0-0-dev sdcc
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-pytest ${{ matrix.pyVer }}-scipy
 
-    - name: Print G++ Version
+    - name: Select G++ Version
+      if: matrix.os == 'ubuntu-16.04'
       run: |
-        g++ --version
+        sudo update-alternatives --set g++ /usr/bin/g++-7
 
     - name: Install Embedded GCC for Ubuntu 20
       if: matrix.os == 'ubuntu-20.04'

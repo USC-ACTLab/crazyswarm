@@ -95,7 +95,7 @@ class Crazyflie:
         rospy.wait_for_service(prefix + "/start_trajectory")
         self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
         rospy.wait_for_service(prefix + "/notify_setpoints_stop")
-        self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", StartTrajectory)
+        self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", NotifySetpointsStop)
         rospy.wait_for_service(prefix + "/update_params")
         self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
 
@@ -258,7 +258,7 @@ class Crazyflie:
         """
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
 
-    def notifySetpointsStop(self, remainValidMillisecs=100):
+    def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
         """Informs that streaming low-level setpoint packets are about to stop.
 
         Streaming setpoints are :meth:`cmdVelocityWorld`, :meth:`cmdFullState`,
@@ -283,7 +283,7 @@ class Crazyflie:
                 onboard-determined behavior. May be longer e.g. if one radio
                 is controlling many robots.
         """
-        self.notifySetpointsStopService(remainValidMillisecs)
+        self.notifySetpointsStopService(groupMask, remainValidMillisecs)
 
     def position(self):
         """Returns the last true position measurement from motion capture.
@@ -386,7 +386,7 @@ class Crazyflie:
         self.cmdFullStateMsg.twist.angular.z    = omega[2]
         self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
 
-     def cmdVelocityWorld(self, vel, yawRate):
+    def cmdVelocityWorld(self, vel, yawRate):
         """Sends a streaming velocity-world controller setpoint command.
 
         In this mode, the PC specifies desired velocity vector and yaw rate.

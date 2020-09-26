@@ -18,10 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
 set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
-message("${PROJECT_NAME} COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-message("${PROJECT_NAME} COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
-message("${PROJECT_NAME} CXX_STANDARD = ${CMAKE_CXX_STANDARD}")
-
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 find_package(PCL REQUIRED)

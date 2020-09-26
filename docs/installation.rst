@@ -1,7 +1,7 @@
 Installation
 ============
 
-For real hardware operation, we assume that you have **Ubuntu 16.04**.
+For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic**.
 Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
 
 For simulation-only operation, **MacOS** is also supported.
@@ -62,12 +62,12 @@ More details on the usage can be found in the :ref:`Usage` section.
 Simulation and Physical Robots
 ------------------------------
 
-For real hardware operation, we assume that you have **Ubuntu 16.04**
+For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic**.
 with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
 
 Install the dependencies and clone the repository::
 
-    $ sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib gcc-arm-none-eabi libpcl-dev libusb-1.0-0-dev sdcc ros-kinetic-vrpn-client-ros
+    $ sudo apt install git swig libpython-dev python-numpy python-yaml python-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-kinetic-vrpn-client-ros
     $ git clone https://github.com/USC-ACTLab/crazyswarm.git
     $ cd crazyswarm
 

@@ -12,10 +12,10 @@ The convention in the Crazyswarm is to use the following address::
 where ``<X>`` is the number of the Crazyflie in the hexadecimal system. For example cf1 will use address ``0xE7E7E7E701`` and cf10 uses address ``0xE7E7E7E70A``.
 The easiest way to assign addresses is to use the official Crazyflie Python Client.
 
-#. Label your Crazyflies
-#. Assign addresses using the Crazyflie Python Client (use a USB cable for easiest handling)
-#. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
-#. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+1. Label your Crazyflies
+2. Assign addresses using the Crazyflie Python Client (use a USB cable for easiest handling)
+3. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
+4. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
 
   - Option 1: Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
   - Option 2: Upload the precompiled firmware by executing the following steps:
@@ -28,18 +28,18 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
       #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
       #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
 
-#. Upgrade the firmware of you Crazyradios with the provided firmware.
+5. Upgrade the firmware of your Crazyradios with the provided firmware.
 
   - Option 1: follow the instructions in the ``crazyradio-firmware`` folder to install the self-compiled version.
   - Option 2: Use the prebuilt binary:
 
       #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
       #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
-      #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan``, which should report ``Found Crazyradio with version 99.55``.
+      #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan -v``, which should report ``Found Crazyradio with version 99.55``.
 
   - Note: Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
 
-#. Set up PC permissions to use the USB Radio without being root.
+6. Set up PC permissions to use the USB Radio without being root.
 
   - Option 1: follow the instructions in the ``crazyflie-lib-python`` folder or look at `here <https://github.com/bitcraze/crazyflie-lib-python#platform-notes>`_.
   - Option 2: Use the script: ``./pc_permissions.sh``
@@ -48,7 +48,9 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
 Adjust Configuration Files
 --------------------------
 
-There are three major configuration files. First, we have a config file listing all available (but not necessarily active) CFs::
+There are three major configuration files. First, we have a config file listing all available (but not necessarily active) CFs
+
+.. code-block:: yaml
 
     # ros_ws/src/crazyswarm/launch/allCrazyflies.yaml
     crazyflies:
@@ -63,7 +65,9 @@ There are three major configuration files. First, we have a config file listing 
 
 The file assumes that the address of each CF is set as discussed earlier. The channel can be freely configured. The initial position needs to be known for the frame-by-frame tracking as initial guess. Positions are specified in meters, in the coordinate system of your motion capture device. It is not required that the CFs start exactly at those positions (a few centimeters variation is fine).
 
-The second configuration file defines the possible types::
+The second configuration file defines the possible types:
+
+.. code-block:: yaml
 
     # ros_ws/src/crazyswarm/launch/crazyflieTypes.yaml
     crazyflieTypes:
@@ -120,7 +124,9 @@ The third configuration file is the ROS launch file (``ros_ws/src/crazyswarm/lau
 Select Motion Capture System
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Below are the relevant settings for the motion capture system::
+Below are the relevant settings for the motion capture system:
+
+.. code-block:: yaml
 
     # ros_ws/src/crazyswarm/launch/hover_swarm.launch
     # tracking
@@ -182,7 +188,7 @@ Monitor Swarm
 -------------
 
 A simple GUI is available to enable/disable a subset of the CFs, check the battery voltage, reboot and more.
-The tool reads the ``ros_ws/src/crazyswarm/launch/all49.yaml`` file.
+The tool reads the ``ros_ws/src/crazyswarm/launch/allCrazyflies.yaml`` file.
 You can execute it using::
 
     cd ros_ws/src/crazyswarm/scripts

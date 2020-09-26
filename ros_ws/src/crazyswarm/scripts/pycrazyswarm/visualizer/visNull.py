@@ -7,5 +7,8 @@ class VisNull:
     def setGraph(self, edges):
         pass
 
+    def showEllipsoids(self, radii):
+        pass
+
     def update(self, t, crazyflies):
         pass

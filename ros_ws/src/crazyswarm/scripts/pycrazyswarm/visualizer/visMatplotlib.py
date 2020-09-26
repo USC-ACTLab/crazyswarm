@@ -38,6 +38,9 @@ class VisMatplotlib:
             self.graph = Line3DCollection(self.graph_lines, edgecolor=self.line_color)
             self.ax.add_collection(self.graph)
 
+    def showEllipsoids(self, radii):
+        raise Warning("showEllipsoids not implemented in Matplotlib visualizer.")
+
     def update(self, t, crazyflies):
         xs = []
         ys = []

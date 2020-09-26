@@ -16,10 +16,13 @@ import pycrazyswarm.cfsim.cffirmware as firm
 
 
 def main():
-    parser = argparse.ArgumentParser()
+
+    parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("path",
+        type=str,
         help="directory containing numbered subdirectories for each robot," +
             "each of which contains numbered <n>.csv files for each formation change")
+    swarm = Crazyswarm(parent_parser=parser)
     args, unknown = parser.parse_known_args()
 
     #
@@ -71,7 +74,6 @@ def main():
     #
     # CRAZYSWARM INITIALIZATION
     #
-    swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
     crazyflies = allcfs.crazyflies
@@ -209,11 +211,11 @@ def poll_planners(crazyflies, timeHelper, planners, duration):
         for cf, planner in zip(crazyflies, planners):
             ev = firm.plan_current_goal(planner, t)
             cf.cmdFullState(
-                firm2arr(ev.pos),
-                firm2arr(ev.vel),
-                firm2arr(ev.acc),
+                ev.pos,
+                ev.vel,
+                ev.acc,
                 ev.yaw,
-                firm2arr(ev.omega))
+                ev.omega)
         timeHelper.sleepForRate(POLL_RATE)
 
 
@@ -232,10 +234,6 @@ def hover(crazyflies, timeHelper, positions, duration):
                 0.0,
                 zero)
         timeHelper.sleepForRate(POLL_RATE)
-
-
-def firm2arr(vec):
-    return np.array([vec.x, vec.y, vec.z])
 
 
 def load_all_csvs(path):

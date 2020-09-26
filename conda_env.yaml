@@ -2,10 +2,11 @@ name: crazyswarm
 dependencies:
   - python=2.7
   - numpy
-  - matplotlib
+  - matplotlib=2.1  # VisPy not compatible with newer versions
   - vispy
   - pyyaml
   - swig
   - sphinx
   - sphinx_rtd_theme
   - pyqt
+  - pytest

@@ -11,7 +11,7 @@
       # Logging configuration (Use enable_logging to actually enable logging)
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
-      genericLogTopic_log1_Variables: ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z"]
+      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x"]
       # firmware parameters for all drones (use crazyflieTypes.yaml to set per type, or
       # allCrazyflies.yaml to set per drone)
       firmwareParams:
@@ -30,16 +30,14 @@
           extPosStdDev: 1e-3
           extQuatStdDev: 0.5e-1
         kalman:
-          # pNAcc_xy: 1.0
-          # pNAcc_z: 2.0
-          # stdInitialYaw: 0.1
-          resetEstimation: 1
+          pNAcc_xy: 1.0
+          pNAcc_z: 2.0
       # tracking
-      motion_capture_type: "optitrack" # one of none,vicon,optitrack,qualisys,vrpn
+      motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
-      send_position_only: True # set to False to send position+orientation; set to True to send position only
-      # vicon_host_name: "vicon"
-      optitrack_host_name: "192.168.1.249"
+      send_position_only: False # set to False to send position+orientation; set to True to send position only
+      vicon_host_name: "vicon"
+      # optitrack_host_name: "optitrack"
       # qualisys_host_name: "10.0.5.219"
       # qualisys_base_port: 22222
       # vrpn_host_name: "vicon"
@@ -48,13 +46,13 @@
       write_csvs: False
       force_no_cache: False
       enable_parameters: True
-      enable_logging: True
+      enable_logging: False
     </rosparam>
   </node>
 
   <node name="joy" pkg="joy" type="joy_node" output="screen">
     <param name="dev" value="$(arg joy_dev)" />
-  </node> 
+  </node>
 
   <node pkg="crazyswarm" type="crazyswarm_teleop" name="crazyswarm_teleop" output="screen">
     <param name="csv_file" value="$(find crazyswarm)/launch/figure8_smooth.csv" />
@@ -65,23 +63,5 @@
 
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_x" args="/cf2/log1/values[0]"/> -->
   <!-- <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot_roll" args="/cf1/log1/values[2] /cf1/log1/values[3]"/> -->
-
-  <node pkg="vrpn_client_ros" type="vrpn_client_node" name="vrpn_client_node" output="screen">
-    <rosparam subst_value="true">
-      server: 192.168.1.249
-      port: 3883
-      update_frequency: 100.0
-      frame_id: world
-      # Use the VRPN server's time, or the client's ROS time.
-      use_server_time: false
-      broadcast_tf: true
-      # Must either specify refresh frequency > 0.0, or a list of trackers to create
-      refresh_tracker_frequency: 1.0
-      #trackers:
-      #- FirstTracker
-      #- SecondTracker
-    </rosparam>
-  </node>
-
 
 </launch>

@@ -19,7 +19,7 @@ cd $ROOT
 
 # build nrf firmware
 cd crazyflie2-nrf-firmware
-#tools/build/download_deps
+tools/build/download_deps
 make BLE=0
 cd $ROOT
 

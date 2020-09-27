@@ -65,4 +65,5 @@ jobs:
     - name: Test
       run: |
         cd ros_ws/src/crazyswarm/scripts
+        ${{ matrix.pyVer }} -m pytest --version
         ${{ matrix.pyVer }} -m pytest

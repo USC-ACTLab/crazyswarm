@@ -51,7 +51,7 @@ class TimeHelper:
         # operator // has unexpected (wrong ?) behavior for this calculation.
         ticks = math.floor((duration + self.sleepResidual) / self.dt)
         self.sleepResidual += duration - self.dt * ticks
-        assert 0.0 <= self.sleepResidual < self.dt
+        assert -1e-9 <= self.sleepResidual < self.dt
 
         for _ in range(int(ticks)):
             self.visualizer.update(self.t, self.crazyflies)

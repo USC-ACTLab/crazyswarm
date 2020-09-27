@@ -5,28 +5,24 @@ import numpy as np
 from pycrazyswarm import *
 import uav_trajectory
 
-def executeTrajectory(timeHelper, file, reverse = False, rate = 100, offset=np.array([0,0,0])):
+
+def executeTrajectory(timeHelper, cf, trajpath, rate=100, offset=np.zeros(3)):
     traj = uav_trajectory.Trajectory()
-    traj.loadcsv(file)
+    traj.loadcsv(trajpath)
 
     start_time = timeHelper.time()
     while not timeHelper.isShutdown():
         t = timeHelper.time() - start_time
-        print(t)
         if t > traj.duration:
             break
 
-        if reverse:
-            e = traj.eval(traj.duration - t)
-        else:
-            e = traj.eval(t)
-        for cf in allcfs.crazyflies:
-            cf.cmdFullState(
-                e.pos + np.array(cf.initialPosition) + offset,
-                e.vel,
-                e.acc,
-                e.yaw,
-                e.omega)
+        e = traj.eval(t)
+        cf.cmdFullState(
+            e.pos + np.array(cf.initialPosition) + offset,
+            e.vel,
+            e.acc,
+            e.yaw,
+            e.omega)
 
         timeHelper.sleepForRate(rate)
 
@@ -34,14 +30,16 @@ def executeTrajectory(timeHelper, file, reverse = False, rate = 100, offset=np.a
 if __name__ == "__main__":
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
-    allcfs = swarm.allcfs
+    cf = swarm.allcfs.crazyflies[0]
 
-    rate = 100
+    rate = 30.0
+    Z = 0.5
 
-    executeTrajectory(timeHelper, "takeoff.csv", False, rate)
-    executeTrajectory(timeHelper, "figure8.csv", False, rate, np.array([0, 0, 0.5]))
-    executeTrajectory(timeHelper, "takeoff.csv", True, rate)
+    cf.takeoff(targetHeight=Z, duration=Z+1.0)
+    timeHelper.sleep(Z+2.0)
 
-    for i in range(0, 100):
-        for cf in allcfs.crazyflies:
-            cf.cmdStop()
+    executeTrajectory(timeHelper, cf, "figure8.csv", rate, offset=np.array([0, 0, 0.5]))
+
+    cf.notifySetpointsStop()
+    cf.land(targetHeight=0.03, duration=Z+1.0)
+    timeHelper.sleep(Z+2.0)

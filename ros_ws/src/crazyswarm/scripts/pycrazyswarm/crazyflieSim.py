@@ -165,14 +165,16 @@ class Crazyflie:
                     traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)
                 else:
                     traj_init = firm.piecewise_eval(traj, traj.t_begin)
-                traj.shift = firm.vsub(pos, traj_init.pos)
+                traj.shift = firm.vsub(self.state.pos, traj_init.pos)
             else:
                 traj.shift = firm.vzero()
             firm.plan_start_trajectory(self.planner, traj, reverse)
 
     def notifySetpointsStop(self, remainValidMillisecs=100):
-        # No-op - the real Crazyflie prioritizes streaming setpoints over high-level commands. This tells it to stop doing that. We don't simulate this behavior.
-	pass
+        # No-op - the real Crazyflie prioritizes streaming setpoints over
+        # high-level commands. This tells it to stop doing that. We don't
+        # simulate this behavior.
+        pass
 
     def position(self):
         return np.array(self.state.pos)
@@ -240,6 +242,7 @@ class Crazyflie:
         # TODO: should we set pos, acc, yaw to zero, or rely on modes to not read them?
 
     def cmdStop(self):
+        # TODO: set mode to MODE_IDLE?
         pass
 
     def integrate(self, time, disturbanceSize):

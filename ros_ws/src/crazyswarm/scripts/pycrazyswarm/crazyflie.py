@@ -94,6 +94,8 @@ class Crazyflie:
         self.uploadTrajectoryService = rospy.ServiceProxy(prefix + "/upload_trajectory", UploadTrajectory)
         rospy.wait_for_service(prefix + "/start_trajectory")
         self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
+        rospy.wait_for_service(prefix + "/notify_setpoints_stop")
+        self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", NotifySetpointsStop)
         rospy.wait_for_service(prefix + "/update_params")
         self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
 
@@ -294,6 +296,33 @@ class Crazyflie:
             groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
         """
         self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
+
+    def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
+        """Informs that streaming low-level setpoint packets are about to stop.
+
+        Streaming setpoints are :meth:`cmdVelocityWorld`, :meth:`cmdFullState`,
+        and so on. For safety purposes, they normally preempt onboard high-level
+        commands such as :meth:`goTo`.
+
+        Once preempted, the Crazyflie will not switch back to high-level
+        commands (or other behaviors determined by onboard planning/logic) until
+        a significant amount of time has elapsed where no low-level setpoint
+        was received.
+
+        This command short-circuits that waiting period to a user-chosen time.
+        It should be called after sending the last low-level setpoint, and
+        before sending any high-level command.
+
+        A common use case is to execute the :meth:`land` command after using
+        streaming setpoint modes.
+
+        Args:
+            remainValidMillisecs (int): Number of milliseconds that the last
+                streaming setpoint should be followed before reverting to the
+                onboard-determined behavior. May be longer e.g. if one radio
+                is controlling many robots.
+        """
+        self.notifySetpointsStopService(groupMask, remainValidMillisecs)
 
     def position(self):
         """Returns the last true position measurement from motion capture.

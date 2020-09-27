@@ -55,7 +55,7 @@ class TimeHelper:
         # operator // has unexpected (wrong ?) behavior for this calculation.
         ticks = math.floor((duration + self.sleepResidual) / self.dt)
         self.sleepResidual += duration - self.dt * ticks
-        assert 0.0 <= self.sleepResidual < self.dt
+        assert -1e-9 <= self.sleepResidual < self.dt
 
         for _ in range(int(ticks)):
             self.visualizer.update(self.t, self.crazyflies)
@@ -225,14 +225,16 @@ class Crazyflie:
     def takeoff(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
+            targetYaw = 0.0
             firm.plan_takeoff(self.planner,
-                self.state.pos, self.yaw(), targetHeight, 0.0, duration, self.time())
+                self.state.pos, self.state.yaw, targetHeight, targetYaw, duration, self.time())
 
     def land(self, targetHeight, duration, groupMask = 0):
         if self._isGroup(groupMask):
             self.mode = Crazyflie.MODE_HIGH_POLY
+            targetYaw = 0.0
             firm.plan_land(self.planner,
-                self.state.pos, self.yaw(), targetHeight, 0.0, duration, self.time())
+                self.state.pos, self.state.yaw, targetHeight, targetYaw, duration, self.time())
 
     def stop(self, groupMask = 0):
         if self._isGroup(groupMask):
@@ -280,6 +282,12 @@ class Crazyflie:
             else:
                 traj.shift = firm.vzero()
             firm.plan_start_trajectory(self.planner, traj, reverse)
+
+    def notifySetpointsStop(self, remainValidMillisecs=100):
+        # No-op - the real Crazyflie prioritizes streaming setpoints over
+        # high-level commands. This tells it to stop doing that. We don't
+        # simulate this behavior.
+        pass
 
     def position(self):
         return np.array(self.state.pos)

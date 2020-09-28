@@ -1,4 +1,4 @@
-name: Crazyswarm System Python CI
+name: Sim-Only System-Python CI
 
 on: [push, pull_request]
 

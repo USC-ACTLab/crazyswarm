@@ -24,3 +24,13 @@ def check_ellipsoid_collisions(positions, radii):
     dists[range(n), range(n)] = np.inf
     colliding = np.any(dists < 2.0, axis=1)
     return colliding
+
+
+def yaml_with_positions(positions):
+    return "crazyflies:" + "".join([
+"""
+- channel: 100
+  id: {}
+  initialPosition: {}""".format(i + 1, pos)
+        for i, pos in enumerate(positions)
+    ])

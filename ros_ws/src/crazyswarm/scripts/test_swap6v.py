@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 
+"""Execute pre-planned trajectories to swap sides in a hexagon formation.
+
+This script works both as a unit test and with real hardware."""
+
+
 import numpy as np
 
 from pycrazyswarm import *
+from pycrazyswarm import util
 import pycrazyswarm.cfsim.cffirmware as firm
 import uav_trajectory
+
 
 TIMESCALE = 1.0
 
@@ -19,18 +26,16 @@ POSITIONS = [
 
 OFFSET = [0.0, 0.0, -0.3]
 
-if __name__ == "__main__":
-    swarm = Crazyswarm()
+
+def main(yaml=None, args=None):
+    swarm = Crazyswarm(crazyflies_yaml=yaml, args=args)
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
-    ids = [15, 16, 17, 18, 19, 20] #[15, 16, 17] #range(1, 6+1)
-    trajIds = [1, 2, 3, 4, 5, 6] #[1, 2, 3, 4, 5, 6]
-
-    cfs = [allcfs.crazyfliesById[i] for i in ids]
+    trajIds = range(1, 7)
+    cfs = allcfs.crazyflies[:6]
     root = 'swap6v_pps'
     fnames = ['{0}/pp{1}.csv'.format(root, i) for i in trajIds]
-    # trajs = [piecewise.loadcsv(fname) for fname in fnames]
 
     T = 0
     for cf, fname in zip(cfs, fnames):
@@ -38,14 +43,12 @@ if __name__ == "__main__":
         traj.loadcsv(fname)
         cf.uploadTrajectory(0, 0, traj)
         T = max(T, traj.duration)
-    print("T: ", T * TIMESCALE)
 
     allcfs.takeoff(targetHeight=1.0, duration=2.0)
     timeHelper.sleep(2.5)
 
     for cf, trajId in zip(cfs, trajIds):
         pos = POSITIONS[trajId - 1]
-        print(pos)
         cf.goTo(np.array(pos) + np.array(OFFSET), 0, 3.0)
     timeHelper.sleep(3.5)
 
@@ -62,3 +65,15 @@ if __name__ == "__main__":
     allcfs.land(targetHeight=0.06, duration=2.0)
     timeHelper.sleep(3.0)
 
+
+def test_swap6v():
+    initial_positions = np.array(POSITIONS)
+    initial_positions[:, 2] = 0.0
+    initial_positions = initial_positions.tolist()
+    yaml = util.yaml_with_positions(initial_positions)
+    print(yaml)
+    main(yaml=yaml, args="--sim --vis null")
+
+
+if __name__ == "__main__":
+    main()

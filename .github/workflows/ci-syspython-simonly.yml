@@ -1,4 +1,4 @@
-name: Crazyswarm ROS CI
+name: Crazyswarm System Python CI
 
 on: [push, pull_request]
 
@@ -29,10 +29,9 @@ jobs:
       run: |
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-pytest ${{ matrix.pyVer }}-scipy
 
-
     - name: Build
       run: |
-        CSW_PYTHON=${{ matrix.python.pyVer }} ./buildSimOnly.sh 
+        CSW_PYTHON=${{ matrix.pyVer }} ./buildSimOnly.sh 
 
     - name: Test
       run: |

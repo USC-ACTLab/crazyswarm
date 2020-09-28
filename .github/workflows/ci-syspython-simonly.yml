@@ -1,4 +1,4 @@
-name: Sim-Only System-Python CI
+name: Sim-Only System Python Test
 
 on: [push, pull_request]
 

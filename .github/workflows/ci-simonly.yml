@@ -1,4 +1,4 @@
-name: Sim-Only Conda CI
+name: Sim-Only Conda Test
 
 on: [push, pull_request]
 

@@ -1,4 +1,4 @@
-name: Crazyswarm ROS CI
+name: Crazyswarm ROS Build
 
 on: [push, pull_request]
 
@@ -61,9 +61,3 @@ jobs:
       run: |
         source /opt/ros/${{ matrix.ros }}/setup.bash
         CSW_PYTHON=${{ matrix.pyVer }} ./build.sh
-
-    - name: Test
-      run: |
-        source /opt/ros/${{ matrix.ros }}/setup.bash
-        cd ros_ws/src/crazyswarm/scripts
-        ${{ matrix.pyVer }} -m pytest

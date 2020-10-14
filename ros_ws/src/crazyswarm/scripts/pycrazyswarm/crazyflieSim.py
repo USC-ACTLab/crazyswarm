@@ -217,7 +217,7 @@ class Crazyflie:
         state.lastFeasibleSetPosition = firm.mkvec(np.nan, np.nan, np.nan)
         self.collisionAvoidanceState = state
 
-    def disableCollsionAvoidance(self):
+    def disableCollisionAvoidance(self):
         self.otherCFs = None
         self.collisionAvoidanceParams = None
         self.collisionAvoidanceState = None

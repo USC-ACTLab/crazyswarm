@@ -170,16 +170,16 @@ class Crazyflie:
         # Set radii before enabling to ensure collision avoidance never
         # observes a wrong radius value.
         self.setParams({
-            "collisionAvoidance/ellipsoidX": ellipsoidRadii[0],
-            "collisionAvoidance/ellipsoidY": ellipsoidRadii[1],
-            "collisionAvoidance/ellipsoidZ": ellipsoidRadii[2],
+            "colAv/ellipsoidX": float(ellipsoidRadii[0]),
+            "colAv/ellipsoidY": float(ellipsoidRadii[1]),
+            "colAv/ellipsoidZ": float(ellipsoidRadii[2]),
         })
-        self.setParam("collisionAvoidance/enable", 1)
+        self.setParam("colAv/enable", 1)
 
 
     def disableCollisionAvoidance(self):
         """Disables onboard collision avoidance."""
-        self.setParam("collisionAvoidance/enable", 0)
+        self.setParam("colAv/enable", 0)
 
     def takeoff(self, targetHeight, duration, groupMask = 0):
         """Execute a takeoff - fly straight up, then hover indefinitely.

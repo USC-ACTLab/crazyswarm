@@ -64,14 +64,20 @@ More details on the usage can be found in the :ref:`Usage` section.
 Simulation and Physical Robots
 ------------------------------
 
-For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic** or **Ubuntu 20.04 with ROS Noetic**.
+For real hardware operation, we assume that you have one of the following system configurations:
 
 - Ubuntu 16.04, ROS Kinetic, Python2
-    with ROS Kinetic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
+    with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
 - Ubuntu 18.04, ROS Melodic, Python2
-    with ROS Melodic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/melodic/Installation/Ubuntu>`_).
+    with ROS Melodic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/melodic/Installation/Ubuntu>`_).
 - Ubuntu 20.04, ROS Noetic, Python3
-    with ROS Noetic(desktop or desktop-full) installed (`instructions <http://wiki.ros.org/noetic/Installation/Ubuntu>`_).
+    with ROS Noetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/noetic/Installation/Ubuntu>`_).
+
+.. warning::
+
+    Ubuntu 20 / Python 3 support is currently in **experimental status** because we have not had the opportunity to test it on real hardware yet.
+    If you test it on real hardware, **please report your results** to us by filing a GitHub issue.
+
 
 Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and clone the repository::
 

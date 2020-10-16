@@ -36,13 +36,13 @@ class Crazyswarm:
             crazyflies_yaml = open(crazyflies_yaml, 'r').read()
 
         if args.sim:
-            import crazyflieSim
-            self.timeHelper = crazyflieSim.TimeHelper(args.vis, args.dt, args.writecsv, args.disturbance)
-            self.allcfs = crazyflieSim.CrazyflieServer(self.timeHelper, crazyflies_yaml)
+            from .crazyflieSim import TimeHelper, CrazyflieServer
+            self.timeHelper = TimeHelper(args.vis, args.dt, args.writecsv, args.disturbance)
+            self.allcfs = CrazyflieServer(self.timeHelper, crazyflies_yaml)
         else:
-            import crazyflie
-            self.allcfs = crazyflie.CrazyflieServer(crazyflies_yaml)
-            self.timeHelper = crazyflie.TimeHelper()
+            from .crazyflie import TimeHelper, CrazyflieServer
+            self.allcfs = CrazyflieServer(crazyflies_yaml)
+            self.timeHelper = TimeHelper()
             if args.writecsv:
                 print("WARNING: writecsv argument ignored! This is only available in simulation.")
         self.input = genericJoystick.Joystick(self.timeHelper)

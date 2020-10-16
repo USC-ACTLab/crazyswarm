@@ -10,12 +10,21 @@ jobs:
   build:
 
     strategy:
+      fail-fast: false
       matrix:
         include:
+
           - os: ubuntu-16.04
             ros: kinetic
+            pyVer: python
+
           - os: ubuntu-18.04
             ros: melodic
+            pyVer: python
+
+          - os: ubuntu-20.04
+            ros: noetic
+            pyVer: python3
 
     runs-on: ${{ matrix.os }}
 
@@ -25,25 +34,36 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install ROS
-      uses: ros-tooling/setup-ros@0.0.16
+      uses: ros-tooling/setup-ros@0.0.25
       with:
         required-ros-distributions: ${{ matrix.ros }}
 
     - name: Install Dependencies
       run: |
-        sudo apt install -y ros-${{ matrix.ros }}-vrpn ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
+        sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
         sudo apt install -y libpcl-dev
-        sudo apt install -y swig libpython-dev python-numpy python-yaml python-matplotlib python-pytest
+        sudo apt install -y libusb-1.0-0-dev sdcc
+        sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-pytest ${{ matrix.pyVer }}-scipy
+
+    - name: Install Embedded GCC for Ubuntu 20
+      if: matrix.os == 'ubuntu-20.04'
+      run: |
+        sudo apt install -y gcc-arm-none-eabi
+
+    - name: Install Embedded GCC for Ubuntu <20
+      if: matrix.os != 'ubuntu-20.04'
+      run: |
         sudo add-apt-repository -y ppa:team-gcc-arm-embedded/ppa
         sudo apt-get update
-        sudo apt install -y gcc-arm-embedded libusb-1.0-0-dev sdcc
+        sudo apt install -y gcc-arm-embedded
 
     - name: Build
       run: |
         source /opt/ros/${{ matrix.ros }}/setup.bash
-        ./build.sh
+        CSW_PYTHON=${{ matrix.pyVer }} ./build.sh
 
     - name: Test
       run: |
         cd ros_ws/src/crazyswarm/scripts
-        python -m pytest
+        ${{ matrix.pyVer }} -m pytest --version
+        ${{ matrix.pyVer }} -m pytest

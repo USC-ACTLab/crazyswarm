@@ -3,7 +3,7 @@ modinc = $(firmdir)/src/modules/interface
 modsrc = $(firmdir)/src/modules/src
 
 swig: setup.py cffirmware_wrap.c $(modsrc)/*.c
-	python2 setup.py build_ext --inplace
+	$(CSW_PYTHON) setup.py build_ext --inplace
 
 cffirmware_wrap.c: cffirmware.i $(modinc)/*.h
 	swig -python -I$(modinc) cffirmware.i

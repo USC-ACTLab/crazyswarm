@@ -27,7 +27,7 @@ cd $ROOT
 cd crazyflie-firmware
 git submodule init
 git submodule update
-make
+make -j8
 cd $ROOT
 
 # build radio firmware

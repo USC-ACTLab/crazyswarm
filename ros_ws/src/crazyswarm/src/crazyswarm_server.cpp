@@ -11,6 +11,7 @@
 #include "crazyflie_driver/NotifySetpointsStop.h"
 #undef major
 #undef minor
+#include "crazyflie_driver/Hover.h"
 #include "crazyflie_driver/Takeoff.h"
 #include "crazyflie_driver/Land.h"
 #include "crazyflie_driver/GoTo.h"
@@ -216,6 +217,9 @@ public:
     m_subscribeCmdFullState = n.subscribe(tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
     m_subscribeCmdVelocityWorld = n.subscribe(tf_prefix + "/cmd_velocity_world", 1, &CrazyflieROS::cmdVelocityWorldSetpoint, this);
     m_subscribeCmdStop = n.subscribe(m_tf_prefix + "/cmd_stop", 1, &CrazyflieROS::cmdStop, this);
+
+    // New Velocity command type (Hover)
+    m_subscribeCmdHover=n.subscribe(m_tf_prefix+"/cmd_hover",1,&CrazyflieROS::cmdHoverSetpoint, this);
 
     if (m_enableLogging) {
       m_logFile.open("logcf" + std::to_string(id) + ".csv");
@@ -518,6 +522,17 @@ public:
     // }
   }
 
+  void cmdHoverSetpoint(const crazyflie_driver::Hover::ConstPtr& msg){
+     //ROS_INFO("got a hover setpoint");
+      float vx = msg->vx;
+      float vy = msg->vy;
+      float yawRate = msg->yawrate;
+      float zDistance = msg->zDistance;
+
+      m_cf.sendHoverSetpoint(vx, vy, yawRate, zDistance);
+      //ROS_INFO("set a hover setpoint");
+
+  }
   void cmdVelocityWorldSetpoint(
     const crazyflie_driver::VelocityWorld::ConstPtr& msg)
   {
@@ -789,6 +804,8 @@ private:
   ros::Subscriber m_subscribeCmdFullState;
   ros::Subscriber m_subscribeCmdVelocityWorld;
   ros::Subscriber m_subscribeCmdStop;
+
+  ros::Subscriber m_subscribeCmdHover; // Hover vel subscriber
 
   std::vector<crazyflie_driver::LogBlock> m_logBlocks;
   std::vector<ros::Publisher> m_pubLogDataGeneric;

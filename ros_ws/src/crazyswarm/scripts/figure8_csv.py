@@ -33,4 +33,3 @@ if __name__ == "__main__":
 
         allcfs.land(targetHeight=0.06, duration=2.0)
         timeHelper.sleep(3.0)
-

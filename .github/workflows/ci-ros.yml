@@ -34,7 +34,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install ROS
-      uses: ros-tooling/setup-ros@0.1.0
+      uses: ros-tooling/setup-ros@v0.1
       with:
         required-ros-distributions: ${{ matrix.ros }}
 

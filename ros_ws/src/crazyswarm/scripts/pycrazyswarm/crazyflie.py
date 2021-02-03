@@ -12,7 +12,7 @@ import std_msgs
 from crazyflie_driver.srv import *
 from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
 from tf import TransformListener
-from visualizer import visNull
+from .visualizer import visNull
 
 def arrayToGeometryPoint(a):
     return geometry_msgs.msg.Point(a[0], a[1], a[2])

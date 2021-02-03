@@ -1,0 +1,25 @@
+name: Docs build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Handle dependencies here instead of conda_env.yaml
+    # because some packages are conda-forge only,
+    # which makes the env build much more slowly.
+
+    - name: Install dependencies
+      run: |
+        sudo pip3 install -U setuptools
+        sudo pip3 install -U sphinx sphinx-rtd-theme sphinx-tabs sphinx-argparse
+
+    - name: Build Docs
+      run: |
+        cd docs
+        make html

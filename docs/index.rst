@@ -23,18 +23,18 @@ How is Crazyswarm different from Bitcraze's `Crazyflie Python API <https://githu
 -----------------------------------------------------------------------------------------------------------------------
 
 Both can be used to control several Crazyflies from a Python script.
-Overall, Crazyswarm has more features but is more complicated.
 Here are some differences:
 
 - **Motion capture integration.**
   Crazyswarm contains drivers for common motion capture systems.
   The Bitcraze API can *send* position measurements to the Crazyflie,
   but does not know how to *get* position measurements from mocap hardware.
-- **Identical motion capture markers.**
+- **Identical or single motion capture markers.**
   Via `libobjecttracker <https://github.com/USC-ACTLab/libobjecttracker>`_,
-  Crazyswarm can track multiple quadrotors with identical motion capture arrangements.
+  Crazyswarm can track multiple quadrotors with identical motion capture marker arrangements,
+  or quadrotors with only one marker each.
   Most motion capture devices do not support this natively.
-  However, the user must supply the quadrotors' initial positions in a configuration file
+  To make it possible, the user must supply the quadrotors' initial positions in a configuration file
   at startup to establish the mapping from radio addresses to positions.
 - **Simulation.**
   Crazyswarm has a simulation mode with 3D graphics,

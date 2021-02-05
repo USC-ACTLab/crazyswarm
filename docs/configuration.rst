@@ -1,10 +1,14 @@
-.. _usage:
+.. _configuration:
 
-Usage
-=====
+Configuration
+=============
 
-Crazyflie Preparation
----------------------
+After completing :ref:`installation`,
+a significant amount of configuration is needed before the Crazyswarm is ready to fly.
+Follow the steps below.
+
+Prepare Crazyflies
+------------------
 
 Since the Crazyflies are sharing radios and communication channels, they need to have a unique identifier/address.
 The convention in the Crazyswarm is to use the following address::
@@ -14,8 +18,8 @@ The convention in the Crazyswarm is to use the following address::
 where ``<X>`` is the number of the Crazyflie in the hexadecimal system. For example cf1 will use address ``0xE7E7E7E701`` and cf10 uses address ``0xE7E7E7E70A``.
 The easiest way to assign addresses is to use the official Crazyflie Python Client.
 
-1. Label your Crazyflies
-2. Assign addresses using the Crazyflie Python Client (use a USB cable for easiest handling)
+1. Label your Crazyflies with numbers.
+2. Assign addresses using the Crazyflie Python Client (use a USB cable for easiest handling).
 3. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
 4. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
 
@@ -47,14 +51,53 @@ The easiest way to assign addresses is to use the official Crazyflie Python Clie
   - Option 2: Use the script: ``./pc_permissions.sh``
 
 
-Adjust Configuration Files
+
+Adjust configuration files
 --------------------------
 
-There are three major configuration files. First, we have a config file listing all available (but not necessarily active) CFs
+Several configuration files may require editing.
+The most significant configuration choice is whether or not to use *unique arrangements*
+of motion capture markers for each Crazyflie in your fleet.
+Select one of the tabs below for a description of each choice.
+Later steps in the documentation will change depending on your selection.
+
+.. tabs::
+
+   .. group-tab:: Unique Marker Arrangements
+
+      With a unique marker arrangement for each Crazyflie, you rely on the motion capture hardware to differentiate between objects.
+      This is generally preferred.
+      However, if you have lots of Crazyflies, it can be hard to design enough unique configurations -- there are not many places to put a marker on the Crazyflie.
+
+      If your arrangements are too similar, motion capture software may not fail gracefully.
+      For example, it may rapidly switch back and forth between recognizing two different objects at a single physical location.
+
+   .. group-tab:: Duplicated Marker Arrangements
+
+      If more than one Crazyflie has the same marker arrangement, standard motion capture software will refuse to track them.
+      Instead, Crazyswarm can use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
+      There are two main consequences of this option:
+
+      - The initial positions of the Crazyflies must be known, to establish a mapping between radio IDs and physical locations.
+      - The tracking is done frame-by-frame, so if markers are occluded for a significant amount of time,
+        the algorithm may not be able to re-establish the ID-location mapping once they are visible again.
+
+      You can use more than one marker arrangement in this mode.
+      For example, you might have several standard Crazyflies with arrangement 1,
+      and several larger quadcopters with arrangement 2.
+
+
+.. _config_crazyflies_yaml:
+
+Enumerate Crazyflies
+~~~~~~~~~~~~~~~~~~~~
+First we have ``crazyflies.yaml``, a file that lists all active Crazyflies.
+The Crazyswarm server reads this configuration file at startup.
+If it cannot communicate with all the Crazyflies defined in ``crazyflies.yaml``, it will halt and report an error.
 
 .. code-block:: yaml
 
-    # ros_ws/src/crazyswarm/launch/allCrazyflies.yaml
+    # ros_ws/src/crazyswarm/launch/crazyflies.yaml
     crazyflies:
       - id: 1
         channel: 100
@@ -65,9 +108,40 @@ There are three major configuration files. First, we have a config file listing 
         initialPosition: [1.5, 1.0, 0.0]
         type: medium
 
-The file assumes that the address of each CF is set as discussed earlier. The channel can be freely configured. The initial position needs to be known for the frame-by-frame tracking as initial guess. Positions are specified in meters, in the coordinate system of your motion capture device. It is not required that the CFs start exactly at those positions (a few centimeters variation is fine).
+The file assumes that the address of each CF is set as discussed earlier.
+The channel can be freely configured.
 
-The second configuration file defines the possible types:
+.. tabs::
+
+   .. group-tab:: Unique Marker Arrangements
+
+      If you use unique marker arrangements, the ``initialPosition`` field of the ``crazyflies.yaml`` entries will be ignored,
+      but it should still be set because the parser will expect it.
+
+   .. group-tab:: Duplicated Marker Arrangements
+
+      If you use duplicated marker arrangements, ``initialPosition`` must be correct.
+      Positions are specified in meters, in the coordinate system of your motion capture device.
+      It is not required that the CFs start exactly at those positions -- a few centimeters variation is fine.
+
+It is often useful to select a subset of all available Crazyflies.
+The graphical "Chooser" and the additional configuration file ``allCrazyflies.yaml`` help make this easy.
+See :ref:`config_chooser` for details.
+
+
+.. _config_types:
+
+
+Define Crazyflie types
+~~~~~~~~~~~~~~~~~~~~~~
+
+The second configuration file ``crazyflieTypes.yaml`` defines the possible *types*.
+Each type specifies the physical attributes of the quadrotor.
+The ``type`` field in the ``crazyflies.yaml`` entries must refer to a type listed in this file.
+
+.. note::
+
+   Many users will not need to modify this file.
 
 .. code-block:: yaml
 
@@ -121,10 +195,40 @@ The second configuration file defines the possible types:
         maxFitnessScore: 0.001
 
 
-The third configuration file is the ROS launch file (``ros_ws/src/crazyswarm/launch/hover_swarm.launch``). It contains settings on which motion capture system to use and the marker arrangement on the CFs.
 
-Select Motion Capture System
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. tabs::
+
+   .. group-tab:: Unique Marker Arrangements
+
+      The ``markerConfiguration`` fields are not needed with unique marker arrangements.
+      All marker setup should be done in your motion capture system.
+      Create one object in your motion capture software for each marker arrangement
+      and give them names like ``cf1``, ``cf2``, ``cf3``, etc., corresponding to the IDs listed in your ``crazyflies.yaml``.
+
+   .. group-tab:: Duplicated Marker Arrangements
+
+      For duplicated marker arrangements, each arrangement must be described by a ``markerConfigurations`` entry.
+      The ``points`` specify the physical arrangement of markers you use, in the motion capture coordinate system.
+      For example, the marker configuration ``"0"`` corresponds to an off-the-shelf Crazyflie with the marker configuration shown below:
+
+      .. figure:: images/markerConfigurationExample.jpg
+         :align: center
+         :scale: 70%
+
+      To get values for the ``points``, follow these steps:
+
+      #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
+      #. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
+      #. Update ``crazyflieTypes.yaml``.
+
+
+Configure motion capture system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The third configuration file is the ROS launch file, ``ros_ws/src/crazyswarm/launch/hover_swarm.launch``.
+It contains settings on which motion capture system to use, among others.
+
+Select hardware make
+^^^^^^^^^^^^^^^^^^^^
 
 First, select your motion capture hardware.
 
@@ -187,56 +291,72 @@ Next, select the appropriate tab below and perform the manufacturer-specific con
       This is useful for on-board solutions such as the Ultra-Wideband localization system (UWB), LightHouse, or dead-reckoning using the flow-deck.
 
 
+.. _config_objecttracking:
+
 Select object tracking mode
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Select the object tracking type:
-
-.. code-block:: yaml
-
-    # ros_ws/src/crazyswarm/launch/hover_swarm.launch
-    object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
+Next, select the object tracking type:
 
 
-If you select ``libobjecttracker`` as ``object_tracking_type``, the tracking will just use the raw marker cloud from the motion capture system and track the CFs frame-by-frame.
-If you select ``motionCapture`` as ``object_tracking_type``, the objects as tracked by the motion capture system will be used.
-In this case you will need unique marker arrangements and your objects need to be named ``cf1``, ``cf2``, ``cf3``, and so on.
+.. tabs::
 
-When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software.
-Some motion capture systems remove markers from the point cloud when they are matched to an object.
-Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
+   .. group-tab:: Unique Marker Arrangements
+
+      .. code-block:: yaml
+
+          # ros_ws/src/crazyswarm/launch/hover_swarm.launch
+          object_tracking_type: "motionCapture"
+
+      Set ``object_tracking_type`` to ``"motionCapture"``.
+
+   .. group-tab:: Duplicated Marker Arrangements
+      j
+      .. code-block:: yaml
+
+          # ros_ws/src/crazyswarm/launch/hover_swarm.launch
+          object_tracking_type: "libobjecttracker"
+
+      When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software.
+      Some motion capture systems remove markers from the point cloud when they are matched to an object.
+      Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
 
 
-Configure Marker Arrangement
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _config_chooser:
 
-If you select the ``libobjecttracker`` as ``motion_capture_type``, you will need to provide the marker arrangement of your markers. All CFs must use the same marker configuration. An example marker configuration using four markers is shown below:
+Manage fleet with the Chooser
+-----------------------------
 
-.. image:: images/markerConfigurationExample.jpg
-
-#. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
-#. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
-#. Update ``crazyflieTypes.yaml``, see the example above.
-
-
-Monitor Swarm
--------------
-
-A simple GUI is available to enable/disable a subset of the CFs, check the battery voltage, reboot and more.
-The tool reads the ``ros_ws/src/crazyswarm/launch/allCrazyflies.yaml`` file.
-You can execute it using::
+The graphical *Chooser* tool is used to enable/disable subsets of the available Crazyflies
+and perform other practical tasks.
+Chooser relies on the additional configuration file ``allCrazyflies.yaml``,
+which has the same format as ``crazyflies.yaml`` (see :ref:`config_crazyflies_yaml`).
+Edit this file to contain all the Crazyflies you have available.
+Then, start the Chooser::
 
     cd ros_ws/src/crazyswarm/scripts
     python chooser.py
 
-Also, make sure you have ``pyyaml`` installed before using this tool.
-You can check it by ``pip3 install pyyaml``.
-An example screenshot is given below:
+You should see something like the screenshot below.
 
 .. image:: images/chooser.png
 
-:Clear:   Disables all CFs
-:Fill:    Enables all CFs
+Each checkbox corresponds to an entry in ``allCrazyflies.yaml``.
+The checkbox positions should match the ``initialPosition`` fields in the file.
+You can drag a box to select many checkboxes at once.
+
+Whenever the selection is changed,
+the ``allCrazyflies.yaml`` entries for the selected boxes are **immediately** copied and written to ``crazyflies.yaml``.
+
+.. note::
+
+   If you are using the ``allCrazyflies.yaml`` and the Chooser,
+   you should never need to edit ``crazyflies.yaml`` manually.
+
+The buttons perform various functions that can be tedious to do for many CFs:
+
+:Clear:   Deselects all CFs.
+:Fill:    Selects all CFs.
 :battery: Retrieves battery voltage for enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Can be used while the CF is in power-safe mode.
 :version: Retrieves STM32 firmware version of enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Can only be used if CF is fully powered on.
 :sysOff: Puts enabled CFs in power-safe mode (NRF51 powered, but STM32 turned off). Only works if ``crazyflie_server`` is not running at the same time.
@@ -245,35 +365,8 @@ An example screenshot is given below:
 :flash (NRF): Flashes NRF51 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built.
 
 
-Basic Flight
-------------
+Testing configuration
+---------------------
 
-In order to fly the CFs, the ``crazyflie_server`` needs to be running. Execute it using::
-
-    source ros_ws/devel/setup.bash
-    roslaunch crazyswarm hover_swarm.launch
-
-It should only take a few seconds to connect to the CFs. If you have the LED ring extension installed, you can see the connectivity by the color (green=good connectivity; red=bad connectivity). Furthermore, ``rviz`` will show the estimated pose of all CFs. If there is an error (such as a faulty configuration or a turned-off Crazyflie) an error message will be shown and the application exits. If there is a problem in the communication between the motion capture system and the Crazyswarm server, the application will not exit but the positions of the Crazyflies will not appear in rviz.
-
-If you have an XBox360 joystick attached to your computer. You can issue a take-off command by pressing "Start" and a landing command by pressing "Back". All CFs should take-off/land in a synchronized fashion, holding the x/y position they were originally placed in.
-
-
-Advanced Flight
----------------
-
-The flight can be controlled by a python script. A few examples are in ``ros_ws/src/crazyswarm/scripts/``.
-
-#. Test the script in simulation first::
-
-    python figure8_csv.py --sim
-
-(If you are asked to press a button, use the right shoulder on your joystick or press enter on the keyboard.)
-
-#. Run the ``crazyflie_server`` (in another terminal window)::
-
-    source ros_ws/devel/setup.bash
-    roslaunch crazyswarm hover_swarm.launch
-
-#. Once the connection is successful, execute the script without ``--sim``::
-
-    python figure8_csv.py
+Once you have finished configuration,
+move on to the :ref:`tutorial_hover` tutorial for your first test flight!

@@ -1,3 +1,5 @@
+.. _installation:
+
 Installation
 ============
 
@@ -129,4 +131,4 @@ Click the appropriate tab(s) below to see the installation instructions for your
 
 
 Once you have completed installation,
-move on to the :ref:`Usage` section and configure Crazyswarm for your hardware.
+move on to the :ref:`configuration` section and configure Crazyswarm for your hardware.

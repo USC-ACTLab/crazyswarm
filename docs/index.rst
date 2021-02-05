@@ -52,11 +52,12 @@ Contents:
    changelog
    gettingstarted
    installation
-   usage
+   configuration
+   tutorials/tutorials
+   howto/howto
    api
    internals
    hardware
-   tutorials/tutorials
    glossary
    :maxdepth: 2
 

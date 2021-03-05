@@ -1,6 +1,6 @@
 .. _api:
 
-Python Scripting API
+Python API Reference
 ====================
 
 The module ``pycrazyswarm``, contained in ``/ros_ws/src/crazyswarm/scripts``,
@@ -46,35 +46,3 @@ simulation parameters with the command-line flags listed below.
    :module: pycrazyswarm.crazyswarm
    :func: build_argparser
    :prog: python2 <my_crazyswarm_script.py>
-
-
-Examples
---------
-
-Nice Hover
-^^^^^^^^^^
-
-niceHover.py::
-
-    import numpy as np
-    from pycrazyswarm import *
-
-    swarm = Crazyswarm()
-    timeHelper = swarm.timeHelper
-    allcfs = swarm.allcfs
-
-    # takeoff
-    allcfs.takeoff(targetHeight=1.0, duration=2.0)
-
-    # move to the initially assigned positions facing forward
-    timeHelper.sleep(2.0)
-    for cf in allcfs.crazyflies:
-        pos = np.array(cf.initialPosition) + np.array([0, 0, 1.0])
-        cf.goTo(pos, 0, 1.0)
-
-    # Wait 5 seconds
-    timeHelper.sleep(5)
-
-    # Land
-    allcfs.land(targetHeight=0.02, duration=2.0)
-    timeHelper.sleep(2.0)

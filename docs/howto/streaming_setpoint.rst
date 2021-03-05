@@ -9,12 +9,12 @@ of the Crazyswarm system, including the onboard firmware.
 
 .. admonition:: High-level vs. streaming control modes
 
-	In a streaming setpoint mode, the PC sends :term:`setpoint` values over the radio
+	In a streaming setpoint mode, the PC sends :term:`Setpoint` values over the radio
 	many times per second to each robot individually.
 	The onboard feedback controller tries to achieve the states specified by the setpoint.
 
 	In comparison, in a high-level control mode, the PC sends instructions like
-	:term:`piecewise polynomial` trajectory plans over the radio, and the onboard firmware
+	:term:`Piecewise Polynomial` trajectory plans over the radio, and the onboard firmware
 	uses the stored plan to compute a new control setpoint in every iteration of
 	the main loop.
 

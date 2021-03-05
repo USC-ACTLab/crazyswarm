@@ -39,6 +39,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
     'sphinxarg.ext',
+    'sphinx_tabs.tabs',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -59,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Crazyswarm'
-copyright = '2018, Wolfgang Hoenig, James A. Preiss'
+copyright = '2018-2021, Wolfgang Hoenig, James A. Preiss, and contributors.'
 author = 'Wolfgang Hoenig, James A. Preiss'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -1,91 +1,134 @@
+.. _installation:
+
 Installation
 ============
 
-For real hardware operation, we assume that you have **Ubuntu 16.04 with ROS Kinetic** or **Ubuntu 18.04 with ROS Melodic** or **Ubuntu 20.04 with ROS Noetic** .
-Avoid using a virtual machine because this adds additional latency and might cause issues with the visualization tools.
+Crazyswarm runs on **Ubuntu Linux** in one of the following configurations:
 
-For simulation-only operation, **MacOS** is also supported.
+====== ====== =======
+Ubuntu Python ROS
+------ ------ -------
+20.04  3.7    Noetic
+18.04  2.7    Melodic
+16.04  2.7    Kinetic
+====== ====== =======
+
+For simulation-only operation, **Mac OS** is also supported.
+Click the appropriate tab(s) below to see the installation instructions for your desired configuration.
+
+.. note::
+   You must set the environment variable ``$CSW_PYTHON`` to the name of your Python interpreter
+   (e.g. ``python2`` or ``python3``)
+   before building.
+
 
 .. warning::
-
-    Using ubuntu in `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/about>`_ is not supported since WSL does not have USB support and so Crazyradio will not work.
-    You must install Ubuntu either directly on the computer or in a VM.
-
-
-Simulation Only
----------------
-
-It is possible to write/debug ``pycrazyswarm`` scripts and selected firmware modules
-on a machine that does not have ROS or the ARM cross-compilation toolchain installed.
-You can install just the components required for the simulation by doing the following:
-
-----
-
-Linux or MacOS with Anaconda
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-First, install `Anaconda Python 2.7 / 3.7 version <https://www.anaconda.com/distribution>`_.
-We have tested on version ``2019.10``.
-Next, clone the Crazyswsarm repo and build the Anaconda environment with the specific python version number::
-
-    $ git clone https://github.com/USC-ACTLab/crazyswarm.git
-    $ cd crazyswarm
-    $ conda create --name crazyswarm python=[DESIRED PYTHON VERSION]
-    $ conda env update -f conda_env.yaml
-
-Activate the Anaconda environment. Set the CSW_PYTHON variable to either python2 or python3 and run the build script::
-
-    $ conda activate crazyswarm
-    $ CSW_PYTHON=[DESIRED PYTHON COMMAND] ./buildSimOnly.sh
-
-----
-
-Linux without Anaconda
-~~~~~~~~~~~~~~~~~~~~~~
-
-Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and run the build script::
-
-    $ export CSW_PYTHON=python3
-    $ sudo apt install git make gcc swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib
-    $ git clone https://github.com/USC-ACTLab/crazyswarm.git
-    $ cd crazyswarm
-    $ ./buildSimOnly.sh
-
-----
-
-In either case, to test the installation, run one of the examples::
-
-    $ cd ros_ws/src/crazyswarm/scripts
-    $ python figure8_csv.py --sim
-
-More details on the usage can be found in the :ref:`Usage` section.
+   The `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/about>`_ is not supported.
+   You must install Ubuntu either directly on the computer (recommended) or in a VM.
 
 
-Simulation and Physical Robots
-------------------------------
+.. tabs::
 
-For real hardware operation, we assume that you have one of the following system configurations:
+   .. tab:: Simulation Only
 
-- Ubuntu 16.04, ROS Kinetic, Python2
-    with ROS Kinetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/kinetic/Installation/Ubuntu>`_).
-- Ubuntu 18.04, ROS Melodic, Python2
-    with ROS Melodic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/melodic/Installation/Ubuntu>`_).
-- Ubuntu 20.04, ROS Noetic, Python3
-    with ROS Noetic (desktop or desktop-full) installed (`instructions <http://wiki.ros.org/noetic/Installation/Ubuntu>`_).
+      You can write/debug ``pycrazyswarm`` scripts on a machine that does not have ROS installed.
+      On Mac OS, Crazyswarm must run within an Anaconda environment.
+      On Linux, using Anaconda is optional.
+      Select your platform from the tabs below:
 
-.. warning::
+      .. tabs::
 
-    Ubuntu 20 / Python 3 support is currently in **experimental status** because we have not had the opportunity to test it on real hardware yet.
-    If you test it on real hardware, **please report your results** to us by filing a GitHub issue.
+         .. tab:: Linux or Mac OS with Anaconda
+
+            1. Set the ``$CSW_PYTHON`` environment variable::
+
+                $ export CSW_PYTHON=[python2 or python3]
+
+            2. Install `Anaconda Python 2.7 / 3.7 version <https://www.anaconda.com/distribution>`_ (We have tested on version ``2019.10``).
+
+            3. Clone the Crazyswarm git repository::
+
+                $ git clone https://github.com/USC-ACTLab/crazyswarm.git
+
+            4. Create the Anaconda environment with your desired Python version::
+
+                $ cd crazyswarm
+                $ conda create --name crazyswarm python=$CSW_PYTHON
+                $ conda env update -f conda_env.yaml
+
+            5. Activate the Anaconda environment::
+
+                $ conda activate crazyswarm
+
+            6. Run the build script::
+
+                $ ./buildSimOnly.sh
+
+            7. Verify the installation by running the unit tests::
+
+                $ cd ros_ws/src/crazyswarm/scripts
+                $ $CSW_PYTHON -m pytest
+
+         .. tab:: Linux without Anaconda
+
+            1. Set the ``$CSW_PYTHON`` environment variable::
+
+                $ export CSW_PYTHON=[python2 or python3]
+
+            2. Install the dependencies::
+
+                $ sudo apt install git make gcc swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib
+
+            3. Clone the Crazyswarm git repository::
+
+                $ git clone https://github.com/USC-ACTLab/crazyswarm.git
+
+            4. Run the build script::
+
+                $ cd crazyswarm
+                $ ./buildSimOnly.sh
+
+            5. Verify the installation by running the unit tests::
+
+                $ cd ros_ws/src/crazyswarm/scripts
+                $ $CSW_PYTHON -m pytest
 
 
-Install the dependencies. Set the CSW_PYTHON variable to either python2 or python3 and clone the repository::
+   .. tab:: Physical Robots and Simulation
 
-    $ export CSW_PYTHON=python3
-    $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-[ROS version]-vrpn
-    $ git clone https://github.com/USC-ACTLab/crazyswarm.git
-    $ cd crazyswarm
+      For real hardware operation, ensure that your platform matches
+      one of the configurations in the table above.
+      **Avoid using a virtual machine** if possible:
+      they add additional latency and might cause issues with the visualization tools.
 
-You can now build everything by running our build script.::
-    
-    $ ./build.sh
+      .. warning::
+
+          Ubuntu 20 / Python 3 support is currently in **experimental status** because we have not had the opportunity to test it on real hardware yet.
+          If you test it on real hardware, **please report your results** to us by filing a GitHub issue.
+
+
+      1. Set the ``$CSW_PYTHON`` environment variable::
+
+          $ export CSW_PYTHON=[python2 or python3]
+
+      2. Install the dependencies::
+
+          $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-[ROS version]-vrpn
+
+      3. Clone the Crazyswarm git repository::
+
+          $ git clone https://github.com/USC-ACTLab/crazyswarm.git
+
+      4. Run the build script::
+
+          $ cd crazyswarm
+          $ ./build.sh
+
+      5. Verify the installation by running the unit tests::
+
+          $ cd ros_ws/src/crazyswarm/scripts
+          $ $CSW_PYTHON -m pytest
+
+
+Once you have completed installation,
+move on to the :ref:`configuration` section and configure Crazyswarm for your hardware.

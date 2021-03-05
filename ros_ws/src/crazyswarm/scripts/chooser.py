@@ -1,5 +1,8 @@
 import argparse
-import Tkinter
+try:
+	import Tkinter
+except ImportError:
+	import tkinter as Tkinter
 import yaml
 import os
 import subprocess

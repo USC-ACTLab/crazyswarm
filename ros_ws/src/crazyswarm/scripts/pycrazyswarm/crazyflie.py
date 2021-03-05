@@ -142,6 +142,45 @@ class Crazyflie:
         """
         self.setGroupMaskService(groupMask)
 
+    def enableCollisionAvoidance(self, others, ellipsoidRadii):
+        """Enables onboard collision avoidance.
+
+        When enabled, avoids colliding with other Crazyflies by using the
+        Buffered Voronoi Cells method [1]. Computation is performed onboard.
+
+        Args:
+            others (List[Crazyflie]): List of other :obj:`Crazyflie` objects.
+                In simulation, collision avoidance is checked only with members
+                of this list.  With real hardware, this list is **ignored**, and
+                collision avoidance is checked with all other Crazyflies on the
+                same radio channel.
+            ellipsoidRadii (array-like of float[3]): Radii of collision volume ellipsoid in meters.
+                The Crazyflie's boundary for collision checking is a tall
+                ellipsoid. This accounts for the downwash effect: Due to the
+                fast-moving stream of air produced by the rotors, the safe
+                distance to pass underneath another rotorcraft is much further
+                than the safe distance to pass to the side.
+
+        [1] D. Zhou, Wang, Z., Bandyopadhyay, S., and Schwager, M.
+            Fast, On-line Collision Avoidance for Dynamic Vehicles using
+            Buffered Voronoi Cells.  IEEE Robotics and Automation Letters
+            (RA-L), vol. 2, no. 2, pp. 1047 - 1054, 2017.
+            https://msl.stanford.edu/fast-line-collision-avoidance-dynamic-vehicles-using-buffered-voronoi-cells
+        """
+        # Set radii before enabling to ensure collision avoidance never
+        # observes a wrong radius value.
+        self.setParams({
+            "colAv/ellipsoidX": float(ellipsoidRadii[0]),
+            "colAv/ellipsoidY": float(ellipsoidRadii[1]),
+            "colAv/ellipsoidZ": float(ellipsoidRadii[2]),
+        })
+        self.setParam("colAv/enable", 1)
+
+
+    def disableCollisionAvoidance(self):
+        """Disables onboard collision avoidance."""
+        self.setParam("colAv/enable", 0)
+
     def takeoff(self, targetHeight, duration, groupMask = 0):
         """Execute a takeoff - fly straight up, then hover indefinitely.
 
@@ -342,7 +381,7 @@ class Crazyflie:
         Args:
             params (Dict[str, Any]): Dict of parameter names/values.
         """
-        for name, value in params.iteritems():
+        for name, value in params.items():
             rospy.set_param(self.prefix + "/" + name, value)
         self.updateParamsService(params.keys())
 

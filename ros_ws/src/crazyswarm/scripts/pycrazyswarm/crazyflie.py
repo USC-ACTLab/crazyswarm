@@ -381,7 +381,7 @@ class Crazyflie:
         Args:
             params (Dict[str, Any]): Dict of parameter names/values.
         """
-        for name, value in params.iteritems():
+        for name, value in params.items():
             rospy.set_param(self.prefix + "/" + name, value)
         self.updateParamsService(params.keys())
 

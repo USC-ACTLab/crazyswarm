@@ -107,24 +107,26 @@ Click the appropriate tab(s) below to see the installation instructions for your
           If you test it on real hardware, **please report your results** to us by filing a GitHub issue.
 
 
-      1. Set the ``$CSW_PYTHON`` environment variable::
+      1. If needed, install ROS using the instructions at http://wiki.ros.org/ROS/Installation.
+      
+      2. Set the ``$CSW_PYTHON`` environment variable::
 
           $ export CSW_PYTHON=[python2 or python3]
 
-      2. Install the dependencies::
+      3. Install the dependencies::
 
           $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-[ROS version]-vrpn
 
-      3. Clone the Crazyswarm git repository::
+      4. Clone the Crazyswarm git repository::
 
           $ git clone https://github.com/USC-ACTLab/crazyswarm.git
 
-      4. Run the build script::
+      5. Run the build script::
 
           $ cd crazyswarm
           $ ./build.sh
 
-      5. Verify the installation by running the unit tests::
+      6. Verify the installation by running the unit tests::
 
           $ cd ros_ws/src/crazyswarm/scripts
           $ $CSW_PYTHON -m pytest

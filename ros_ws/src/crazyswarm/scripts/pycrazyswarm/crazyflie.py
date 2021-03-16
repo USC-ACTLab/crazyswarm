@@ -538,6 +538,7 @@ class Crazyflie:
             g (float): Green component of color, in range [0, 1].
             b (float): Blue component of color, in range [0, 1].
         """
+        self.setParam("ring/effect",7)
         self.setParam("ring/solidRed", int(r * 255))
         self.setParam("ring/solidGreen", int(g * 255))
         self.setParam("ring/solidBlue", int(b * 255))

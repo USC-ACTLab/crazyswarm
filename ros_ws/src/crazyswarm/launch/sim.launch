@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="crazyflies_yaml" value="$(find crazyswarm)/launch/crazyflies.yaml" />
+
+  <node name="sim" pkg="crazyswarm" type="sim.py" output="screen">
+  </node>
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyswarm)/launch/test.rviz"/>
+
+</launch>

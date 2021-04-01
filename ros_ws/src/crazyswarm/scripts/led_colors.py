@@ -20,6 +20,7 @@ if __name__ == "__main__":
     for i in range(TRIALS):
         for rgb in rgb_bits:
             for cf in allcfs.crazyflies:
+                cf.setParam("ring/effect",7)
                 cf.setLEDColor(*rgb)
             timeHelper.sleep(1.0)
 

@@ -101,12 +101,6 @@ Click the appropriate tab(s) below to see the installation instructions for your
       **Avoid using a virtual machine** if possible:
       they add additional latency and might cause issues with the visualization tools.
 
-      .. warning::
-
-          Ubuntu 20 / Python 3 support is currently in **experimental status** because we have not had the opportunity to test it on real hardware yet.
-          If you test it on real hardware, **please report your results** to us by filing a GitHub issue.
-
-
       1. If needed, install ROS using the instructions at http://wiki.ros.org/ROS/Installation.
 
       2. Set the ``$CSW_PYTHON`` environment variable::

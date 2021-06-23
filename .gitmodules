@@ -10,12 +10,6 @@
 	path = crazyflie-clients-python
 	url = https://github.com/bitcraze/crazyflie-clients-python.git
 	branch = develop
-[submodule "crazyradio-firmware"]
-	path = crazyradio-firmware
-	url = https://github.com/bitcraze/crazyradio-firmware.git
-[submodule "crazyflie2-nrf-firmware"]
-	path = crazyflie2-nrf-firmware
-	url = https://github.com/bitcraze/crazyflie2-nrf-firmware.git
 [submodule "ros_ws/src/externalDependencies/libobjecttracker"]
 	path = ros_ws/src/externalDependencies/libobjecttracker
 	url = https://github.com/USC-ACTLab/libobjecttracker

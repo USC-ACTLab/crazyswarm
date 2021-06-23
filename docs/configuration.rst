@@ -7,10 +7,9 @@ After completing :ref:`installation`,
 a significant amount of configuration is needed before the Crazyswarm is ready to fly.
 Follow the steps below.
 
-Prepare Crazyflies
-------------------
-
-Since the Crazyflies are sharing radios and communication channels, they need to have a unique identifier/address.
+Set up radio communication
+--------------------------
+Since the Crazyflies share radios and communication channels, they need to have a unique identifier/address.
 The convention in the Crazyswarm is to use the following address::
 
     0xE7E7E7E7<X>
@@ -18,37 +17,38 @@ The convention in the Crazyswarm is to use the following address::
 where ``<X>`` is the number of the Crazyflie in the hexadecimal system. For example cf1 will use address ``0xE7E7E7E701`` and cf10 uses address ``0xE7E7E7E70A``.
 The easiest way to assign addresses is to use the official Crazyflie Python Client.
 
-1. Label your Crazyflies with numbers.
+1. Physically label your Crazyflies with numbers.
 2. Assign addresses using the Crazyflie Python Client (use a USB cable for easiest handling).
 3. Each radio can control about 15 Crazyflies. If you have more than 15 CFs you will need to assign different channels to the Crazyflies. For example, if you have 49 Crazyflies you'll need three unique channels. It is up to you which channels you assign to which CF, but a good way is to use the Crazyflie number modulo the number of channels. For example, cf1 is assigned to channel 80, cf2 is assigned to channel 90, cf3 is assigned to channel 100, cf4 is assigned to channel 80 and so on.
-4. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
 
-  - Option 1: Upload the firmware via the command line using ``make cload`` as described `here <https://wiki.bitcraze.io/doc:crazyflie:dev:starting>`_ instead of using Bitcraze graphical app.
-  - Option 2: Upload the precompiled firmware by executing the following steps:
+Note: Crazyflies must be rebooted after any change of the channel/address for the changes to take effect.
 
-      #. Plug in a battery
-      #. Turn your Crazyflie off by pressing the on/off button
-      #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
-      #. ``rosrun crazyflie_tools flash --target nrf51 --filename prebuilt/cf2_nrf.bin``
-      #. Turn your Crazyflie off by pressing the on/off button
-      #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
-      #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
-
-5. Upgrade the firmware of your Crazyradios with the provided firmware.
-
-  - Option 1: follow the instructions in the ``crazyradio-firmware`` folder to install the self-compiled version.
-  - Option 2: Use the prebuilt binary:
-
-      #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
-      #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
-      #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan -v``, which should report ``Found Crazyradio with version 99.55``.
-
-  - Note: Your Crazyflie needs to be rebooted after any change of the channel/address for the changes to take any effect.
-
-6. Set up PC permissions to use the USB Radio without being root.
+Finally, add the user permissions to use the USB Radio without being root.
 
   - Option 1: follow the instructions in the ``crazyflie-lib-python`` folder or look at `here <https://github.com/bitcraze/crazyflie-lib-python#platform-notes>`_.
   - Option 2: Use the script: ``./pc_permissions.sh``
+
+
+Update firmware
+---------------
+Crazyswarm is tested with specific versions of the official Bitcraze firmware for the Crazyflie and Crazyradio.
+We supply the binary images of these firmware versions in the ``/prebuilt`` directory.
+
+1. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+
+    #. Plug in a battery
+    #. Turn your Crazyflie off by pressing the on/off button
+    #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
+    #. ``rosrun crazyflie_tools flash --target nrf51 --filename prebuilt/cf2_nrf.bin``
+    #. Turn your Crazyflie off by pressing the on/off button
+    #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
+    #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
+
+2. Upgrade the firmware of your Crazyradios with the provided firmware.
+
+    #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
+    #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
+    #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan -v``, which should report ``Found Crazyradio with version 99.55``.
 
 
 

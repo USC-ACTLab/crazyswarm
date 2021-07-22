@@ -3,23 +3,22 @@
 #include <tf_conversions/tf_eigen.h>
 #include <ros/callback_queue.h>
 
-#include "crazyflie_driver/AddCrazyflie.h"
-#include "crazyflie_driver/LogBlock.h"
-#include "crazyflie_driver/GenericLogData.h"
-#include "crazyflie_driver/UpdateParams.h"
-#include "crazyflie_driver/UploadTrajectory.h"
-#include "crazyflie_driver/NotifySetpointsStop.h"
+#include "crazyswarm/LogBlock.h"
+#include "crazyswarm/GenericLogData.h"
+#include "crazyswarm/UpdateParams.h"
+#include "crazyswarm/UploadTrajectory.h"
+#include "crazyswarm/NotifySetpointsStop.h"
 #undef major
 #undef minor
-#include "crazyflie_driver/Hover.h"
-#include "crazyflie_driver/Takeoff.h"
-#include "crazyflie_driver/Land.h"
-#include "crazyflie_driver/GoTo.h"
-#include "crazyflie_driver/StartTrajectory.h"
-#include "crazyflie_driver/SetGroupMask.h"
-#include "crazyflie_driver/FullState.h"
-#include "crazyflie_driver/Position.h"
-#include "crazyflie_driver/VelocityWorld.h"
+#include "crazyswarm/Hover.h"
+#include "crazyswarm/Takeoff.h"
+#include "crazyswarm/Land.h"
+#include "crazyswarm/GoTo.h"
+#include "crazyswarm/StartTrajectory.h"
+#include "crazyswarm/SetGroupMask.h"
+#include "crazyswarm/FullState.h"
+#include "crazyswarm/Position.h"
+#include "crazyswarm/VelocityWorld.h"
 #include "std_srvs/Empty.h"
 #include <std_msgs/Empty.h>
 #include "geometry_msgs/Twist.h"
@@ -174,7 +173,7 @@ public:
     const std::string& worldFrame,
     int id,
     const std::string& type,
-    const std::vector<crazyflie_driver::LogBlock>& log_blocks,
+    const std::vector<crazyswarm::LogBlock>& log_blocks,
     ros::CallbackQueue& queue)
     : m_tf_prefix(tf_prefix)
     , m_cf(
@@ -225,7 +224,7 @@ public:
       m_logFile.open("logcf" + std::to_string(id) + ".csv");
       m_logFile << "time,";
       for (auto& logBlock : m_logBlocks) {
-        m_pubLogDataGeneric.push_back(n.advertise<crazyflie_driver::GenericLogData>(tf_prefix + "/" + logBlock.topic_name, 10));
+        m_pubLogDataGeneric.push_back(n.advertise<crazyswarm::GenericLogData>(tf_prefix + "/" + logBlock.topic_name, 10));
         for (const auto& variableName : logBlock.variables) {
           m_logFile << variableName << ",";
         }
@@ -317,8 +316,8 @@ public:
   }
 
   bool updateParams(
-    crazyflie_driver::UpdateParams::Request& req,
-    crazyflie_driver::UpdateParams::Response& res)
+    crazyswarm::UpdateParams::Request& req,
+    crazyswarm::UpdateParams::Response& res)
   {
     ROS_INFO("[%s] Update parameters", m_frame.c_str());
     m_cf.startSetParamRequest();
@@ -365,8 +364,8 @@ public:
 
 
   bool uploadTrajectory(
-    crazyflie_driver::UploadTrajectory::Request& req,
-    crazyflie_driver::UploadTrajectory::Response& res)
+    crazyswarm::UploadTrajectory::Request& req,
+    crazyswarm::UploadTrajectory::Response& res)
   {
     ROS_INFO("[%s] Upload trajectory", m_frame.c_str());
 
@@ -396,8 +395,8 @@ public:
   }
 
   bool startTrajectory(
-    crazyflie_driver::StartTrajectory::Request& req,
-    crazyflie_driver::StartTrajectory::Response& res)
+    crazyswarm::StartTrajectory::Request& req,
+    crazyswarm::StartTrajectory::Response& res)
   {
     ROS_INFO("[%s] Start trajectory", m_frame.c_str());
 
@@ -407,8 +406,8 @@ public:
   }
 
   bool notifySetpointsStop(
-    crazyflie_driver::NotifySetpointsStop::Request& req,
-    crazyflie_driver::NotifySetpointsStop::Response& res)
+    crazyswarm::NotifySetpointsStop::Request& req,
+    crazyswarm::NotifySetpointsStop::Response& res)
   {
     ROS_INFO_NAMED(m_tf_prefix, "NotifySetpointsStop requested");
     m_cf.notifySetpointsStop(req.remainValidMillisecs);
@@ -416,8 +415,8 @@ public:
   }
 
   bool takeoff(
-    crazyflie_driver::Takeoff::Request& req,
-    crazyflie_driver::Takeoff::Response& res)
+    crazyswarm::Takeoff::Request& req,
+    crazyswarm::Takeoff::Response& res)
   {
     ROS_INFO("[%s] Takeoff", m_frame.c_str());
 
@@ -427,8 +426,8 @@ public:
   }
 
   bool land(
-    crazyflie_driver::Land::Request& req,
-    crazyflie_driver::Land::Response& res)
+    crazyswarm::Land::Request& req,
+    crazyswarm::Land::Response& res)
   {
     ROS_INFO("[%s] Land", m_frame.c_str());
 
@@ -438,8 +437,8 @@ public:
   }
 
   bool goTo(
-    crazyflie_driver::GoTo::Request& req,
-    crazyflie_driver::GoTo::Response& res)
+    crazyswarm::GoTo::Request& req,
+    crazyswarm::GoTo::Response& res)
   {
     ROS_INFO("[%s] GoTo", m_frame.c_str());
 
@@ -449,8 +448,8 @@ public:
   }
 
   bool setGroupMask(
-    crazyflie_driver::SetGroupMask::Request& req,
-    crazyflie_driver::SetGroupMask::Response& res)
+    crazyswarm::SetGroupMask::Request& req,
+    crazyswarm::SetGroupMask::Response& res)
   {
     ROS_INFO("[%s] Set Group Mask", m_frame.c_str());
 
@@ -475,7 +474,7 @@ public:
   }
 
   void cmdPositionSetpoint(
-    const crazyflie_driver::Position::ConstPtr& msg)
+    const crazyswarm::Position::ConstPtr& msg)
   {
     // if(!m_isEmergency) {
       float x = msg->x;
@@ -489,7 +488,7 @@ public:
   }
 
   void cmdFullStateSetpoint(
-    const crazyflie_driver::FullState::ConstPtr& msg)
+    const crazyswarm::FullState::ConstPtr& msg)
   {
     //ROS_INFO("got a full state setpoint");
     // if (!m_isEmergency) {
@@ -522,7 +521,7 @@ public:
     // }
   }
 
-  void cmdHoverSetpoint(const crazyflie_driver::Hover::ConstPtr& msg){
+  void cmdHoverSetpoint(const crazyswarm::Hover::ConstPtr& msg){
      //ROS_INFO("got a hover setpoint");
       float vx = msg->vx;
       float vy = msg->vy;
@@ -534,7 +533,7 @@ public:
 
   }
   void cmdVelocityWorldSetpoint(
-    const crazyflie_driver::VelocityWorld::ConstPtr& msg)
+    const crazyswarm::VelocityWorld::ConstPtr& msg)
   {
     // ROS_INFO("got a velocity world setpoint");
     // if (!m_isEmergency) {
@@ -766,7 +765,7 @@ private:
 
     ros::Publisher* pub = reinterpret_cast<ros::Publisher*>(userData);
 
-    crazyflie_driver::GenericLogData msg;
+    crazyswarm::GenericLogData msg;
     msg.header.stamp = ros::Time(time_in_ms/1000.0);
     msg.values = *values;
 
@@ -807,7 +806,7 @@ private:
 
   ros::Subscriber m_subscribeCmdHover; // Hover vel subscriber
 
-  std::vector<crazyflie_driver::LogBlock> m_logBlocks;
+  std::vector<crazyswarm::LogBlock> m_logBlocks;
   std::vector<ros::Publisher> m_pubLogDataGeneric;
   std::vector<std::unique_ptr<LogBlockGeneric> > m_logBlocksGeneric;
 
@@ -841,7 +840,7 @@ public:
     int radio,
     int channel,
     bool useMotionCaptureObjectTracking,
-    const std::vector<crazyflie_driver::LogBlock>& logBlocks,
+    const std::vector<crazyswarm::LogBlock>& logBlocks,
     std::string interactiveObject,
     bool writeCSVs,
     bool sendPositionOnly
@@ -1159,7 +1158,7 @@ private:
   void readObjects(
     std::vector<libobjecttracker::Object>& objects,
     int channel,
-    const std::vector<crazyflie_driver::LogBlock>& logBlocks)
+    const std::vector<crazyswarm::LogBlock>& logBlocks)
   {
     // read CF config
     struct CFConfig
@@ -1234,7 +1233,7 @@ private:
     const std::string& worldFrame,
     int id,
     const std::string& type,
-    const std::vector<crazyflie_driver::LogBlock>& logBlocks)
+    const std::vector<crazyswarm::LogBlock>& logBlocks)
   {
     ROS_INFO("Adding CF: %s (%s, %s)...", tf_prefix.c_str(), uri.c_str(), frame.c_str());
     auto start = std::chrono::high_resolution_clock::now();
@@ -1288,8 +1287,8 @@ private:
     }
 
 
-    crazyflie_driver::UpdateParams::Request request;
-    crazyflie_driver::UpdateParams::Response response;
+    crazyswarm::UpdateParams::Request request;
+    crazyswarm::UpdateParams::Response response;
 
     for (auto& firmwareParams : firmwareParamsVec) {
       // ROS_ASSERT(firmwareParams.getType() == XmlRpc::XmlRpcValue::TypeArray);
@@ -1469,13 +1468,13 @@ public:
     nl.param("genericLogTopics", genericLogTopics, std::vector<std::string>());
     std::vector<int> genericLogTopicFrequencies;
     nl.param("genericLogTopicFrequencies", genericLogTopicFrequencies, std::vector<int>());
-    std::vector<crazyflie_driver::LogBlock> logBlocks;
+    std::vector<crazyswarm::LogBlock> logBlocks;
     if (genericLogTopics.size() == genericLogTopicFrequencies.size())
     {
       size_t i = 0;
       for (auto& topic : genericLogTopics)
       {
-        crazyflie_driver::LogBlock logBlock;
+        crazyswarm::LogBlock logBlock;
         logBlock.topic_name = topic;
         logBlock.frequency = genericLogTopicFrequencies[i];
         nl.getParam("genericLogTopic_" + topic + "_Variables", logBlock.variables);
@@ -1811,8 +1810,8 @@ private:
   }
 
   bool takeoff(
-    crazyflie_driver::Takeoff::Request& req,
-    crazyflie_driver::Takeoff::Response& res)
+    crazyswarm::Takeoff::Request& req,
+    crazyswarm::Takeoff::Response& res)
   {
     ROS_INFO("Takeoff!");
 
@@ -1827,8 +1826,8 @@ private:
   }
 
   bool land(
-    crazyflie_driver::Land::Request& req,
-    crazyflie_driver::Land::Response& res)
+    crazyswarm::Land::Request& req,
+    crazyswarm::Land::Response& res)
   {
     ROS_INFO("Land!");
 
@@ -1843,8 +1842,8 @@ private:
   }
 
   bool goTo(
-    crazyflie_driver::GoTo::Request& req,
-    crazyflie_driver::GoTo::Response& res)
+    crazyswarm::GoTo::Request& req,
+    crazyswarm::GoTo::Response& res)
   {
     ROS_INFO("GoTo!");
 
@@ -1859,8 +1858,8 @@ private:
   }
 
   bool startTrajectory(
-    crazyflie_driver::StartTrajectory::Request& req,
-    crazyflie_driver::StartTrajectory::Response& res)
+    crazyswarm::StartTrajectory::Request& req,
+    crazyswarm::StartTrajectory::Response& res)
   {
     ROS_INFO("Start trajectory!");
 
@@ -1875,8 +1874,8 @@ private:
   }
 
   bool updateParams(
-    crazyflie_driver::UpdateParams::Request& req,
-    crazyflie_driver::UpdateParams::Response& res)
+    crazyswarm::UpdateParams::Request& req,
+    crazyswarm::UpdateParams::Response& res)
   {
     ROS_INFO("UpdateParams!");
 

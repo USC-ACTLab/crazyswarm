@@ -361,5 +361,4 @@ autodoc_mock_imports = [
     'std_srvs',
     'tf',
     'tf_conversions',
-    'crazyflie_driver',
 ]

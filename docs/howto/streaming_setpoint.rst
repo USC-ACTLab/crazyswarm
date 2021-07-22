@@ -235,7 +235,7 @@ which are designed specifically for streaming "fire and forget" data.
 Complex setpoint types may require defining a new ROS message type.
 It is always preferable to use standard types if an appropriate type exists.
 For the full quadrotor state, we define a new message
-in `crazyflie_driver/msg/FullState.msg <https://github.com/whoenig/crazyflie_ros/blob/master/crazyflie_driver/msg/FullState.msg>`_:
+in `crazyswarm/msg/FullState.msg <https://github.com/USC-ACTLab/crazyswarm/tree/master/ros_ws/src/crazyswarm/msg/FullState.msg>`_:
 
 .. code-block:: none
 
@@ -264,7 +264,7 @@ with ``...``:
 	public:
 	...
 		void cmdFullStateSetpoint(
-			const crazyflie_driver::FullState::ConstPtr& msg)
+			const crazyswarm::FullState::ConstPtr& msg)
 		{
 			if (!m_isEmergency) {
 				float x = msg->pose.position.x;
@@ -313,7 +313,7 @@ the ROS publisher object and converting ``numpy`` types into ROS types:
 
 .. code-block:: python
 
-	from crazyflie_driver.msg import ..., FullState
+	from crazyswarm.msg import ..., FullState
 
 	class Crazyflie:
 

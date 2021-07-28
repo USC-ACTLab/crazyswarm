@@ -16,6 +16,6 @@
 [submodule "ros_ws/src/externalDependencies/libmotioncapture"]
 	path = ros_ws/src/externalDependencies/libmotioncapture
 	url = https://github.com/USC-ACTLab/libmotioncapture.git
-[submodule "ros_ws/src/crazyflie_ros"]
-	path = ros_ws/src/crazyflie_ros
-	url = https://github.com/whoenig/crazyflie_ros.git
+[submodule "ros_ws/src/crazyflie_tools"]
+	path = ros_ws/src/crazyflie_tools
+	url = https://github.com/whoenig/crazyflie_tools.git

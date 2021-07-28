@@ -9,8 +9,8 @@ import time
 import tf_conversions
 from std_srvs.srv import Empty
 import std_msgs
-from crazyflie_driver.srv import *
-from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
+from crazyswarm.srv import *
+from crazyswarm.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
 from tf import TransformListener
 from .visualizer import visNull
 

@@ -235,7 +235,7 @@ which are designed specifically for streaming "fire and forget" data.
 Complex setpoint types may require defining a new ROS message type.
 It is always preferable to use standard types if an appropriate type exists.
 For the full quadrotor state, we define a new message
-in `crazyflie_driver/msg/FullState.msg <https://github.com/whoenig/crazyflie_ros/blob/master/crazyflie_driver/msg/FullState.msg>`_:
+in `crazyswarm/msg/FullState.msg <https://github.com/USC-ACTLab/crazyswarm/tree/master/ros_ws/src/crazyswarm/msg/FullState.msg>`_:
 
 .. code-block:: none
 
@@ -264,7 +264,7 @@ with ``...``:
 	public:
 	...
 		void cmdFullStateSetpoint(
-			const crazyflie_driver::FullState::ConstPtr& msg)
+			const crazyswarm::FullState::ConstPtr& msg)
 		{
 			if (!m_isEmergency) {
 				float x = msg->pose.position.x;
@@ -313,7 +313,7 @@ the ROS publisher object and converting ``numpy`` types into ROS types:
 
 .. code-block:: python
 
-	from crazyflie_driver.msg import ..., FullState
+	from crazyswarm.msg import ..., FullState
 
 	class Crazyflie:
 
@@ -357,7 +357,7 @@ rather than waiting for the packet to actually be sent on the radio.
 .. admonition:: Note: Why so many layers?
 
 	We have modified three layers on the PC side of things to add our new
-	setpoint type: ``crazyflie_cpp``, ``crazyflie_ros``, and ``pycrazyswarm``.
+	setpoint type: ``crazyflie_cpp``, ``crazyswarm``, and ``pycrazyswarm``.
 	We wrote a lot of boilerplate code to copy the same data from
 	NumPy types, to ROS types, to C++ function arguments, and finally to
 	a CRTP binary protocol struct. To understand what we gained with this
@@ -367,7 +367,7 @@ rather than waiting for the packet to actually be sent on the radio.
 		1. ``crazyflie_cpp`` is the only layer that needs to understand
 		   the radio protocol and how to control the Crazyradio via USB.
 
-		2. ``crazyflie_ros`` handles all the concurrency.
+		2. ``crazyswarm`` handles all the concurrency.
 		   It performs the M:N multiplexing of multiple Crazyflies
 		   onto multiple Crazyradios, deals with resending and ACKs
 		   in reliable communiation modes (not discussed in this tutorial),
@@ -379,8 +379,8 @@ rather than waiting for the packet to actually be sent on the radio.
 		   and versions. We can develop in the simulator on MacOS and other
 		   Linuxes.
 	
-	It is also worth mentioning that ``crazyflie_cpp`` and ``crazyflie_ros``
-	are both standalone projects that can be used outside the Crazyswarm setting.
+	It is also worth mentioning that ``crazyflie_cpp`` is a standalone 
+	project that can be used outside the Crazyswarm setting.
 
 
 Firmware CRTP parsing

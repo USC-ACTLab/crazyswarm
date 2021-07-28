@@ -7,8 +7,8 @@
 #include <sensor_msgs/Joy.h>
 #include <std_srvs/Empty.h>
 
-#include <crazyflie_driver/Takeoff.h>
-#include <crazyflie_driver/Land.h>
+#include <crazyswarm/Takeoff.h>
+#include <crazyswarm/Land.h>
 
 namespace Xbox360Buttons {
 
@@ -44,9 +44,9 @@ public:
         ros::service::waitForService("/emergency");
         m_serviceEmergency = nh.serviceClient<std_srvs::Empty>("/emergency");
         ros::service::waitForService("/takeoff");
-        m_serviceTakeoff = nh.serviceClient<crazyflie_driver::Takeoff>("/takeoff");
+        m_serviceTakeoff = nh.serviceClient<crazyswarm::Takeoff>("/takeoff");
         ros::service::waitForService("/land");
-        m_serviceLand = nh.serviceClient<crazyflie_driver::Land>("/land");
+        m_serviceLand = nh.serviceClient<crazyswarm::Land>("/land");
 
         ROS_INFO("Manager ready.");
     }
@@ -88,7 +88,7 @@ private:
 
     void takeoff()
     {
-        crazyflie_driver::Takeoff srv;
+        crazyswarm::Takeoff srv;
         srv.request.groupMask = 0;
         srv.request.height = 0.5;
         srv.request.duration = ros::Duration(2.0);
@@ -97,7 +97,7 @@ private:
 
     void land()
     {
-        crazyflie_driver::Land srv;
+        crazyswarm::Land srv;
         srv.request.groupMask = 0;
         srv.request.height = 0.05;
         srv.request.duration = ros::Duration(3.5);

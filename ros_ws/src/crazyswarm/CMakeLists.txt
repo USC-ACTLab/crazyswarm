@@ -169,8 +169,6 @@ if (ENABLE_VRPN)
 endif()
 
 
-# message(${CMAKE_BINARY_DIR}/crazyflie_ros/externalDependencies/libobjecttracker)
-
 ## Declare a cpp executable
 add_executable(crazyswarm_server
   src/crazyswarm_server.cpp

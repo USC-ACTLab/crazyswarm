@@ -212,17 +212,27 @@ if __name__ == '__main__':
 			uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
 			cfType = crazyflie["type"]
 			bigQuad = cfTypes[cfType]["bigQuad"]
-			if not bigQuad:
-				voltage = subprocess.check_output(["rosrun crazyflie_tools battery --uri " + uri], shell=True)
-			else:
-				voltage = subprocess.check_output(["rosrun crazyflie_tools battery --uri " + uri + " --external 1"], shell=True)
-			voltage = float(voltage)
+			
+			try:
+				if not bigQuad:
+					voltage = subprocess.check_output(["rosrun crazyflie_tools battery --uri " + uri], shell=True)
+				else:
+					voltage = subprocess.check_output(["rosrun crazyflie_tools battery --uri " + uri + " --external 1"], shell=True)
+			except subprocess.CalledProcessError:
+				voltage = None  # CF not available
+
 			color = '#000000'
-			if voltage < cfTypes[cfType]["batteryVoltageWarning"]:
-				color = '#FF8800'
-			if voltage < cfTypes[cfType]["batteryVoltateCritical"]:
-				color = '#FF0000'
-			widgets[crazyflie["id"]].batteryLabel.config(foreground=color, text="{:.2f} v".format(voltage))
+			if voltage is not None:
+				voltage = float(voltage)
+				if voltage < cfTypes[cfType]["batteryVoltageWarning"]:
+					color = '#FF8800'
+				if voltage < cfTypes[cfType]["batteryVoltateCritical"]:
+					color = '#FF0000'
+				widgetText = "{:.2f} v".format(voltage)
+			else:
+				widgetText = "N/A"
+
+			widgets[crazyflie["id"]].batteryLabel.config(foreground=color, text=widgetText)
 
 	# def checkVersion():
 	# 	for id, w in widgets.items():

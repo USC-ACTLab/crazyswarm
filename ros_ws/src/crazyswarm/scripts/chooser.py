@@ -230,7 +230,7 @@ if __name__ == '__main__':
 					color = '#FF0000'
 				widgetText = "{:.2f} v".format(voltage)
 			else:
-				widgetText = "N/A"
+				widgetText = "Err"
 
 			widgets[crazyflie["id"]].batteryLabel.config(foreground=color, text=widgetText)
 

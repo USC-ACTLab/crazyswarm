@@ -24,6 +24,8 @@ jobs:
     - name: Conda
       uses: conda-incubator/setup-miniconda@v2.0.0
       with:
+        channels: conda-forge,defaults
+        mamba-version: "*"
         python-version: ${{ matrix.python.python-version }}
         environment-file: conda_env.yaml
         activate-environment: crazyswarm

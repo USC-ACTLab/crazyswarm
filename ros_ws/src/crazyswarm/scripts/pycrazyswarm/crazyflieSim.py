@@ -333,22 +333,28 @@ class Crazyflie:
         return np.array(self.state.acc)
 
     def rpy(self):
+        yaw = self.yaw()
+        # Unpack the matrix columns.
+        x_body, y_body, z_body = self.rotBodyToWorld().T
+        pitch = math.asin(-x_body[2])
+        roll = math.atan2(y_body[2], z_body[2])
+        return (roll, pitch, yaw)
+
+    def rotBodyToWorld(self):
         acc = self.acceleration()
         yaw = self.yaw()
         norm = np.linalg.norm(acc)
-        if norm > 5.0:
-            print("acc", acc)
-        if norm < 1e-6:
-            return (0.0, 0.0, yaw)
-        else:
-            thrust = acc + np.array([0, 0, 9.81])
-            z_body = thrust / np.linalg.norm(thrust)
-            x_world = np.array([math.cos(yaw), math.sin(yaw), 0])
-            y_body = np.cross(z_body, x_world)
-            x_body = np.cross(y_body, z_body)
-            pitch = math.asin(-x_body[2])
-            roll = math.atan2(y_body[2], z_body[2])
-            return (roll, pitch, yaw)
+        # TODO: This causes a vertical flip for faster-than-gravity vertical
+        # deceleration, but fixing it would essentially require introducing the
+        # idea of a controller, which we have avoided so far.
+        thrust = acc + np.array([0, 0, 9.81])
+        z_body = thrust / np.linalg.norm(thrust)
+        x_world = np.array([math.cos(yaw), math.sin(yaw), 0])
+        y_body = np.cross(z_body, x_world)
+        # TODO: This can have a singularity if z_body = x_world.
+        y_body /= np.linalg.norm(y_body)
+        x_body = np.cross(y_body, z_body)
+        return np.column_stack([x_body, y_body, z_body])
 
     def cmdFullState(self, pos, vel, acc, yaw, omega):
         self.mode = Crazyflie.MODE_LOW_FULLSTATE

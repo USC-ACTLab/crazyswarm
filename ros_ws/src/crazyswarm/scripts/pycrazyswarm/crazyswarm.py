@@ -52,7 +52,7 @@ class Crazyswarm:
             self.timeHelper = TimeHelper()
             if args.writecsv:
                 print("WARNING: writecsv argument ignored! This is only available in simulation.")
-            if args.video != "":
+            if args.video:
                 print("WARNING: video argument ignored! This is only available in simulation.")
 
         self.input = genericJoystick.Joystick(self.timeHelper)

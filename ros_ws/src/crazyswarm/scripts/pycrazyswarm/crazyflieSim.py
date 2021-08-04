@@ -43,7 +43,6 @@ class TimeHelper:
         if videopath is not None:
             from .videowriter import VideoWriter
             frame = self.visualizer.render()
-            print("frame shape:", frame.shape)
             self.videoWriter = VideoWriter(videopath, dt, frame.shape[:2])
         else:
             self.videoWriter = None

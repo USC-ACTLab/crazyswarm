@@ -20,7 +20,6 @@ as the test process when run via pytest.
 [2] https://stackoverflow.com/questions/34506638/how-to-register-atexit-function-in-pythons-multiprocessing-subprocess
 """
 
-import multiprocessing
 import os
 import subprocess
 import sys
@@ -44,7 +43,7 @@ TOTAL_TIME = 4.0
 
 
 def videoWriterProcess(path):
-    args = "--sim --vis vispy_headless --dt {} --video {}".format(DT, path)
+    args = "--sim --vis vispy --dt {} --video {}".format(DT, path)
     swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=args)
     timeHelper = swarm.timeHelper
     cf = swarm.allcfs.crazyflies[0]
@@ -57,7 +56,7 @@ def videoWriterProcess(path):
 
 
 @pytest.mark.skipif("TRAVIS" in os.environ or "CI" in os.environ,
-                    reason="Travis-CI cannot create OpenGL context.")
+                    reason="CI usually cannot create OpenGL context.")
 def test_videoOutput(tmp_path):
     # tmp_path is supplied by pytest - a directory where we can write that will
     # eventually be deleted.

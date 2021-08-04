@@ -5,8 +5,14 @@ on: [push, pull_request]
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04, macos-latest]
+        os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest]
+        python:
+          - python-version: "3.7"
+            pyVer: python3
+          - python-version: "2.7"
+            pyVer: python2
 
     runs-on: ${{ matrix.os }}
 
@@ -16,15 +22,16 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Conda
-      uses: goanpeca/setup-miniconda@v1
+      uses: conda-incubator/setup-miniconda@v2.0.0
       with:
+        python-version: ${{ matrix.python.python-version }}
         environment-file: conda_env.yaml
         activate-environment: crazyswarm
 
     - name: Build
       shell: bash -l {0}
       run: |
-        ./buildSimOnly.sh
+        CSW_PYTHON=${{ matrix.python.pyVer }} ./buildSimOnly.sh
 
     - name: Test
       shell: bash -l {0}

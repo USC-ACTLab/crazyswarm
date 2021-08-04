@@ -41,7 +41,7 @@ class VisMatplotlib:
             self.ax.add_collection(self.graph)
 
     def showEllipsoids(self, radii):
-        raise Warning("showEllipsoids not implemented in Matplotlib visualizer.")
+        warnings.warn("showEllipsoids not implemented in Matplotlib visualizer.")
 
     def update(self, t, crazyflies):
         xs = []

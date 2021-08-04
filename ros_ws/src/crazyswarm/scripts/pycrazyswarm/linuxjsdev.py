@@ -203,11 +203,9 @@ class Joystick():
 
     def devices(self):
         """
-        Returns a dict with device_id as key and device name as value of all
-        the detected devices (result is cached once one or more device are
-        found).
+        Returns a list containing an {"id": id, "name": name} dict for each
+        detected device. Result is cached once one or more devices are found.
         """
-
         if len(self._devices) == 0:
             syspaths = glob.glob("/sys/class/input/js*")
 

@@ -54,3 +54,4 @@ class VideoWriter:
         self.ffmpegProcess.wait()
         self.ffmpegProcess = None
         print("wrote {} frames to {}".format(self.frames, self.path))
+        

@@ -1,15 +1,16 @@
 name: crazyswarm
 dependencies:
-  - python=2.7
-  - numpy=1.14
-  - matplotlib=2.1  # VisPy not compatible with newer versions
+  - numpy
+  - matplotlib
   - vispy
   - pyyaml
   - swig
   - sphinx
   - sphinx_rtd_theme
   - pyqt
+  - conda-forge::sphinx-argparse
   - pytest
+  - snakeviz
+  - scipy
   - ffmpeg>=4.2
   - conda-forge::ffmpeg-python
-  - scipy

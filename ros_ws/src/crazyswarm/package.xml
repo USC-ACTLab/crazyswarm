@@ -19,7 +19,6 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>crazyflie_cpp</build_depend>
-  <build_depend>crazyflie_driver</build_depend>
   <build_depend>libobjecttracker</build_depend>
   <build_depend>libmotioncapture</build_depend>
   <build_depend>tf_conversion</build_depend>
@@ -28,7 +27,6 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>crazyflie_cpp</run_depend>
-  <run_depend>crazyflie_driver</run_depend>
   <run_depend>libobjecttracker</run_depend>
   <run_depend>libmotioncapture</run_depend>
 

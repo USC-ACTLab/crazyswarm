@@ -28,17 +28,19 @@ class Joystick:
         # self.buttonWasPressed = False
         # joystick.push_handlers(self)
         self.timeHelper = timeHelper
-        self.hasJoystick = False
+        self.joyID = None
 
         try:
             from . import linuxjsdev
             self.js = linuxjsdev.Joystick()
-            dummy = self.js.devices()
-            if len(dummy) == 0:
+            devices = self.js.devices()
+            if len(devices) == 0:
                 print("Warning: No joystick found!")
             else:
-                self.hasJoystick = True
-                self.js.open(0)
+                ids = [dev["id"] for dev in devices]
+                # For backwards compatibility, always choose device 0 if available.
+                self.joyID = 0 if 0 in ids else devices[0]["id"]
+                self.js.open(self.joyID)
         except ImportError:
             print("Warning: Joystick only supported on Linux.")
 
@@ -54,14 +56,14 @@ class Joystick:
     #     self.buttonWasPressed = False
 
     def checkIfButtonIsPressed(self):
-        if self.hasJoystick:
-            state = self.js.read(0)
+        if self.joyID is not None:
+            state = self.js.read(self.joyID)
             return state[1][5] == 1
         else:
             return False
 
     def waitUntilButtonPressed(self):
-        if self.hasJoystick:
+        if self.joyID is not None:
             while not self.checkIfButtonIsPressed():
                 self.timeHelper.sleep(0.01)
             while self.checkIfButtonIsPressed():
@@ -77,8 +79,8 @@ class Joystick:
 
 
     def checkIfAnyButtonIsPressed(self):
-        if self.hasJoystick:
-            state = self.js.read(0)
+        if self.joyID is not None:
+            state = self.js.read(self.joyID)
             if state[1][5] == 1 or state[1][4] == 1 or state[1][3] == 1:
                 return state[1]
             else:
@@ -87,7 +89,7 @@ class Joystick:
             return None
 
     def waitUntilAnyButtonPressed(self):
-        if self.hasJoystick:
+        if self.joyID is not None:
             buttons = self.checkIfAnyButtonIsPressed()
             while buttons is None:
                 self.timeHelper.sleep(0.01)

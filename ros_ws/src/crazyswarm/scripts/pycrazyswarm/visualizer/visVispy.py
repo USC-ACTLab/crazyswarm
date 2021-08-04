@@ -12,6 +12,16 @@ from .. import util as util
 
 
 CF_MESH_PATH = os.path.join(os.path.dirname(__file__), "crazyflie2.obj.gz")
+# Convert millimeters to meters, but make twice as big so easier to see.
+MESHFILE_SCALE = 2.0 * 0.001
+# The matrix that rotates the coordinates of the .obj file to agree with the
+# Crazyflie's standard coordinate system. VisPy uses [row vector] * [matrix]
+# (like DirectX), so this is the transpose of what we would expect.
+UNROT_MESHFILE_TRANSPOSE = MESHFILE_SCALE * np.array([
+    [-1,  0,  0],
+    [ 0,  0,  1],
+    [ 0, -1,  0],
+])
 ELLIPSOID_COLOR_OK = Color("#11FF22", alpha=0.1)
 ELLIPSOID_COLOR_COLLISION  = Color("#FF0000", alpha=0.1)
 
@@ -114,15 +124,12 @@ class VisVispy:
         positions = np.stack([cf.position() for cf in crazyflies])
 
         for i in range(0, len(self.cfs)):
-            x, y, z = crazyflies[i].position()
-            roll, pitch, yaw = crazyflies[i].rpy()
-            self.cfs[i].transform.reset()
-            self.cfs[i].transform.rotate(-90, (1, 0, 0))
-            self.cfs[i].transform.rotate(math.degrees(roll), (1, 0, 0))
-            self.cfs[i].transform.rotate(math.degrees(pitch), (0, 1, 0))
-            self.cfs[i].transform.rotate(math.degrees(yaw), (0, 0, 1))
-            self.cfs[i].transform.scale((0.002, 0.002, -0.002))
-            self.cfs[i].transform.translate(positions[i])
+            R_state = crazyflies[i].rot_bodytoworld()
+            # Recall VisPy uses [row vector] * [matrix]!!
+            T = np.eye(4)
+            T[:3, :3] = np.dot(UNROT_MESHFILE_TRANSPOSE, R_state.T)
+            T[3, :3] = positions[i]
+            self.cfs[i].transform = transforms.MatrixTransform(T)
             # vispy does not do this check
             color = crazyflies[i].ledRGB
             if color != self.led_color_cache[i]:

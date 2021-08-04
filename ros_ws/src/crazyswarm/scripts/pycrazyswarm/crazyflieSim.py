@@ -335,18 +335,15 @@ class Crazyflie:
     def rpy(self):
         yaw = self.yaw()
         # Unpack the matrix columns.
-        x_body, y_body, z_body = self.rot_bodytoworld().T
+        x_body, y_body, z_body = self.rotBodyToWorld().T
         pitch = math.asin(-x_body[2])
         roll = math.atan2(y_body[2], z_body[2])
         return (roll, pitch, yaw)
 
-    def rot_bodytoworld(self):
+    def rotBodyToWorld(self):
         acc = self.acceleration()
         yaw = self.yaw()
         norm = np.linalg.norm(acc)
-        # TODO: Why?
-        if norm > 5.0:
-            print("acc", acc)
         # TODO: This causes a vertical flip for faster-than-gravity vertical
         # deceleration, but fixing it would essentially require introducing the
         # idea of a controller, which we have avoided so far.

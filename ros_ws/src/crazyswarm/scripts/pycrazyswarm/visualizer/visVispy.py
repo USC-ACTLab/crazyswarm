@@ -124,7 +124,7 @@ class VisVispy:
         positions = np.stack([cf.position() for cf in crazyflies])
 
         for i in range(0, len(self.cfs)):
-            R_state = crazyflies[i].rot_bodytoworld()
+            R_state = crazyflies[i].rotBodyToWorld()
             # Recall VisPy uses [row vector] * [matrix]!!
             T = np.eye(4)
             T[:3, :3] = np.dot(UNROT_MESHFILE_TRANSPOSE, R_state.T)

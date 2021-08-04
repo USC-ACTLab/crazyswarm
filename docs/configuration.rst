@@ -34,7 +34,7 @@ Update firmware
 Crazyswarm is tested with specific versions of the official Bitcraze firmware for the Crazyflie and Crazyradio.
 We supply the binary images of these firmware versions in the ``/prebuilt`` directory.
 
-1. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
 
     #. Plug in a battery
     #. Turn your Crazyflie off by pressing the on/off button
@@ -43,13 +43,6 @@ We supply the binary images of these firmware versions in the ``/prebuilt`` dire
     #. Turn your Crazyflie off by pressing the on/off button
     #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
     #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
-
-2. Upgrade the firmware of your Crazyradios with the provided firmware.
-
-    #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
-    #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
-    #. Now unplug and re-plug the radio. You can check the version using ``rosrun crazyflie_tools scan -v``, which should report ``Found Crazyradio with version 99.55``.
-
 
 
 Adjust configuration files

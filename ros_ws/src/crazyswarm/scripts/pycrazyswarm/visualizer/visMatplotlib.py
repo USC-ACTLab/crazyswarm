@@ -75,3 +75,7 @@ class VisMatplotlib:
 
         self.timeAnnotation.set_text("{} s".format(t))
         plt.pause(0.0001)
+
+    def render(self):
+        warnings.warn("Rendering video not supported in VisMatplotlib yet.")
+        return None

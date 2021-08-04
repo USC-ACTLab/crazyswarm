@@ -46,3 +46,8 @@ simulation parameters with the command-line flags listed below.
    :module: pycrazyswarm.crazyswarm
    :func: build_argparser
    :prog: python2 <my_crazyswarm_script.py>
+
+Note: rendering video output with the ``--video`` option requires an
+installation of `ffmpeg <https://ffmpeg.org>`_ with the ``libx264`` encoder.
+This is provided in the :ref:`anaconda` environment, but must be installed
+manually otherwise.

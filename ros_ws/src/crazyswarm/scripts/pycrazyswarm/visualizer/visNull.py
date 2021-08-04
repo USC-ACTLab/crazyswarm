@@ -12,3 +12,6 @@ class VisNull:
 
     def update(self, t, crazyflies):
         pass
+
+    def render(self):
+        return None

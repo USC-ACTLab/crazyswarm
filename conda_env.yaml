@@ -12,3 +12,5 @@ dependencies:
   - pytest
   - snakeviz
   - scipy
+  - ffmpeg>=4.2
+  - conda-forge::ffmpeg-python

@@ -1,7 +1,8 @@
 import os
 import math
-import numpy as np
 
+import ffmpeg
+import numpy as np
 from vispy import scene, app, io, geometry
 from vispy.color import Color
 from vispy.visuals import transforms
@@ -16,9 +17,9 @@ ELLIPSOID_COLOR_COLLISION  = Color("#FF0000", alpha=0.1)
 
 
 class VisVispy:
-    def __init__(self):
+    def __init__(self, show=True, resizable=True):
         self.canvas = scene.SceneCanvas(
-            keys='interactive', size=(1024, 768), show=True, config=dict(samples=4), resizable=True
+            keys='interactive', size=(1024, 768), show=show, config=dict(samples=4), resizable=resizable
         )
 
         self.plane_color = 0.25 * np.ones((1, 3))
@@ -149,3 +150,10 @@ class VisVispy:
                     ell.color = new_color
 
         self.canvas.app.process_events()
+
+    def render(self):
+        frame = self.canvas.render()
+        # Do not render alpha channel - we always use rgb24 format.
+        if frame.shape[2] == 4:
+            frame = frame[:, :, :3]
+        return frame

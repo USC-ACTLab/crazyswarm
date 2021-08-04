@@ -12,13 +12,14 @@ from .cfsim import cffirmware as firm
 # also does the plotting.
 #
 class TimeHelper:
-    def __init__(self, vis, dt, writecsv, disturbanceSize, maxVel=np.inf):
+    def __init__(self, vis, dt, writecsv, disturbanceSize, maxVel=np.inf, videopath=None):
         if vis == "mpl":
             from .visualizer import visMatplotlib
             self.visualizer = visMatplotlib.VisMatplotlib()
         elif vis == "vispy":
             from .visualizer import visVispy
-            self.visualizer = visVispy.VisVispy()
+            resizable = videopath is None
+            self.visualizer = visVispy.VisVispy(resizable=resizable)
         elif vis == "null":
             from .visualizer import visNull
             self.visualizer = visNull.VisNull()
@@ -38,6 +39,13 @@ class TimeHelper:
             self.output = output.Output()
         else:
             self.output = None
+
+        if videopath is not None:
+            from .videowriter import VideoWriter
+            frame = self.visualizer.render()
+            self.videoWriter = VideoWriter(videopath, dt, frame.shape[:2])
+        else:
+            self.videoWriter = None
 
     def time(self):
         return self.t
@@ -61,6 +69,9 @@ class TimeHelper:
             self.visualizer.update(self.t, self.crazyflies)
             if self.output:
                 self.output.update(self.t, self.crazyflies)
+            if self.videoWriter is not None:
+                frame = self.visualizer.render()
+                self.videoWriter.writeFrame(frame)
             self.step(self.dt)
 
     # Mock for abstraction of rospy.Rate.sleep().
@@ -74,6 +85,10 @@ class TimeHelper:
 
     def addObserver(self, observer):
         self.observers.append(observer)
+
+    def _atexit(self):
+        if self.videoWriter is not None:
+            self.videoWriter.close()
 
 
 def collisionAvoidanceUpdateSetpoint(

@@ -1,4 +1,5 @@
 import argparse
+import atexit
 
 import numpy as np
 
@@ -19,6 +20,7 @@ def build_argparser(parent_parsers=[]):
     group.add_argument("--writecsv", help="Enable CSV output.", action="store_true")
     group.add_argument("--disturbance", help="Simulate Gaussian-distributed disturbance when using cmdVelocityWorld.", type=float, default=0.0)
     group.add_argument("--maxvel", help="Limit simulated velocity (meters/sec).", type=float, default=np.inf)
+    group.add_argument("--video", help="Video output path.", type=str)
 
     return parser
 
@@ -41,12 +43,16 @@ class Crazyswarm:
 
         if args.sim:
             from .crazyflieSim import TimeHelper, CrazyflieServer
-            self.timeHelper = TimeHelper(args.vis, args.dt, args.writecsv, disturbanceSize=args.disturbance, maxVel=args.maxvel)
+            self.timeHelper = TimeHelper(args.vis, args.dt, args.writecsv, disturbanceSize=args.disturbance, maxVel=args.maxvel, videopath=args.video)
             self.allcfs = CrazyflieServer(self.timeHelper, crazyflies_yaml)
+            atexit.register(self.timeHelper._atexit)
         else:
             from .crazyflie import TimeHelper, CrazyflieServer
             self.allcfs = CrazyflieServer(crazyflies_yaml)
             self.timeHelper = TimeHelper()
             if args.writecsv:
                 print("WARNING: writecsv argument ignored! This is only available in simulation.")
+            if args.video:
+                print("WARNING: video argument ignored! This is only available in simulation.")
+
         self.input = genericJoystick.Joystick(self.timeHelper)

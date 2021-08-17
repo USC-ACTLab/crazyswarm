@@ -24,7 +24,5 @@ cd $ROOT
 
 # ros
 cd ros_ws
-# -k: hack for dependency issues
-catkin_make -DCMAKE_BUILD_TYPE=RelWithDebInfo -k
-catkin_make
+catkin_make -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cd $ROOT

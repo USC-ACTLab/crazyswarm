@@ -173,6 +173,9 @@ endif()
 add_executable(crazyswarm_server
   src/crazyswarm_server.cpp
 )
+add_dependencies(crazyswarm_server
+  crazyswarm_gencpp
+)
 target_link_libraries(crazyswarm_server
   ${catkin_LIBRARIES}
 )
@@ -180,6 +183,9 @@ target_link_libraries(crazyswarm_server
 ## Declare a cpp executable
 add_executable(crazyswarm_teleop
   src/crazyswarm_teleop.cpp
+)
+add_dependencies(crazyswarm_teleop
+  crazyswarm_gencpp
 )
 target_link_libraries(crazyswarm_teleop
   ${catkin_LIBRARIES}

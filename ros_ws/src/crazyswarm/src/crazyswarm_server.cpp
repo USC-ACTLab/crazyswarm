@@ -744,7 +744,7 @@ private:
     if (m_enableLoggingPose) {
       geometry_msgs::PoseStamped msg;
       msg.header.stamp = ros::Time::now();
-      msg.header.frame_id = "/world";
+      msg.header.frame_id = "world";
 
       msg.pose.position.x = data->x;
       msg.pose.position.y = data->y;
@@ -758,6 +758,12 @@ private:
       msg.pose.orientation.w = q[3];
 
       m_pubPose.publish(msg);
+
+
+      tf::Transform tftransform;
+      tftransform.setOrigin(tf::Vector3(data->x, data->y, data->z));
+      tftransform.setRotation(tf::Quaternion(q[0], q[1], q[2], q[3]));
+      m_br.sendTransform(tf::StampedTransform(tftransform, ros::Time::now(), "world", frame()));
     }
   }
 
@@ -805,6 +811,8 @@ private:
   ros::Subscriber m_subscribeCmdStop;
 
   ros::Subscriber m_subscribeCmdHover; // Hover vel subscriber
+
+  tf::TransformBroadcaster m_br;
 
   std::vector<crazyswarm::LogBlock> m_logBlocks;
   std::vector<ros::Publisher> m_pubLogDataGeneric;

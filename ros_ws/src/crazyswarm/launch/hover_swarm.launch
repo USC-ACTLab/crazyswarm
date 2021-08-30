@@ -7,7 +7,6 @@
 
   <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
-      world_frame: "/world"
       # Logging configuration (Use enable_logging to actually enable logging)
       genericLogTopics: ["log1"]
       genericLogTopicFrequencies: [10]
@@ -46,6 +45,7 @@
       force_no_cache: False
       enable_parameters: True
       enable_logging: False
+      enable_logging_pose: True
     </rosparam>
   </node>
 

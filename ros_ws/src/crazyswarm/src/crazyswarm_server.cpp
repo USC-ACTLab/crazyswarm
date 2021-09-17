@@ -1433,10 +1433,13 @@ public:
     std::string hostname;
     nl.getParam("motion_capture_host_name", hostname);
     cfg["hostname"] = hostname;
-    libmotioncapture::MotionCapture *mocap = libmotioncapture::MotionCapture::connect(motionCaptureType, cfg);
-    if (!mocap)
-    {
-      throw std::runtime_error("Unknown motion capture type!");
+    libmotioncapture::MotionCapture *mocap = nullptr;
+    
+    if (motionCaptureType != "none") {
+      mocap = libmotioncapture::MotionCapture::connect(motionCaptureType, cfg);
+      if (!mocap) {
+        throw std::runtime_error("Unknown motion capture type!");
+      }
     }
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr markers(new pcl::PointCloud<pcl::PointXYZ>);

@@ -260,7 +260,7 @@ public:
   void updateParam(uint16_t id, const std::string& ros_param) {
       U value;
       ros::param::get(ros_param, value);
-      m_cf.addSetParam<T>(id, (T)value);
+      m_cf.setParam<T>(id, (T)value);
   }
 
   bool updateParams(
@@ -268,7 +268,6 @@ public:
     crazyswarm::UpdateParams::Response& res)
   {
     ROS_INFO("[%s] Update parameters", m_frame.c_str());
-    m_cf.startSetParamRequest();
     for (auto&& p : req.params) {
       std::string ros_param = "/" + m_tf_prefix + "/" + p;
       size_t pos = p.find("/");
@@ -306,7 +305,6 @@ public:
         ROS_ERROR("Could not find param %s/%s", group.c_str(), name.c_str());
       }
     }
-    m_cf.setRequestedParams();
     return true;
   }
 
@@ -517,8 +515,8 @@ public:
 
     auto start = std::chrono::system_clock::now();
 
-    std::function<void(float)> cb_lq = std::bind(&CrazyflieROS::onLinkQuality, this, std::placeholders::_1);
-    m_cf.setLinkQualityCallback(cb_lq);
+    // std::function<void(float)> cb_lq = std::bind(&CrazyflieROS::onLinkQuality, this, std::placeholders::_1);
+    // m_cf.setLinkQualityCallback(cb_lq);
 
     m_cf.logReset();
 
@@ -597,7 +595,7 @@ public:
       ROS_INFO("[%s] logBlocks: %f s", m_frame.c_str(), elapsedSeconds1.count());
 
       if (m_enableLoggingPose) {
-        std::function<void(uint32_t, logPose*)> cb = std::bind(&CrazyflieROS::onPoseData, this, std::placeholders::_1, std::placeholders::_2);
+        std::function<void(uint32_t, const logPose*)> cb = std::bind(&CrazyflieROS::onPoseData, this, std::placeholders::_1, std::placeholders::_2);
 
         m_logBlockPose.reset(new LogBlock<logPose>(
           &m_cf,{
@@ -631,14 +629,12 @@ public:
       return;
     }
 
-    m_cf.startSetParamRequest();
     auto entry = m_cf.getParamTocEntry("kalman", "initialX");
-    m_cf.addSetParam(entry->id, x);
+    m_cf.setParam(entry->id, x);
     entry = m_cf.getParamTocEntry("kalman", "initialY");
-    m_cf.addSetParam(entry->id, y);
+    m_cf.setParam(entry->id, y);
     entry = m_cf.getParamTocEntry("kalman", "initialZ");
-    m_cf.addSetParam(entry->id, z);
-    m_cf.setRequestedParams();
+    m_cf.setParam(entry->id, z);
 
     entry = m_cf.getParamTocEntry("kalman", "resetEstimation");
     m_cf.setParam<uint8_t>(entry->id, 1);
@@ -646,14 +642,12 @@ public:
     // kalmanUSC might not be part of the firmware
     entry = m_cf.getParamTocEntry("kalmanUSC", "resetEstimation");
     if (entry) {
-      m_cf.startSetParamRequest();
       entry = m_cf.getParamTocEntry("kalmanUSC", "initialX");
-      m_cf.addSetParam(entry->id, x);
+      m_cf.setParam(entry->id, x);
       entry = m_cf.getParamTocEntry("kalmanUSC", "initialY");
-      m_cf.addSetParam(entry->id, y);
+      m_cf.setParam(entry->id, y);
       entry = m_cf.getParamTocEntry("kalmanUSC", "initialZ");
-      m_cf.addSetParam(entry->id, z);
-      m_cf.setRequestedParams();
+      m_cf.setParam(entry->id, z);
 
       entry = m_cf.getParamTocEntry("kalmanUSC", "resetEstimation");
       m_cf.setParam<uint8_t>(entry->id, 1);
@@ -672,11 +666,11 @@ private:
 
 private:
 
-  void onLinkQuality(float linkQuality) {
-      if (linkQuality < 0.7) {
-        ROS_WARN("[%s] Link Quality low (%f)", m_frame.c_str(), linkQuality);
-      }
-  }
+  // void onLinkQuality(float linkQuality) {
+  //     if (linkQuality < 0.7) {
+  //       ROS_WARN("[%s] Link Quality low (%f)", m_frame.c_str(), linkQuality);
+  //     }
+  // }
 
   void onConsole(const char* msg) {
     m_messageBuffer += msg;
@@ -688,7 +682,7 @@ private:
     }
   }
 
-  void onPoseData(uint32_t time_in_ms, logPose* data) {
+  void onPoseData(uint32_t time_in_ms, const logPose* data) {
     if (m_enableLoggingPose) {
       geometry_msgs::PoseStamped msg;
       msg.header.stamp = ros::Time::now();

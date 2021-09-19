@@ -164,6 +164,8 @@ add_dependencies(crazyswarm_server
 target_link_libraries(crazyswarm_server
   ${catkin_LIBRARIES}
   libmotioncapture
+  crazyflie_cpp
+  crazyflieLinkCpp
 )
 
 ## Declare a cpp executable

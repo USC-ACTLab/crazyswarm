@@ -25,26 +25,18 @@ Note: Crazyflies must be rebooted after any change of the channel/address for th
 
 Finally, add the user permissions to use the USB Radio without being root.
 
-  - Option 1: follow the instructions in the ``crazyflie-lib-python`` folder or look at `here <https://github.com/bitcraze/crazyflie-lib-python#platform-notes>`_.
+  - Option 1: follow the `official instructions <https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/installation/usb_permissions>`_.
   - Option 2: Use the script: ``./pc_permissions.sh``
 
 
 Update firmware
 ---------------
-Crazyswarm is tested with specific versions of the official Bitcraze firmware for the Crazyflie and Crazyradio.
-We supply the binary images of these firmware versions in the ``/prebuilt`` directory.
+Crazyswarm is tested with the official Bitcraze firmwares for the Crazyflie and Crazyradio.
+We supply the binary image of the Crazyradio firmware in the ``/prebuilt`` directory.
 
-1. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+1. Upgrade the firmwares of your Crazyflies with the latest official release using `cfclient`. This will update STM32, NRF51, and attached decks (e.g., LightHouse deck). We tested version 2021.6.
 
-    #. Plug in a battery
-    #. Turn your Crazyflie off by pressing the on/off button
-    #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
-    #. ``rosrun crazyflie_tools flash --target nrf51 --filename prebuilt/cf2_nrf.bin``
-    #. Turn your Crazyflie off by pressing the on/off button
-    #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
-    #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
-
-2. Upgrade the firmware of your Crazyradios with the provided firmware.
+2. Upgrade the firmware of your Crazyradios with the latest `official firmware <https://github.com/bitcraze/crazyradio-firmware>`_. Note that this is even required for newly bought Crazyradios.
 
     #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
     #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``

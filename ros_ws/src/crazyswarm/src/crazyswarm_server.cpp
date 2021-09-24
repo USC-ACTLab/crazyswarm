@@ -793,7 +793,7 @@ public:
     , m_pMarkers(pMarkers)
     , m_pMocapRigidBodies(pMocapRigidBodies)
     , m_slowQueue()
-    , m_cfbc("radio://" + std::to_string(radio) + "/" + std::to_string(channel) + "/2M/FFE7E7E7E7")
+    , m_cfbc("radiobroadcast://" + std::to_string(radio) + "/" + std::to_string(channel) + "/2M")
     , m_isEmergency(false)
     , m_useMotionCaptureObjectTracking(useMotionCaptureObjectTracking)
     , m_br()

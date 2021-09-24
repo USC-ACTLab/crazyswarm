@@ -9,7 +9,7 @@ git submodule update
 
 cd ros_ws/src/crazyflie_tools/
 git submodule init
-git submodule update
+git submodule update --recursive
 cd $ROOT
 
 cd ros_ws/src/crazyswarm/externalDependencies/libmotioncapture/

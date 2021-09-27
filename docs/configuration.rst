@@ -36,6 +36,8 @@ We supply the binary image of the Crazyradio firmware in the ``/prebuilt`` direc
 
 1. Upgrade the firmwares of your Crazyflies with the latest official release using `cfclient`. This will update STM32, NRF51, and attached decks (e.g., LightHouse deck). We tested version 2021.6.
 
+    Note: If you use a custom-built firmware, you can also use `chooser.py`, see below.
+
 2. Upgrade the firmware of your Crazyradios with the latest `official firmware <https://github.com/bitcraze/crazyradio-firmware>`_. Note that this is even required for newly bought Crazyradios.
 
     #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
@@ -353,8 +355,8 @@ The buttons perform various functions that can be tedious to do for many CFs:
 :version: Retrieves STM32 firmware version of enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Can only be used if CF is fully powered on.
 :sysOff: Puts enabled CFs in power-safe mode (NRF51 powered, but STM32 turned off). Only works if ``crazyflie_server`` is not running at the same time.
 :reboot: Reboot enabled CFs (such that NRF51 and STM32 will be powered). Only works if ``crazyflie_server`` is not running at the same time.
-:flash (STM): Flashes STM32 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built.
-:flash (NRF): Flashes NRF51 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built.
+:flash (STM): Flashes STM32 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built in ``crazyflie-firmware/cf2.bin``. Use ``--stm32Fw`` to specify a custom path.
+:flash (NRF): Flashes NRF51 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built in ``crazyflie2-nrf-firmware/cf2_nrf.bin``. Use ``--nrf51Fw`` to specify a custom path.
 
 
 Testing configuration

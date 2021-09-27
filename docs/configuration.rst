@@ -36,7 +36,9 @@ We supply the binary image of the Crazyradio firmware in the ``/prebuilt`` direc
 
 1. Upgrade the firmwares of your Crazyflies with the latest official release using `cfclient`. This will update STM32, NRF51, and attached decks (e.g., LightHouse deck). We tested version 2021.6.
 
-    Note: If you use a custom-built firmware, you can also use `chooser.py`, see below.
+   .. note::
+      If you use a custom-built firmware, you can also use `chooser.py`, see below.
+      To flash on the command line, check out the official Bitcraze documentation: `STM32 <https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/>`_, `NRF51 <https://github.com/bitcraze/crazyflie2-nrf-firmware/blob/master/docs/build/build.md>`_.
 
 2. Upgrade the firmware of your Crazyradios with the latest `official firmware <https://github.com/bitcraze/crazyradio-firmware>`_. Note that this is even required for newly bought Crazyradios.
 

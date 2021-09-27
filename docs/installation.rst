@@ -10,7 +10,6 @@ Ubuntu Python ROS
 ------ ------ -------
 20.04  3.7    Noetic
 18.04  2.7    Melodic
-16.04  2.7    Kinetic
 ====== ====== =======
 
 For simulation-only operation, **Mac OS** is also supported.

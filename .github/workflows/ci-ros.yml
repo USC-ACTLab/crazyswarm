@@ -14,10 +14,6 @@ jobs:
       matrix:
         include:
 
-          - os: ubuntu-16.04
-            ros: kinetic
-            pyVer: python
-
           - os: ubuntu-18.04
             ros: melodic
             pyVer: python

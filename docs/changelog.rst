@@ -2,12 +2,15 @@ Changelog
 =========
 
 October 4th, 2019
-----------------
+-----------------
 
 1. We switched to the official firmware. Our own EKF is not used anymore, instead we contributed a full pose update in the official EKF.
+
   a. We now support single-marker tracking, where only the position and not the pose is tracked by an external system. Attitude is estimated on-board.
   b. The EKF is pre-tuned to work with motion capture systems and the Mellinger controller.
+
 2. There can be now more than 255 parameters in the firmware. Parameters can be specified by Crazyflie (and not only per type as before). Parameters can be updated using broadcasts mid-flight (e.g., to switch the controller mid-flight).
+
 3. We now have full support for OptiTrack, including for using Motive 2.x. Both object tracking by Motive and custom object tracking are supported.
 
 April 22nd, 2018

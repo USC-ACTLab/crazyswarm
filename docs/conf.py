@@ -164,7 +164,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -356,6 +356,8 @@ autodoc_member_order = 'bysource'
 
 # Do not try to import ROS modules so we can build on more machines easily.
 autodoc_mock_imports = [
+    'crazyswarm',
+    'numpy',
     'rospy',
     'std_msgs',
     'std_srvs',

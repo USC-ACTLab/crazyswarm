@@ -3,7 +3,7 @@ import subprocess
 import pytest
 
 
-HAVE_ROS = subprocess.run("type roslaunch", shell=True).returncode == 0
+HAVE_ROS = subprocess.call("type roslaunch", shell=True) == 0
 
 
 def pytest_runtest_setup(item):

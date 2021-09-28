@@ -1,6 +1,6 @@
 How-To Guides
 =============
 
-.. include:: git_integration.rst
+.. include:: git_integration.rstinclude
 
-.. include:: streaming_setpoint.rst
+.. include:: streaming_setpoint.rstinclude

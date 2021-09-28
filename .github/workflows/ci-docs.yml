@@ -16,6 +16,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt install texlive-latex-extra dvipng
         sudo pip3 install -U setuptools
         sudo pip3 install -U sphinx sphinx-rtd-theme sphinx-tabs sphinx-argparse
 

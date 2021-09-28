@@ -49,5 +49,5 @@ simulation parameters with the command-line flags listed below.
 
 Note: rendering video output with the ``--video`` option requires an
 installation of `ffmpeg <https://ffmpeg.org>`_ with the ``libx264`` encoder.
-This is provided in the :ref:`anaconda` environment, but must be installed
-manually otherwise.
+This is provided in the Anaconda environment, but must be installed manually
+otherwise.

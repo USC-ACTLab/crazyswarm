@@ -25,26 +25,22 @@ Note: Crazyflies must be rebooted after any change of the channel/address for th
 
 Finally, add the user permissions to use the USB Radio without being root.
 
-  - Option 1: follow the instructions in the ``crazyflie-lib-python`` folder or look at `here <https://github.com/bitcraze/crazyflie-lib-python#platform-notes>`_.
+  - Option 1: follow the `official instructions <https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/installation/usb_permissions>`_.
   - Option 2: Use the script: ``./pc_permissions.sh``
 
 
 Update firmware
 ---------------
-Crazyswarm is tested with specific versions of the official Bitcraze firmware for the Crazyflie and Crazyradio.
-We supply the binary images of these firmware versions in the ``/prebuilt`` directory.
+Crazyswarm is tested with the official Bitcraze firmwares for the Crazyflie and Crazyradio.
+We supply the binary image of the Crazyradio firmware in the ``/prebuilt`` directory.
 
-1. Upgrade the firmwares of your Crazyflies with the provided firmwares (both NRF51 and STM32 firmwares).
+1. Upgrade the firmwares of your Crazyflies with the latest official release using `cfclient`. This will update STM32, NRF51, and attached decks (e.g., LightHouse deck). We tested version 2021.6.
 
-    #. Plug in a battery
-    #. Turn your Crazyflie off by pressing the on/off button
-    #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
-    #. ``rosrun crazyflie_tools flash --target nrf51 --filename prebuilt/cf2_nrf.bin``
-    #. Turn your Crazyflie off by pressing the on/off button
-    #. Set your Crazyflie into bootloader mode by holding the on/off button for 3 seconds (The blue M2 and M3 LEDs start to blink)
-    #. ``rosrun crazyflie_tools flash --target stm32 --filename prebuilt/cf2.bin``
+   .. note::
+      If you use a custom-built firmware, you can also use `chooser.py`, see below.
+      To flash on the command line, check out the official Bitcraze documentation: `STM32 <https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/>`_, `NRF51 <https://github.com/bitcraze/crazyflie2-nrf-firmware/blob/master/docs/build/build.md>`_.
 
-2. Upgrade the firmware of your Crazyradios with the provided firmware.
+2. Upgrade the firmware of your Crazyradios with the latest `official firmware <https://github.com/bitcraze/crazyradio-firmware>`_. Note that this is even required for newly bought Crazyradios.
 
     #. ``python crazyradio-firmware/usbtools/launchBootloader.py``
     #. ``sudo python crazyradio-firmware/usbtools/nrfbootload.py flash prebuilt/cradio.bin``
@@ -361,8 +357,8 @@ The buttons perform various functions that can be tedious to do for many CFs:
 :version: Retrieves STM32 firmware version of enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Can only be used if CF is fully powered on.
 :sysOff: Puts enabled CFs in power-safe mode (NRF51 powered, but STM32 turned off). Only works if ``crazyflie_server`` is not running at the same time.
 :reboot: Reboot enabled CFs (such that NRF51 and STM32 will be powered). Only works if ``crazyflie_server`` is not running at the same time.
-:flash (STM): Flashes STM32 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built.
-:flash (NRF): Flashes NRF51 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built.
+:flash (STM): Flashes STM32 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built in ``crazyflie-firmware/cf2.bin``. Use ``--stm32Fw`` to specify a custom path.
+:flash (NRF): Flashes NRF51 firmware to enabled CFs. Only works if ``crazyflie_server`` is not running at the same time. Assumes that firmware is built in ``crazyflie2-nrf-firmware/cf2_nrf.bin``. Use ``--nrf51Fw`` to specify a custom path.
 
 
 Testing configuration

@@ -35,7 +35,7 @@
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       send_position_only: False # set to False to send position+orientation; set to True to send position only
       motion_capture_host_name: "vicon"
-      save_point_clouds: ~/pointCloud.ot
+      save_point_clouds: "" # set to a valid path to log mocap point cloud binary file.
       print_latency: False
       write_csvs: False
       force_no_cache: False

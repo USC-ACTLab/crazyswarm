@@ -43,7 +43,7 @@ and on real hardware without modification. Enable simulation and control the
 simulation parameters with the command-line flags listed below.
 
 .. argparse::
-   :module: pycrazyswarm.crazyswarm
+   :module: pycrazyswarm.crazyswarm_py
    :func: build_argparser
    :prog: python2 <my_crazyswarm_script.py>
 

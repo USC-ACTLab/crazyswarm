@@ -1063,6 +1063,7 @@ private:
 
   bool publishRigidBody(const std::string& name, uint8_t id, std::vector<CrazyflieBroadcaster::externalPose> &states)
   {
+    assert(m_pMocapRigidBodies);
     const auto& iter = m_pMocapRigidBodies->find(name);
     if (iter != m_pMocapRigidBodies->end()) {
       const auto& rigidBody = iter->second;
@@ -1274,10 +1275,10 @@ private:
 private:
   std::vector<CrazyflieROS*> m_cfs;
   std::string m_interactiveObject;
-  libobjecttracker::ObjectTracker* m_tracker;
+  libobjecttracker::ObjectTracker* m_tracker; // non-owning pointer
   int m_radio;
   pcl::PointCloud<pcl::PointXYZ>::Ptr m_pMarkers;
-  std::map<std::string, libmotioncapture::RigidBody>* m_pMocapRigidBodies;
+  std::map<std::string, libmotioncapture::RigidBody>* m_pMocapRigidBodies; // non-owning pointer
   ros::CallbackQueue m_slowQueue;
   CrazyflieBroadcaster m_cfbc;
   bool m_isEmergency;
@@ -1433,10 +1434,10 @@ public:
     std::string hostname;
     nl.getParam("motion_capture_host_name", hostname);
     cfg["hostname"] = hostname;
-    libmotioncapture::MotionCapture *mocap = nullptr;
+    std::unique_ptr<libmotioncapture::MotionCapture> mocap;
     
     if (motionCaptureType != "none") {
-      mocap = libmotioncapture::MotionCapture::connect(motionCaptureType, cfg);
+      mocap.reset(libmotioncapture::MotionCapture::connect(motionCaptureType, cfg));
       if (!mocap) {
         throw std::runtime_error("Unknown motion capture type!");
       }
@@ -1562,7 +1563,8 @@ public:
 
         // Get the unlabeled markers and create point cloud
         if (!useMotionCaptureObjectTracking) {
-          // ToDO: switch to pointcloud2 to avoid a copy here
+          // ToDO: If we switch our datastructure to pointcloud2 (here, for the ROS publisher, and libobjecttracker)
+          //       we can avoid a copy here.
           const auto& pointcloud = mocap->pointCloud();
           markers->clear();
           for (size_t i = 0; i < pointcloud.rows(); ++i) {

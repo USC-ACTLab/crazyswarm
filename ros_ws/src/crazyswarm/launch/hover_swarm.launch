@@ -34,11 +34,7 @@
       motion_capture_type: "vicon" # one of none,vicon,optitrack,qualisys,vrpn
       object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
       send_position_only: False # set to False to send position+orientation; set to True to send position only
-      vicon_host_name: "vicon"
-      # optitrack_host_name: "optitrack"
-      # qualisys_host_name: "10.0.5.219"
-      # qualisys_base_port: 22222
-      # vrpn_host_name: "vicon"
+      motion_capture_host_name: "vicon"
       save_point_clouds: ~/pointCloud.ot
       print_latency: False
       write_csvs: False

@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(crazyswarm)
 
+
+option(BUILD_PYTHON_BINDINGS "Generate Python Bindings" OFF)
+option(BUILD_EXAMPLE "Enable Example application" OFF)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externalDependencies/libmotioncapture)
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -10,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   crazyflie_cpp
   libobjecttracker
-  libmotioncapture
   tf_conversions
 )
 
@@ -143,30 +147,11 @@ catkin_package(
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
+  externalDependencies/libmotioncapture/include
   ../externalDependencies/libobjecttracker/include
   ## TODO remove this dependency
   ../../../crazyflie-firmware/src/modules/interface/
 )
-
-link_directories(
-  ${LIBMOTIONCAPTURE_LINK_DIR}
-)
-
-if (ENABLE_VICON)
-  add_definitions(-DENABLE_VICON)
-endif()
-if (ENABLE_OPTITRACK)
-  add_definitions(-DENABLE_OPTITRACK)
-endif()
-if (ENABLE_PHASESPACE)
-  add_definitions(-DENABLE_PHASESPACE)
-endif()
-if (ENABLE_QUALISYS)
-  add_definitions(-DENABLE_QUALISYS)
-endif()
-if (ENABLE_VRPN)
-  add_definitions(-DENABLE_VRPN)
-endif()
 
 
 ## Declare a cpp executable
@@ -178,6 +163,7 @@ add_dependencies(crazyswarm_server
 )
 target_link_libraries(crazyswarm_server
   ${catkin_LIBRARIES}
+  libmotioncapture
 )
 
 ## Declare a cpp executable
@@ -197,6 +183,7 @@ add_executable(mocap_helper
 
 target_link_libraries(mocap_helper
   ${catkin_LIBRARIES}
+  libmotioncapture
 )
 
 #############

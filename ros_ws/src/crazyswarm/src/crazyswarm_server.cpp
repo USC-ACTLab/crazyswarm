@@ -42,22 +42,7 @@
 #include <csignal> // or C++ style alternative
 
 // Motion Capture
-#include "libmotioncapture/testmocap.h"
-#ifdef ENABLE_VICON
-#include "libmotioncapture/vicon.h"
-#endif
-#ifdef ENABLE_OPTITRACK
-#include "libmotioncapture/optitrack.h"
-#endif
-#ifdef ENABLE_PHASESPACE
-#include "libmotioncapture/phasespace.h"
-#endif
-#ifdef ENABLE_QUALISYS
-#include <libmotioncapture/qualisys.h>
-#endif
-#ifdef ENABLE_VRPN
-#include <libmotioncapture/vrpn.h>
-#endif
+#include <libmotioncapture/motioncapture.h>
 
 // Object tracker
 #include <libobjecttracker/object_tracker.h>
@@ -71,16 +56,16 @@
 /*
 Threading
  * There are 2N+1 threads, where N is the number of groups (== number of unique channels)
- * The main thread uses the VICON SDK to query vicon; Once a new frame comes in, the
+ * The main thread uses the libmotioncapture to receive external state updates; Once a new frame comes in, the
    workers (CrazyflieGroup) are notified using a condition variable. Each CrazyflieGroup
-   does the objectTracking for its own group and broadcasts the resulting vicon data.
+   does the objectTracking for its own group and broadcasts the resulting mocap data.
  * One helper thread is used in the server to take care of incoming global service requests.
    Those are forwarded to the groups (using a function call, i.e. the broadcasts run in this thread).
  * Each group has two threads:
-   * VICON worker. Waits for new vicon data (using a condition variable) and does the object tracking
+   * Mocap worker. Waits for new mocap data (using a condition variable) and does the object tracking
      and broadcasts the result.
    * Service worker: Listens to CF-based service calls (such as upload trajectory) and executes
-     them. Those can be potentially long, without interfering with the VICON update.
+     them. Those can be potentially long, without interfering with the mocap update.
 */
 
 constexpr double pi() { return std::atan(1)*4; }
@@ -125,43 +110,6 @@ public:
 };
 
 static ROSLogger rosLogger;
-
-// TODO this is incredibly dumb, fix it
-/*
-std::mutex viconClientMutex;
-
-static bool viconObjectAllMarkersVisible(
-  ViconDataStreamSDK::CPP::Client &client, std::string const &objName)
-{
-  std::lock_guard<std::mutex> guard(viconClientMutex);
-  using namespace ViconDataStreamSDK::CPP;
-  auto output = client.GetMarkerCount(objName);
-  if (output.Result != Result::Success) {
-    return false;
-  }
-  bool ok = true;
-  for (unsigned i = 0; i < output.MarkerCount; ++i) {
-    auto marker = client.GetMarkerName(objName, i);
-    if (marker.Result != Result::Success) {
-      ROS_INFO("GetMarkerName fail on marker %d", i);
-      return false;
-    }
-    auto position = client.GetMarkerGlobalTranslation(objName, marker.MarkerName);
-    if (position.Result != Result::Success) {
-      ROS_INFO("GetMarkerGlobalTranslation fail on marker %s",
-        std::string(marker.MarkerName).c_str());
-      return false;
-    }
-    if (position.Occluded) {
-      ROS_INFO("Interactive object marker %s occluded with z = %f",
-        std::string(marker.MarkerName).c_str(), position.Translation[2]);
-      ok = false;
-      // don't early return; we want to print messages for all occluded markers
-    }
-  }
-  return ok;
-}
-*/
 
 class CrazyflieROS
 {
@@ -844,7 +792,7 @@ public:
     const std::vector<libobjecttracker::DynamicsConfiguration>& dynamicsConfigurations,
     const std::vector<libobjecttracker::MarkerConfiguration>& markerConfigurations,
     pcl::PointCloud<pcl::PointXYZ>::Ptr pMarkers,
-    std::vector<libmotioncapture::Object>* pMocapObjects,
+    std::map<std::string, libmotioncapture::RigidBody>* pMocapRigidBodies,
     int radio,
     int channel,
     bool useMotionCaptureObjectTracking,
@@ -857,7 +805,7 @@ public:
     , m_tracker(nullptr)
     , m_radio(radio)
     , m_pMarkers(pMarkers)
-    , m_pMocapObjects(pMocapObjects)
+    , m_pMocapRigidBodies(pMocapRigidBodies)
     , m_slowQueue()
     , m_cfbc("radio://" + std::to_string(radio) + "/" + std::to_string(channel) + "/2M/FFE7E7E7E7")
     , m_isEmergency(false)
@@ -1123,40 +1071,35 @@ private:
 
   bool publishRigidBody(const std::string& name, uint8_t id, std::vector<CrazyflieBroadcaster::externalPose> &states)
   {
-    bool found = false;
-    for (const auto& rigidBody : *m_pMocapObjects) {
-      if (   rigidBody.name() == name
-          && !rigidBody.occluded()) {
+    assert(m_pMocapRigidBodies);
+    const auto& iter = m_pMocapRigidBodies->find(name);
+    if (iter != m_pMocapRigidBodies->end()) {
+      const auto& rigidBody = iter->second;
 
-        states.resize(states.size() + 1);
-        states.back().id = id;
-        states.back().x = rigidBody.position().x();
-        states.back().y = rigidBody.position().y();
-        states.back().z = rigidBody.position().z();
-        states.back().qx = rigidBody.rotation().x();
-        states.back().qy = rigidBody.rotation().y();
-        states.back().qz = rigidBody.rotation().z();
-        states.back().qw = rigidBody.rotation().w();
+      states.resize(states.size() + 1);
+      states.back().id = id;
+      states.back().x = rigidBody.position().x();
+      states.back().y = rigidBody.position().y();
+      states.back().z = rigidBody.position().z();
+      states.back().qx = rigidBody.rotation().x();
+      states.back().qy = rigidBody.rotation().y();
+      states.back().qz = rigidBody.rotation().z();
+      states.back().qw = rigidBody.rotation().w();
 
-        tf::Transform transform;
-        transform.setOrigin(tf::Vector3(
-          states.back().x,
-          states.back().y,
-          states.back().z));
-        tf::Quaternion q(
-          states.back().qx,
-          states.back().qy,
-          states.back().qz,
-          states.back().qw);
-        transform.setRotation(q);
-        m_br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", name));
-        found = true;
-        return true;
-      }
-
-    }
-
-    if (!found) {
+      tf::Transform transform;
+      transform.setOrigin(tf::Vector3(
+        states.back().x,
+        states.back().y,
+        states.back().z));
+      tf::Quaternion q(
+        states.back().qx,
+        states.back().qy,
+        states.back().qz,
+        states.back().qw);
+      transform.setRotation(q);
+      m_br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", name));
+      return true;
+    } else {
       ROS_WARN("No updated pose for motion capture object %s", name.c_str());
     }
     return false;
@@ -1340,11 +1283,10 @@ private:
 private:
   std::vector<CrazyflieROS*> m_cfs;
   std::string m_interactiveObject;
-  libobjecttracker::ObjectTracker* m_tracker;
+  libobjecttracker::ObjectTracker* m_tracker; // non-owning pointer
   int m_radio;
-  // ViconDataStreamSDK::CPP::Client* m_pClient;
   pcl::PointCloud<pcl::PointXYZ>::Ptr m_pMarkers;
-  std::vector<libmotioncapture::Object>* m_pMocapObjects;
+  std::map<std::string, libmotioncapture::RigidBody>* m_pMocapRigidBodies; // non-owning pointer
   ros::CallbackQueue m_slowQueue;
   CrazyflieBroadcaster m_cfbc;
   bool m_isEmergency;
@@ -1496,81 +1438,27 @@ public:
     }
 
     // Make a new client
-    libmotioncapture::MotionCapture* mocap = nullptr;
-    if (motionCaptureType == "none")
-    {
-    } else if (motionCaptureType == "test")
-    {
-        std::vector<libmotioncapture::Object> objects;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud(new pcl::PointCloud<pcl::PointXYZ>);
-        pointCloud->push_back(pcl::PointXYZ(-0.5, 1.0, 0.0));
-        pointCloud->push_back(pcl::PointXYZ(-0.5, 0.5, 0.0));
-        pointCloud->push_back(pcl::PointXYZ(-0.5, 0.0, 0.0));
-        pointCloud->push_back(pcl::PointXYZ(-0.5, -0.5, 0.0));
-        pointCloud->push_back(pcl::PointXYZ(-0.5, -1.0, 0.0));
-
-        mocap = new libmotioncapture::MotionCaptureTest(
-          0.01,
-          objects,
-          pointCloud);
-    }
-#ifdef ENABLE_VICON
-    else if (motionCaptureType == "vicon")
-    {
-      std::string hostName;
-      nl.getParam("vicon_host_name", hostName);
-      mocap = new libmotioncapture::MotionCaptureVicon(hostName,
-        /*enableObjects*/useMotionCaptureObjectTracking || !interactiveObject.empty(),
-        /*enablePointcloud*/ !useMotionCaptureObjectTracking);
-    }
-#endif
-#ifdef ENABLE_OPTITRACK
-    else if (motionCaptureType == "optitrack")
-    {
-      std::string hostName;
-      nl.getParam("optitrack_host_name", hostName);
-      mocap = new libmotioncapture::MotionCaptureOptitrack(hostName);
-    }
-#endif
-#ifdef ENABLE_PHASESPACE
-    else if (motionCaptureType == "phasespace")
-    {
-      std::string ip;
-      int numMarkers;
-      nl.getParam("phasespace_ip", ip);
-      nl.getParam("phasespace_num_markers", numMarkers);
-      std::map<size_t, std::pair<int, int> > cfs;
-      cfs[231] = std::make_pair<int, int>(10, 11);
-      mocap = new libmotioncapture::MotionCapturePhasespace(ip, numMarkers, cfs);
-    }
-#endif
-#ifdef ENABLE_QUALISYS
-    else if (motionCaptureType == "qualisys")
-    {
-      std::string hostname;
-      int port;
-      nl.getParam("qualisys_host_name", hostname);
-      nl.getParam("qualisys_base_port", port);
-      mocap = new libmotioncapture::MotionCaptureQualisys(hostname, port,
-        /*enableObjects*/ true,
-        /*enablePointcloud*/ true);
-    }
-#endif
-#ifdef ENABLE_VRPN
-  else if (motionCaptureType == "vrpn")
-  {
+    std::map<std::string, std::string> cfg;
     std::string hostname;
-    int port;
-    nl.getParam("vrpn_host_name", hostname);
-    mocap = new libmotioncapture::MotionCaptureVrpn(hostname);
-  }
-#endif
-    else {
-      throw std::runtime_error("Unknown motion capture type!");
+    nl.getParam("motion_capture_host_name", hostname);
+    cfg["hostname"] = hostname;
+    std::unique_ptr<libmotioncapture::MotionCapture> mocap;
+
+    if (motionCaptureType != "none") {
+      ROS_INFO(
+        "libmotioncapture connecting to %s at hostname '%s' - "
+        "might block indefinitely if unreachable!",
+        motionCaptureType.c_str(),
+        hostname.c_str()
+      );
+      mocap.reset(libmotioncapture::MotionCapture::connect(motionCaptureType, cfg));
+      if (!mocap) {
+        throw std::runtime_error("Unknown motion capture type!");
+      }
     }
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr markers(new pcl::PointCloud<pcl::PointXYZ>);
-    std::vector<libmotioncapture::Object> mocapObjects;
+    std::map<std::string, libmotioncapture::RigidBody> mocapRigidBodies;
 
     // Create all groups in parallel and launch threads
     {
@@ -1587,7 +1475,7 @@ public:
                 markerConfigurations,
                 // &client,
                 markers,
-                &mocapObjects,
+                &mocapRigidBodies,
                 radio,
                 channel,
                 useMotionCaptureObjectTracking,
@@ -1643,7 +1531,6 @@ public:
 
       std::vector<double> latencyTotal(6 + 3 * 2, 0.0);
       uint32_t latencyCount = 0;
-      std::vector<libmotioncapture::LatencyInfo> mocapLatency;
 
       while (ros::ok() && !m_isEmergency) {
         // Get a frame
@@ -1655,14 +1542,14 @@ public:
         double totalLatency = 0;
 
         // Get the latency
-        mocap->getLatency(mocapLatency);
-        float viconLatency = 0;
+        const auto& mocapLatency = mocap->latency();
+        float totalMocapLatency = 0;
         for (const auto& item : mocapLatency) {
-          viconLatency += item.value();
+          totalMocapLatency += item.value();
         }
-        if (viconLatency > 0.035) {
+        if (totalMocapLatency > 0.035) {
           std::stringstream sstr;
-          sstr << "VICON Latency high: " << viconLatency << " s." << std::endl;
+          sstr << "MoCap Latency high: " << totalMocapLatency << " s." << std::endl;
           for (const auto& item : mocapLatency) {
             sstr << "  Latency: " << item.name() << ": " << item.value() << " s." << std::endl;
           }
@@ -1690,7 +1577,14 @@ public:
 
         // Get the unlabeled markers and create point cloud
         if (!useMotionCaptureObjectTracking) {
-          mocap->getPointCloud(markers);
+          // ToDO: If we switch our datastructure to pointcloud2 (here, for the ROS publisher, and libobjecttracker)
+          //       we can avoid a copy here.
+          const auto& pointcloud = mocap->pointCloud();
+          markers->clear();
+          for (size_t i = 0; i < pointcloud.rows(); ++i) {
+            const auto &point = pointcloud.row(i);
+            markers->push_back(pcl::PointXYZ(point(0), point(1), point(2)));
+          }
 
           msgPointCloud.header.seq += 1;
           msgPointCloud.header.stamp = ros::Time::now();
@@ -1710,15 +1604,14 @@ public:
 
         if (useMotionCaptureObjectTracking || !interactiveObject.empty()) {
           // get mocap rigid bodies
-          mocapObjects.clear();
-          mocap->getObjects(mocapObjects);
+          mocapRigidBodies = mocap->rigidBodies();
           if (interactiveObject == "virtual") {
             Eigen::Quaternionf quat(0, 0, 0, 1);
-            mocapObjects.push_back(
-              libmotioncapture::Object(
-                interactiveObject,
-                m_lastInteractiveObjectPosition,
-                quat));
+            mocapRigidBodies.emplace(interactiveObject,
+                libmotioncapture::RigidBody(
+                    interactiveObject,
+                    m_lastInteractiveObjectPosition,
+                    quat));
           }
         }
 

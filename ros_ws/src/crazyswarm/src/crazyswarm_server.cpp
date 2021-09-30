@@ -1435,8 +1435,14 @@ public:
     nl.getParam("motion_capture_host_name", hostname);
     cfg["hostname"] = hostname;
     std::unique_ptr<libmotioncapture::MotionCapture> mocap;
-    
+
     if (motionCaptureType != "none") {
+      ROS_INFO(
+        "libmotioncapture connecting to %s at hostname '%s' - "
+        "might block indefinitely if unreachable!",
+        motionCaptureType.c_str(),
+        hostname.c_str()
+      );
       mocap.reset(libmotioncapture::MotionCapture::connect(motionCaptureType, cfg));
       if (!mocap) {
         throw std::runtime_error("Unknown motion capture type!");

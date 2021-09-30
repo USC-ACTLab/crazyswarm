@@ -1151,7 +1151,7 @@ private:
           default:
             std::stringstream message;
             message << "crazyflies.yaml error:"
-              " entry " << j << " of initialPosition for cf" << id
+              " entry " << j << " of initialPosition for cf" << id <<
               " should be type int or double.";
             throw std::runtime_error(message.str().c_str());
           }

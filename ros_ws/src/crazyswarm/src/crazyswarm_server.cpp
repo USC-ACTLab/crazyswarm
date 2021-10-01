@@ -1175,6 +1175,7 @@ private:
         cfConfigs.push_back({uri, tf_prefix, frame, id, type});
       }
     }
+    ROS_INFO("Parsed crazyflies.yaml successfully.");
 
     // add Crazyflies
     for (const auto& config : cfConfigs) {

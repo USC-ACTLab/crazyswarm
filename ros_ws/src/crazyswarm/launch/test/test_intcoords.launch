@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <rosparam command="load" file="$(find crazyswarm)/launch/crazyflieTypes.yaml" />
+  <rosparam command="load" file="$(find crazyswarm)/launch/test/intcoords.yaml" />
+
+  <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" required="true">
+    <rosparam>
+      # Logging configuration (Use enable_logging to actually enable logging)
+      genericLogTopics: ["log1"]
+      genericLogTopicFrequencies: [10]
+      genericLogTopic_log1_Variables: ["stateEstimate.x", "ctrltarget.x"]
+      # firmware parameters for all drones (use crazyflieTypes.yaml to set per type, or
+      # allCrazyflies.yaml to set per drone)
+      firmwareParams:
+        commander:
+          enHighLevel: 1
+        stabilizer:
+          estimator: 2 # 1: complementary, 2: kalman
+          controller: 2 # 1: PID, 2: mellinger
+        ring:
+          effect: 16 # 6: double spinner, 7: solid color, 16: packetRate
+          solidBlue: 255 # if set to solid color
+          solidGreen: 0 # if set to solid color
+          solidRed: 0 # if set to solid color
+          headlightEnable: 0
+        locSrv:
+          extPosStdDev: 1e-3
+          extQuatStdDev: 0.5e-1
+        kalman:
+          resetEstimation: 1
+      # tracking
+      motion_capture_type: none 
+      object_tracking_type: "libobjecttracker" # one of motionCapture,libobjecttracker
+      send_position_only: False # set to False to send position+orientation; set to True to send position only
+      motion_capture_host_name: "NOTvicon"
+      save_point_clouds: ~/pointCloud.ot
+      print_latency: False
+      write_csvs: False
+      force_no_cache: False
+      enable_parameters: True
+      enable_logging: False
+      enable_logging_pose: True
+    </rosparam>
+  </node>
+
+  <node pkg="crazyswarm" type="crazyswarm_teleop" name="crazyswarm_teleop" output="screen">
+    <param name="csv_file" value="$(find crazyswarm)/launch/figure8_smooth.csv" />
+    <param name="timescale" value="0.8" />
+  </node>
+</launch>

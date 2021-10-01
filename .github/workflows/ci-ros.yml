@@ -59,9 +59,14 @@ jobs:
         source /opt/ros/${{ matrix.ros }}/setup.bash
         CSW_PYTHON=${{ matrix.pyVer }} ./build.sh
 
-    - name: Test
+    - name: Python Unit Tests
       run: |
         source ros_ws/devel/setup.bash
         cd ros_ws/src/crazyswarm/scripts
         ${{ matrix.pyVer }} -m pytest --version
         ${{ matrix.pyVer }} -m pytest
+
+    - name: ROS Launch Tests
+      run: |
+        roslaunch crazyswarm test_intcoords.launch 2>&1 | grep "Parsed crazyflies.yaml successfully"
+

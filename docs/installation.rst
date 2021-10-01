@@ -108,7 +108,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
 
       3. Install the dependencies::
 
-          $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib ${CSW_PYTHON}-pytest ${CSW_PYTHON}-scipy gcc-arm-embedded libpcl-dev libusb-1.0-0-dev sdcc ros-[ROS version]-vrpn
+          $ sudo apt install git swig lib${CSW_PYTHON}-dev ${CSW_PYTHON}-numpy ${CSW_PYTHON}-yaml ${CSW_PYTHON}-matplotlib ${CSW_PYTHON}-pytest ${CSW_PYTHON}-scipy gcc-arm-embedded libpcl-dev libusb-1.0-0-dev ros-[ROS version]-joy
 
       4. Clone the Crazyswarm git repository::
 

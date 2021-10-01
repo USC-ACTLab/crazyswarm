@@ -226,14 +226,7 @@ It contains settings on which motion capture system to use, among others.
 Select hardware make
 ^^^^^^^^^^^^^^^^^^^^
 
-First, select your motion capture hardware.
-
-.. code-block:: yaml
-
-    # ros_ws/src/crazyswarm/launch/hover_swarm.launch
-    motion_capture_type: "vicon" # one of vicon,optitrack,qualisys,none
-
-Next, select the appropriate tab below and perform the manufacturer-specific configuration.
+First, select your tracking system in the appropriate tab below.
 
 .. tabs::
 
@@ -245,25 +238,27 @@ Next, select the appropriate tab below and perform the manufacturer-specific con
       .. code-block:: yaml
 
           # ros_ws/src/crazyswarm/launch/hover_swarm.launch
-          vicon_host_name: "vicon" # only needed if vicon is selected
+          motion_capture_type: "vicon"
+          motion_capture_host_name: "viconPC" # hostname or IP address
+
+      If using ``libobjecttracker`` as ``object_tracking_type`` disable all objects.
 
    .. tab:: OptiTrack
 
-      Select your local and server IPs:
+      OptiTrack is fully supported and tested with Motive 2.3 and Motive 3.0.
+      Select the host name of the Optitrack machine:
 
       .. code-block:: yaml
 
           # ros_ws/src/crazyswarm/launch/hover_swarm.launch
-          optitrack_local_ip: "localhost" # only needed if optitrack is selected
-          optitrack_server_ip: "optitrack" # only needed if optitrack is selected
+          motion_capture_type: "optitrack"
+          motion_capture_host_name: "optitrackPC" # hostname or IP address
 
       Use the following settings for correct operation:
 
-        * Un-tick the rigid body in Motive so that the point cloud is streamed.
-        * Advanced network settings. Up axis: Z
-        * When specifying the marker locations in the config file you need to use the coordinates in Rviz and not Motive.
+        * Data Streaming Pane: ``Up axis: Z``
 
-      Instruction on how to use the rigid body option with Optitrack are available `here <https://github.com/USC-ACTLab/libmotioncapture/pull/3>`_.
+      If using ``libobjecttracker`` as ``object_tracking_type`` disable all assets and make sure that labeled or unlabeled markers are being streamed.
 
    .. tab:: Qualisys
 
@@ -273,18 +268,34 @@ Next, select the appropriate tab below and perform the manufacturer-specific con
       .. code-block:: yaml
 
           # ros_ws/src/crazyswarm/launch/hover_swarm.launch
-          qualisys_host_name: "10.0.5.219" # only needed if qualisys is selected
-          qualisys_base_port: 22222 # only needed if qualisys is selected
+          motion_capture_type: "qualisys"
+          motion_capture_host_name: "qualisysPC" # hostname or IP address
 
       If using ``motionCapture`` as ``object_tracking_type`` make sure to check the checkbox ``Calculate 6DOF`` in QTM ``Project options/Processing/Real time actions``.
 
       If using ``libobjecttracker`` as ``object_tracking_type`` and you have setup 6DOF tracking for your Crazyflies in QTM, make sure to disable the ``Calculate 6DOF`` checkbox.
 
 
-   .. tab:: None
+   .. tab:: LPS/LightHouse/FlowDeck
 
       The usage of a motion capture system can be disabled by selecting ``none``.
+
+      .. code-block:: yaml
+
+          # ros_ws/src/crazyswarm/launch/hover_swarm.launch
+          motion_capture_type: "none"
+
       This is useful for on-board solutions such as the Ultra-Wideband localization system (UWB), LightHouse, or dead-reckoning using the flow-deck.
+
+      In this case, you can visualize the state estimate in rviz if the following settings are enabled.
+
+      .. code-block:: yaml
+
+          # ros_ws/src/crazyswarm/launch/hover_swarm.launch
+          enable_logging: True
+          enable_logging_pose: True
+
+      (This only works for debugging when connected to a few drones.)
 
 
 .. _config_objecttracking:

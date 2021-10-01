@@ -1141,9 +1141,20 @@ private:
 
         std::vector<double> posVec(3);
         for (int32_t j = 0; j < pos.size(); ++j) {
-          ROS_ASSERT(pos[j].getType() == XmlRpc::XmlRpcValue::TypeDouble);
-          double f = static_cast<double>(pos[j]);
-          posVec[j] = f;
+          switch (pos[j].getType()) {
+          case XmlRpc::XmlRpcValue::TypeDouble:
+            posVec[j] = static_cast<double>(pos[j]);
+            break;
+          case XmlRpc::XmlRpcValue::TypeInt:
+            posVec[j] = static_cast<int>(pos[j]);
+            break;
+          default:
+            std::stringstream message;
+            message << "crazyflies.yaml error:"
+              " entry " << j << " of initialPosition for cf" << id <<
+              " should be type int or double.";
+            throw std::runtime_error(message.str().c_str());
+          }
         }
         Eigen::Affine3f m;
         m = Eigen::Translation3f(posVec[0], posVec[1], posVec[2]);
@@ -1164,6 +1175,7 @@ private:
         cfConfigs.push_back({uri, tf_prefix, frame, id, type});
       }
     }
+    ROS_INFO("Parsed crazyflies.yaml successfully.");
 
     // add Crazyflies
     for (const auto& config : cfConfigs) {

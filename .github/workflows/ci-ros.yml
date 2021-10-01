@@ -68,5 +68,6 @@ jobs:
 
     - name: ROS Launch Tests
       run: |
-        roslaunch crazyswarm test_intcoords.launch 2>&1 | grep "Parsed crazyflies.yaml successfully"
+        roslaunch crazyswarm test_intcoords.launch 2>&1 | tee launchlog
+        grep "Parsed crazyflies.yaml successfully" < launchlog
 

@@ -36,11 +36,10 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions
-        sudo apt install -y libpcl-dev
-        sudo apt install -y libusb-1.0-0-dev sdcc
-        sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-numpy ${{ matrix.pyVer }}-yaml ${{ matrix.pyVer }}-matplotlib ${{ matrix.pyVer }}-scipy ${{ matrix.pyVer }}-pip
-        sudo ${{ matrix.pyVer }} -m pip install pytest
+        sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions ros-${{ matrix.ros }}-joy
+        sudo apt install -y libpcl-dev libusb-1.0-0-dev
+        sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-pip
+        sudo ${{ matrix.pyVer }} -m pip install pytest numpy PyYAML matplotlib scipy
 
     - name: Install Embedded GCC for Ubuntu 20
       if: matrix.os == 'ubuntu-20.04'

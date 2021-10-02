@@ -61,7 +61,7 @@ Later steps in the documentation will change depending on your selection.
 
    .. group-tab:: Unique Marker Arrangements
 
-      With a unique marker arrangement for each Crazyflie, you rely on the motion capture hardware to differentiate between objects.
+      With a unique marker arrangement for each Crazyflie, you rely on the motion capture vendor to differentiate between objects.
       This is generally preferred.
       However, if you have lots of Crazyflies, it can be hard to design enough unique configurations -- there are not many places to put a marker on the Crazyflie.
 
@@ -72,6 +72,7 @@ Later steps in the documentation will change depending on your selection.
 
       If more than one Crazyflie has the same marker arrangement, standard motion capture software will refuse to track them.
       Instead, Crazyswarm can use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
+      Here we use Iterative Closest Point (ICP) to greedily match the known marker arrangements to the pointcloud. 
       There are two main consequences of this option:
 
       - The initial positions of the Crazyflies must be known, to establish a mapping between radio IDs and physical locations.
@@ -82,6 +83,16 @@ Later steps in the documentation will change depending on your selection.
       For example, you might have several standard Crazyflies with arrangement 1,
       and several larger quadcopters with arrangement 2.
 
+   .. group-tab:: Single Marker
+
+      A special case of duplicated marker arrangements is the case where we only use a single marker per robot.
+      As before, the Crazyswarm will use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
+      In this mode, we use optimal task assignment at every frame, which makes this mode more robust to motion capture outliers compared to the duplicate marker arrangements.
+      The main disadvantage is that the yaw angle cannot be observed without moving in the xy-plane.
+      Nevertheless, it is possible to hover for 30 seconds in place for a Crazyflie 2.1, without causing flight instabilities.
+      The stable hover time for Crazyflie 2.0 is shorter (about 15s), due to the noisier IMU.
+
+      Currently, it is not possible to mix duplicate marker arrangements and single marker tracking.
 
 .. _config_crazyflies_yaml:
 
@@ -119,6 +130,11 @@ The channel can be freely configured.
       If you use duplicated marker arrangements, ``initialPosition`` must be correct.
       Positions are specified in meters, in the coordinate system of your motion capture device.
       It is not required that the CFs start exactly at those positions -- a few centimeters variation is fine.
+
+   .. group-tab:: Single Marker
+
+      If you use single markers, ``initialPosition`` can be a rough estimate.
+      Positions are specified in meters, in the coordinate system of your motion capture device.
 
 It is often useful to select a subset of all available Crazyflies.
 The graphical "Chooser" and the additional configuration file ``allCrazyflies.yaml`` help make this easy.
@@ -216,6 +232,14 @@ The ``type`` field in the ``crazyflies.yaml`` entries must refer to a type liste
       #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
       #. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
       #. Update ``crazyflieTypes.yaml``.
+
+   .. group-tab:: Single Marker
+
+      For single markers, the ``markerConfigurations`` entry simply contains a single ``points`` entry. This point should describe the offset of the marker with respect to the Crazyflie's center of mass. For example, the marker configuration ``"3"`` corresponds to the marker placement shown below:
+
+      .. figure:: images/CrazyflieWithSingleMarker.jpg
+         :align: center
+         :scale: 70%
 
 
 Configure motion capture system

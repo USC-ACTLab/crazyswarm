@@ -9,6 +9,7 @@ dependencies:
   - sphinx_rtd_theme
   - pyqt
   - conda-forge::sphinx-argparse
+  - conda-forge::sphinxcontrib-programoutput
   - pytest
   - snakeviz
   - scipy

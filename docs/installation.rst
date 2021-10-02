@@ -76,8 +76,8 @@ Click the appropriate tab(s) below to see the installation instructions for your
 
             2. Install the dependencies
 
-               .. include:: generated/simonly_dependencies.rstinclude
-                  :code: bash
+               .. program-output:: python3 generate_install_deps_code.py ../.github/workflows/ci-ros.yml | sed -e '/ros/d' -e '/usb/d'
+                  :shell:
 
             3. Clone the Crazyswarm git repository::
 
@@ -109,8 +109,8 @@ Click the appropriate tab(s) below to see the installation instructions for your
 
       3. Install the dependencies
 
-         .. include:: generated/full_dependencies.rstinclude
-            :code: bash
+         .. program-output:: python3 generate_install_deps_code.py ../.github/workflows/ci-ros.yml
+            :shell:
 
       4. Clone the Crazyswarm git repository::
 

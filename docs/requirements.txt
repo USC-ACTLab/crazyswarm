@@ -2,3 +2,4 @@ numpy
 pyyaml
 sphinx-argparse
 sphinx-tabs
+sphinxcontrib-programoutput

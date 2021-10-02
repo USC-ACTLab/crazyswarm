@@ -89,6 +89,8 @@ Later steps in the documentation will change depending on your selection.
       As before, the Crazyswarm will use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
       In this mode, we use optimal task assignment at every frame, which makes this mode more robust to motion capture outliers compared to the duplicate marker arrangements.
       The main disadvantage is that the yaw angle cannot be observed without moving in the xy-plane.
+      Nevertheless, it is possible to hover for 30 seconds in place for a Crazyflie 2.1, without causing flight instabilities.
+      The stable hover time for Crazyflie 2.0 is shorter (about 15s), due to the noisier IMU.
 
       Currently, it is not possible to mix duplicate marker arrangements and single marker tracking.
 

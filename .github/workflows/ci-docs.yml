@@ -18,7 +18,7 @@ jobs:
       run: |
         sudo apt install texlive-latex-extra dvipng
         sudo pip3 install -U setuptools
-        sudo pip3 install -U sphinx sphinx-rtd-theme sphinx-tabs sphinx-argparse
+        sudo pip3 install -U -r docs/requirements.txt
 
     - name: Build Docs
       run: |

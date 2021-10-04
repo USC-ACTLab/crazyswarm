@@ -4,9 +4,9 @@ Welcome to Crazyswarm's documentation!
 ======================================
 
 The Crazyswarm platform allows you to fly a swarm of
-`Bitcraze Crazyflie 2.x <https://www.bitcraze.io/products/crazyflie-2-1/>`_
+`Bitcraze Crazyflie 2.x <https://www.bitcraze.io/products/crazyflie-2-1/>`_ and `Bitcraze Crazyflie Bolt-based <https://store.bitcraze.io/products/crazyflie-bolt>`_ 
 quadcopters in tight, synchronized formations.
-A motion capture system is recommended: VICON, OptiTrack, and Qualisys are supported.
+Different localization systems are supported: LightHouse, LPS, and motion capture. The Crazyswarm is particularly optimized for motion capture systems and supports VICON, OptiTrack, and Qualisys.
 We successfully flew 49 Crazyflies using three Crazyradios.
 An example video for what you can do is shown below:
 
@@ -15,8 +15,6 @@ An example video for what you can do is shown below:
     <div style="position: relative; padding-bottom: 56.25%; margin-bottom: 20pt; height: 0; overflow: hidden; max-width: 100%; height: auto;">
         <iframe src="https://www.youtube.com/embed/D0CrjoYDt9w" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
-
-It is also possible to use the Crazyflie as a control board for other quadcopter hardware.
 
 
 How is Crazyswarm different from Bitcraze's `Crazyflie Python API <https://github.com/bitcraze/crazyflie-lib-python>`_?
@@ -36,6 +34,8 @@ Here are some differences:
   Most motion capture devices do not support this natively.
   To make it possible, the user must supply the quadrotors' initial positions in a configuration file
   at startup to establish the mapping from radio addresses to positions.
+- **Broadcasts.**
+  Crazyswarm uses broadcast communication whenever possible to require fewer radios per Crazyflie. In contrast, the official SDK uses unicast communication instead.
 - **Simulation.**
   Crazyswarm has a simulation mode with 3D graphics,
   which makes it easy to validate complex scripts before running them on real hardware.

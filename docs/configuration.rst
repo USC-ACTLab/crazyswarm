@@ -51,201 +51,12 @@ We supply the binary image of the Crazyradio firmware in the ``/prebuilt`` direc
 Adjust configuration files
 --------------------------
 
-Several configuration files may require editing.
-The most significant configuration choice is whether or not to use *unique arrangements*
-of motion capture markers for each Crazyflie in your fleet.
-Select one of the tabs below for a description of each choice.
-Later steps in the documentation will change depending on your selection.
+Several configuration files may require editing. You can edit those files in place, or follow :ref:`tutorial_git_integration` if you want to use your custom package.
 
-.. tabs::
-
-   .. group-tab:: Unique Marker Arrangements
-
-      With a unique marker arrangement for each Crazyflie, you rely on the motion capture vendor to differentiate between objects.
-      This is generally preferred.
-      However, if you have lots of Crazyflies, it can be hard to design enough unique configurations -- there are not many places to put a marker on the Crazyflie.
-
-      If your arrangements are too similar, motion capture software may not fail gracefully.
-      For example, it may rapidly switch back and forth between recognizing two different objects at a single physical location.
-
-   .. group-tab:: Duplicated Marker Arrangements
-
-      If more than one Crazyflie has the same marker arrangement, standard motion capture software will refuse to track them.
-      Instead, Crazyswarm can use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
-      Here we use Iterative Closest Point (ICP) to greedily match the known marker arrangements to the pointcloud. 
-      There are two main consequences of this option:
-
-      - The initial positions of the Crazyflies must be known, to establish a mapping between radio IDs and physical locations.
-      - The tracking is done frame-by-frame, so if markers are occluded for a significant amount of time,
-        the algorithm may not be able to re-establish the ID-location mapping once they are visible again.
-
-      You can use more than one marker arrangement in this mode.
-      For example, you might have several standard Crazyflies with arrangement 1,
-      and several larger quadcopters with arrangement 2.
-
-   .. group-tab:: Single Marker
-
-      A special case of duplicated marker arrangements is the case where we only use a single marker per robot.
-      As before, the Crazyswarm will use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
-      In this mode, we use optimal task assignment at every frame, which makes this mode more robust to motion capture outliers compared to the duplicate marker arrangements.
-      The main disadvantage is that the yaw angle cannot be observed without moving in the xy-plane.
-      Nevertheless, it is possible to hover for 30 seconds in place for a Crazyflie 2.1, without causing flight instabilities.
-      The stable hover time for Crazyflie 2.0 is shorter (about 15s), due to the noisier IMU.
-
-      Currently, it is not possible to mix duplicate marker arrangements and single marker tracking.
-
-.. _config_crazyflies_yaml:
-
-Enumerate Crazyflies
-~~~~~~~~~~~~~~~~~~~~
-First we have ``crazyflies.yaml``, a file that lists all active Crazyflies.
-The Crazyswarm server reads this configuration file at startup.
-If it cannot communicate with all the Crazyflies defined in ``crazyflies.yaml``, it will halt and report an error.
-
-.. code-block:: yaml
-
-    # ros_ws/src/crazyswarm/launch/crazyflies.yaml
-    crazyflies:
-      - id: 1
-        channel: 100
-        initialPosition: [1.5, 1.5, 0.0]
-        type: default
-      - id: 2
-        channel: 110
-        initialPosition: [1.5, 1.0, 0.0]
-        type: medium
-
-The file assumes that the address of each CF is set as discussed earlier.
-The channel can be freely configured.
-
-.. tabs::
-
-   .. group-tab:: Unique Marker Arrangements
-
-      If you use unique marker arrangements, the ``initialPosition`` field of the ``crazyflies.yaml`` entries will be ignored,
-      but it should still be set because the parser will expect it.
-
-   .. group-tab:: Duplicated Marker Arrangements
-
-      If you use duplicated marker arrangements, ``initialPosition`` must be correct.
-      Positions are specified in meters, in the coordinate system of your motion capture device.
-      It is not required that the CFs start exactly at those positions -- a few centimeters variation is fine.
-
-   .. group-tab:: Single Marker
-
-      If you use single markers, ``initialPosition`` can be a rough estimate.
-      Positions are specified in meters, in the coordinate system of your motion capture device.
-
-It is often useful to select a subset of all available Crazyflies.
-The graphical "Chooser" and the additional configuration file ``allCrazyflies.yaml`` help make this easy.
-See :ref:`config_chooser` for details.
-
-
-.. _config_types:
-
-
-Define Crazyflie types
-~~~~~~~~~~~~~~~~~~~~~~
-
-The second configuration file ``crazyflieTypes.yaml`` defines the possible *types*.
-Each type specifies the physical attributes of the quadrotor.
-The ``type`` field in the ``crazyflies.yaml`` entries must refer to a type listed in this file.
-
-.. note::
-
-   Many users will not need to modify this file.
-
-.. code-block:: yaml
-
-    # ros_ws/src/crazyswarm/launch/crazyflieTypes.yaml
-    crazyflieTypes:
-      default:
-        bigQuad: False
-        batteryVoltageWarning: 3.8  # V
-        batteryVoltateCritical: 3.7 # V
-        markerConfiguration: 0
-        dynamicsConfiguration: 0
-        firmwareParams:
-          ...
-      medium:
-        bigQuad: True
-        batteryVoltageWarning: 7.6  # V
-        batteryVoltateCritical: 7.4 # V
-        markerConfiguration: 1
-        dynamicsConfiguration: 0
-        firmwareParams:
-          ...
-    numMarkerConfigurations: 2
-    markerConfigurations:
-      "0":  # for standard Crazyflie
-        numPoints: 4
-        offset: [0.0, -0.01, -0.04]
-        points:
-          "0": [0.0177184,0.0139654,0.0557585]
-          "1": [-0.0262914,0.0509139,0.0402475]
-          "2": [-0.0328889,-0.02757,0.0390601]
-          "3": [0.0431307,-0.0331216,0.0388839]
-      "1": # medium frame
-        numPoints: 4
-        offset: [0.0, 0.0, -0.03]
-        points:
-          "0": [-0.00896228,-0.000716753,0.0716129]
-          "1": [-0.0156318,0.0997402,0.0508162]
-          "2": [0.0461693,-0.0881012,0.0380672]
-          "3": [-0.0789959,-0.0269793,0.0461144]
-    numDynamicsConfigurations: 1
-    dynamicsConfigurations:
-      "0":
-        maxXVelocity: 2.0
-        maxYVelocity: 2.0
-        maxZVelocity: 3.0
-        maxPitchRate: 20.0
-        maxRollRate: 20.0
-        maxYawRate: 10.0
-        maxRoll: 1.4
-        maxPitch: 1.4
-        maxFitnessScore: 0.001
-
-
-
-.. tabs::
-
-   .. group-tab:: Unique Marker Arrangements
-
-      The ``markerConfiguration`` fields are not needed with unique marker arrangements.
-      All marker setup should be done in your motion capture system.
-      Create one object in your motion capture software for each marker arrangement
-      and give them names like ``cf1``, ``cf2``, ``cf3``, etc., corresponding to the IDs listed in your ``crazyflies.yaml``.
-
-   .. group-tab:: Duplicated Marker Arrangements
-
-      For duplicated marker arrangements, each arrangement must be described by a ``markerConfigurations`` entry.
-      The ``points`` specify the physical arrangement of markers you use, in the motion capture coordinate system.
-      For example, the marker configuration ``"0"`` corresponds to an off-the-shelf Crazyflie with the marker configuration shown below:
-
-      .. figure:: images/markerConfigurationExample.jpg
-         :align: center
-         :scale: 70%
-
-      To get values for the ``points``, follow these steps:
-
-      #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
-      #. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
-      #. Update ``crazyflieTypes.yaml``.
-
-   .. group-tab:: Single Marker
-
-      For single markers, the ``markerConfigurations`` entry simply contains a single ``points`` entry. This point should describe the offset of the marker with respect to the Crazyflie's center of mass. For example, the marker configuration ``"3"`` corresponds to the marker placement shown below:
-
-      .. figure:: images/CrazyflieWithSingleMarker.jpg
-         :align: center
-         :scale: 70%
-
-
-Configure motion capture system
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The third configuration file is the ROS launch file, ``ros_ws/src/crazyswarm/launch/hover_swarm.launch``.
-It contains settings on which motion capture system to use, among others.
+Configure external tracking system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The first configuration file is the ROS launch file, ``ros_ws/src/crazyswarm/launch/hover_swarm.launch``.
+It contains settings on which external tracking system to use, among others.
 
 Select hardware make
 ^^^^^^^^^^^^^^^^^^^^
@@ -321,36 +132,225 @@ First, select your tracking system in the appropriate tab below.
 
       (This only works for debugging when connected to a few drones.)
 
+Select object tracking mode (motion capture only)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _config_objecttracking:
-
-Select object tracking mode
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Next, select the object tracking type:
-
+The most significant configuration choice is whether or not to use *unique arrangements*
+of motion capture markers for each Crazyflie in your fleet.
+Select one of the tabs below for a description of each choice.
+Later steps in the documentation will change depending on your selection.
 
 .. tabs::
 
    .. group-tab:: Unique Marker Arrangements
+
+      With a unique marker arrangement for each Crazyflie, you rely on the motion capture vendor to differentiate between objects.
+      This is generally preferred.
+      However, if you have lots of Crazyflies, it can be hard to design enough unique configurations -- there are not many places to put a marker on the Crazyflie.
+
+      If your arrangements are too similar, motion capture software may not fail gracefully.
+      For example, it may rapidly switch back and forth between recognizing two different objects at a single physical location.
 
       .. code-block:: yaml
 
           # ros_ws/src/crazyswarm/launch/hover_swarm.launch
           object_tracking_type: "motionCapture"
 
-      Set ``object_tracking_type`` to ``"motionCapture"``.
-
    .. group-tab:: Duplicated Marker Arrangements
-      j
+
+      If more than one Crazyflie has the same marker arrangement, standard motion capture software will refuse to track them.
+      Instead, Crazyswarm can use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
+      Here we use Iterative Closest Point (ICP) to greedily match the known marker arrangements to the pointcloud. 
+      There are two main consequences of this option:
+
+      - The initial positions of the Crazyflies must be known, to establish a mapping between radio IDs and physical locations.
+      - The tracking is done frame-by-frame, so if markers are occluded for a significant amount of time,
+        the algorithm may not be able to re-establish the ID-location mapping once they are visible again.
+
+      You can use more than one marker arrangement in this mode.
+      For example, you might have several standard Crazyflies with arrangement 1,
+      and several larger quadcopters with arrangement 2.
+
       .. code-block:: yaml
 
           # ros_ws/src/crazyswarm/launch/hover_swarm.launch
           object_tracking_type: "libobjecttracker"
 
-      When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software.
-      Some motion capture systems remove markers from the point cloud when they are matched to an object.
-      Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
+      .. warning::
+         When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software.
+         Some motion capture systems remove markers from the point cloud when they are matched to an object.
+         Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
+
+   .. group-tab:: Single Marker
+
+      A special case of duplicated marker arrangements is the case where we only use a single marker per robot.
+      As before, the Crazyswarm will use the raw point cloud from the motion capture system and track the CFs frame-by-frame.
+      In this mode, we use optimal task assignment at every frame, which makes this mode more robust to motion capture outliers compared to the duplicate marker arrangements.
+      The main disadvantage is that the yaw angle cannot be observed without moving in the xy-plane.
+      Nevertheless, it is possible to hover for 30 seconds in place for a Crazyflie 2.1, without causing flight instabilities.
+      The stable hover time for Crazyflie 2.0 is shorter (about 15s), due to the noisier IMU.
+
+      Currently, it is not possible to mix duplicate marker arrangements and single marker tracking.
+
+      .. code-block:: yaml
+
+          # ros_ws/src/crazyswarm/launch/hover_swarm.launch
+          object_tracking_type: "libobjecttracker"
+
+      .. warning::
+         When using ``libobjecttracker`` it is important to disable tracking of Crazyflies in your motion capture system's control software.
+         Some motion capture systems remove markers from the point cloud when they are matched to an object.
+         Since ``libobjecttracker`` operates on the raw point cloud, it will not be able to track any Crazyflies that have already been "taken" by the motion capture system.
+
+
+.. _config_crazyflies_yaml:
+
+Enumerate Crazyflies
+~~~~~~~~~~~~~~~~~~~~
+Second we have ``crazyflies.yaml``, a file that lists all active Crazyflies.
+The Crazyswarm server reads this configuration file at startup.
+If it cannot communicate with all the Crazyflies defined in ``crazyflies.yaml``, it will halt and report an error.
+
+.. code-block:: yaml
+
+    # ros_ws/src/crazyswarm/launch/crazyflies.yaml
+    crazyflies:
+      - id: 1
+        channel: 100
+        initialPosition: [1.5, 1.5, 0.0]
+        type: default
+      - id: 2
+        channel: 110
+        initialPosition: [1.5, 1.0, 0.0]
+        type: medium
+
+The file assumes that the address of each CF is set as discussed earlier.
+The channel can be freely configured.
+The ``initialPosition`` field is required for the simulation and for some motion capture configurations, see below.
+
+.. tabs::
+
+   .. group-tab:: Unique Marker Arrangements
+
+      If you use unique marker arrangements, the ``initialPosition`` field of the ``crazyflies.yaml`` entries will be ignored,
+      but it should still be set because the parser will expect it.
+
+   .. group-tab:: Duplicated Marker Arrangements
+
+      If you use duplicated marker arrangements, ``initialPosition`` must be correct.
+      Positions are specified in meters, in the coordinate system of your motion capture device.
+      It is not required that the CFs start exactly at those positions -- a few centimeters variation is fine.
+
+   .. group-tab:: Single Marker
+
+      If you use single markers, ``initialPosition`` can be a rough estimate.
+      Positions are specified in meters, in the coordinate system of your motion capture device.
+
+It is often useful to select a subset of all available Crazyflies.
+The graphical "Chooser" and the additional configuration file ``allCrazyflies.yaml`` help make this easy.
+See :ref:`config_chooser` for details.
+
+
+.. _config_types:
+
+
+Define Crazyflie types
+~~~~~~~~~~~~~~~~~~~~~~
+
+The third configuration file ``crazyflieTypes.yaml`` defines the possible *types*.
+Each type specifies the physical attributes of the quadrotor.
+The ``type`` field in the ``crazyflies.yaml`` entries must refer to a type listed in this file.
+
+.. note::
+
+   Many users will not need to modify this file.
+
+.. code-block:: yaml
+
+    # ros_ws/src/crazyswarm/launch/crazyflieTypes.yaml
+    crazyflieTypes:
+      default:
+        bigQuad: False
+        batteryVoltageWarning: 3.8  # V
+        batteryVoltateCritical: 3.7 # V
+        markerConfiguration: 0
+        dynamicsConfiguration: 0
+        firmwareParams:
+          ...
+      medium:
+        bigQuad: True
+        batteryVoltageWarning: 7.6  # V
+        batteryVoltateCritical: 7.4 # V
+        markerConfiguration: 1
+        dynamicsConfiguration: 0
+        firmwareParams:
+          ...
+    numMarkerConfigurations: 2
+    markerConfigurations:
+      "0":  # for standard Crazyflie
+        numPoints: 4
+        offset: [0.0, -0.01, -0.04]
+        points:
+          "0": [0.0177184,0.0139654,0.0557585]
+          "1": [-0.0262914,0.0509139,0.0402475]
+          "2": [-0.0328889,-0.02757,0.0390601]
+          "3": [0.0431307,-0.0331216,0.0388839]
+      "1": # medium frame
+        numPoints: 4
+        offset: [0.0, 0.0, -0.03]
+        points:
+          "0": [-0.00896228,-0.000716753,0.0716129]
+          "1": [-0.0156318,0.0997402,0.0508162]
+          "2": [0.0461693,-0.0881012,0.0380672]
+          "3": [-0.0789959,-0.0269793,0.0461144]
+    numDynamicsConfigurations: 1
+    dynamicsConfigurations:
+      "0":
+        maxXVelocity: 2.0
+        maxYVelocity: 2.0
+        maxZVelocity: 3.0
+        maxPitchRate: 20.0
+        maxRollRate: 20.0
+        maxYawRate: 10.0
+        maxRoll: 1.4
+        maxPitch: 1.4
+        maxFitnessScore: 0.001
+
+The dynamics and marker configurations are only relevant when using a motion capture system for tracking, see below for details.
+
+.. tabs::
+
+   .. group-tab:: Unique Marker Arrangements
+
+      The ``markerConfiguration`` fields are not needed with unique marker arrangements.
+      All marker setup should be done in your motion capture system.
+      Create one object in your motion capture software for each marker arrangement
+      and give them names like ``cf1``, ``cf2``, ``cf3``, etc., corresponding to the IDs listed in your ``crazyflies.yaml``.
+
+   .. group-tab:: Duplicated Marker Arrangements
+
+      For duplicated marker arrangements, each arrangement must be described by a ``markerConfigurations`` entry.
+      The ``points`` specify the physical arrangement of markers you use, in the motion capture coordinate system.
+      For example, the marker configuration ``"0"`` corresponds to an off-the-shelf Crazyflie with the marker configuration shown below:
+
+      .. figure:: images/markerConfigurationExample.jpg
+         :align: center
+         :scale: 70%
+
+      To get values for the ``points``, follow these steps:
+
+      #. Place one CF with the desired arrangement at the origin of your motion capture space. The front of the Crazyflie should point in the ``x`` direction of the motion capture coordinate system.
+      #. Find the coordinates of the used markers, for example by using ``roslaunch crazyswarm mocap_helper.launch``. (You may need to do ``source ros_ws/devel/setup.bash`` before ``roslaunch``)
+      #. Update ``crazyflieTypes.yaml``.
+
+   .. group-tab:: Single Marker
+
+      For single markers, the ``markerConfigurations`` entry simply contains a single ``points`` entry. This point should describe the offset of the marker with respect to the Crazyflie's center of mass. For example, the marker configuration ``"3"`` corresponds to the marker placement shown below:
+
+      .. figure:: images/CrazyflieWithSingleMarker.jpg
+         :align: center
+         :scale: 70%
+
 
 
 .. _config_chooser:

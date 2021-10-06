@@ -39,7 +39,7 @@ jobs:
         sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions ros-${{ matrix.ros }}-joy
         sudo apt install -y libpcl-dev libusb-1.0-0-dev
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-pip
-        sudo ${{ matrix.pyVer }} -m pip install pytest numpy PyYAML matplotlib scipy
+        sudo ${{ matrix.pyVer }} -m pip install pytest numpy PyYAML matplotlib scipy ffmpeg-python
 
     - name: Install Embedded GCC for Ubuntu 20
       if: matrix.os == 'ubuntu-20.04'

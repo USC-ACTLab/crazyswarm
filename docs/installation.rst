@@ -79,16 +79,21 @@ Click the appropriate tab(s) below to see the installation instructions for your
                .. program-output:: python3 generate_install_deps_code.py ../.github/workflows/ci-ros.yml | sed -e '/ros/d' -e '/usb/d'
                   :shell:
 
-            3. Clone the Crazyswarm git repository::
+            3. Install the optional dependencies::
+
+                $ sudo apt install -y ffmpeg
+                $ ${CSW_PYTHON} -m pip install ffmpeg-python
+
+            4. Clone the Crazyswarm git repository::
 
                 $ git clone https://github.com/USC-ACTLab/crazyswarm.git
 
-            4. Run the build script::
+            5. Run the build script::
 
                 $ cd crazyswarm
                 $ ./buildSimOnly.sh
 
-            5. Verify the installation by running the unit tests::
+            6. Verify the installation by running the unit tests::
 
                 $ cd ros_ws/src/crazyswarm/scripts
                 $ $CSW_PYTHON -m pytest
@@ -112,18 +117,24 @@ Click the appropriate tab(s) below to see the installation instructions for your
          .. program-output:: python3 generate_install_deps_code.py ../.github/workflows/ci-ros.yml
             :shell:
 
-      4. Clone the Crazyswarm git repository::
+      4. Install the optional dependencies::
+
+          $ sudo apt install -y ffmpeg
+          $ ${CSW_PYTHON} -m pip install ffmpeg-python
+
+      5. Clone the Crazyswarm git repository::
 
           $ git clone https://github.com/USC-ACTLab/crazyswarm.git
 
-      5. Run the build script::
+      6. Run the build script::
 
           $ cd crazyswarm
           $ ./build.sh
 
-      6. Verify the installation by running the unit tests::
+      7. Verify the installation by running the unit tests::
 
           $ cd ros_ws/src/crazyswarm/scripts
+          $ source ../../../devel/setup.bash
           $ $CSW_PYTHON -m pytest
 
 

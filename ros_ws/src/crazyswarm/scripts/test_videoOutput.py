@@ -61,7 +61,7 @@ def test_videoOutput(tmp_path):
     # tmp_path is supplied by pytest - a directory where we can write that will
     # eventually be deleted.
     path = str(tmp_path / "crazyswarm_test_video.mp4")
-    subprocess.call(["python", __file__, path])
+    subprocess.call([os.environ["CSW_PYTHON"], __file__, path])
 
     import ffmpeg
     properties = ffmpeg.probe(path)

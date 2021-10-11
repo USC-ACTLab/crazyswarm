@@ -81,6 +81,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
 
             3. Install the optional dependencies::
 
+                $ sudo apt install -y ffmpeg
                 $ ${CSW_PYTHON} -m pip install ffmpeg-python
 
             4. Clone the Crazyswarm git repository::
@@ -118,6 +119,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
 
       4. Install the optional dependencies::
 
+          $ sudo apt install -y ffmpeg
           $ ${CSW_PYTHON} -m pip install ffmpeg-python
 
       5. Clone the Crazyswarm git repository::

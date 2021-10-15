@@ -2,32 +2,38 @@
 
 import rospy
 from tf import TransformListener
-
-import yaml
 import numpy as np
+
 from pycrazyswarm.crazyflie import Crazyflie
 
+def run(tf, cf):
+    # Use the following to get state information of neighbors
+    # position, quaternion = ctf.lookupTransform("/world", "/cf" + str(cfid), rospy.Time(0))
+    rospy.loginfo("HERE")
+    pos = cf.initialPosition.copy()
+    cf.takeoff(targetHeight=0.5, duration=2.0)
+    for _ in range(10):
+        pos[2] = np.random.uniform(0.5, 1.0)
+        duration = np.random.uniform(0.5, 2.0)
+        rospy.loginfo("CF {} going to {} in {}s".format(cf.id, pos, duration))
+        cf.goTo(pos, 0, duration)
+        rospy.sleep(duration)
+
+    cf.land(targetHeight=0.02, duration=2.0)
 
 if __name__ == "__main__":
 
     rospy.init_node("CrazyflieDistributed", anonymous=True)
-
-    with open(rospy.get_param("crazyflies_yaml"), 'r') as ymlfile:
-        cfg = yaml.safe_load(ymlfile)
-
-    tf = TransformListener()
-
+    cfid = rospy.get_param("~cfid")
     cf = None
-    for crazyflie in cfg["crazyflies"]:
-        cfid = int(crazyflie["id"])
-        if cfid == 1:
+    for crazyflie in rospy.get_param("crazyflies"):
+        if cfid == int(crazyflie["id"]):
             initialPosition = crazyflie["initialPosition"]
+            tf = TransformListener()
             cf = Crazyflie(cfid, initialPosition, tf)
             break
 
     if cf is None:
-        exit("No CF with required ID found!")
-
-    cf.takeoff(0.5, 2.0)
-    rospy.sleep(2.5)
-    cf.land(0.02, 2.0)
+        rospy.logwarn("No CF with required ID {} found!".format(cfid))
+    else:
+        run(tf, cf)

@@ -2,15 +2,16 @@
 
 import rospy
 import tf2_ros
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty as EmptyMsg
+from std_srvs.srv import Empty as EmptySrv
 import geometry_msgs.msg
 from visualization_msgs.msg import Marker
 
-import yaml
 import numpy as np
-from crazyflie_driver.srv import *
-from crazyflie_driver.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
-from pycrazyswarm.crazyflieSim import TimeHelper, Crazyflie
+from crazyswarm.srv import *
+from crazyswarm.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
+from pycrazyswarm.crazyflieSim import Crazyflie, CrazyflieServer
+import uav_trajectory
 
 
 class TimeHelperROS:
@@ -21,7 +22,7 @@ class TimeHelperROS:
         return (rospy.Time.now() - self.start).to_sec()
 
 
-class CrazyflieROS(Crazyflie):
+class CrazyflieROSSim(Crazyflie):
     def __init__(self, id, initialPosition, timeHelper):
         super().__init__(id, initialPosition, timeHelper)
 
@@ -37,7 +38,7 @@ class CrazyflieROS(Crazyflie):
 
         rospy.Subscriber(prefix + "/cmd_full_state", FullState, self.handle_cmd_full_state)
         rospy.Subscriber(prefix + "/cmd_position", Position, self.handle_cmd_position)
-        rospy.Subscriber(prefix + "/cmd_stop", Empty, self.handle_cmd_stop)
+        rospy.Subscriber(prefix + "/cmd_stop", EmptyMsg, self.handle_cmd_stop)
 
         # LED support
         self.ledsPublisher = rospy.Publisher("/visualization_marker", Marker, queue_size=1)
@@ -50,7 +51,6 @@ class CrazyflieROS(Crazyflie):
         return SetGroupMaskResponse()
 
     def handle_takeoff(self, req):
-        print(req)
         self.takeoff(req.height, req.duration.to_sec(), req.groupMask)
         return TakeoffResponse()
 
@@ -64,17 +64,27 @@ class CrazyflieROS(Crazyflie):
         return GoToResponse()
 
     def handle_upload_trajectory(self, req):
-        print("ERROR NOT IMPLEMENTED!")
+        trajectory = uav_trajectory.Trajectory()
+        trajectory.duration = 0
+        trajectory.polynomials = []
+        for piece in req.pieces:
+            poly = uav_trajectory.Polynomial4D(
+                piece.duration.to_sec(), piece.poly_x, piece.poly_y, piece.poly_z, piece.poly_yaw)
+            trajectory.polynomials.append(poly)
+            trajectory.duration += poly.duration
+        self.uploadTrajectory(req.trajectoryId, req.pieceOffset, trajectory)
+        return UploadTrajectoryResponse()
 
     def handle_start_trajectory(self, req):
-        print("ERROR NOT IMPLEMENTED!")
+        self.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask)
+        return StartTrajectoryResponse()
 
     def handle_notify_setpoints_stop(self, req):
         self.notifySetpointsStop(req.remainValidMillisecs)
         return NotifySetpointsStopResponse()
 
     def handle_update_params(self, req):
-        print("Warning: Update params not implemented in simulation!", req)
+        rospy.logwarn("Update params not implemented in simulation!")
         for param in req.params:
             if "ring/solid" in param:
                 self.updateLED()
@@ -133,39 +143,65 @@ class CrazyflieROS(Crazyflie):
             marker.frame_locked = True
             self.ledsPublisher.publish(marker)
 
-class CrazyflieServerROS:
-    def __init__(self, timehelper, crazyflies_yaml="../launch/crazyflies.yaml"):
+
+class CrazyflieServerROSSim(CrazyflieServer):
+    def __init__(self, timehelper):
         """Initialize the server.
-
-        Args:
-            crazyflies_yaml (str): If ends in ".yaml", interpret as a path and load
-                from file. Otherwise, interpret as YAML string and parse
-                directly from string.
         """
-        if crazyflies_yaml.endswith(".yaml"):
-            with open(crazyflies_yaml, 'r') as ymlfile:
-                cfg = yaml.safe_load(ymlfile)
-        else:
-            cfg = yaml.safe_load(crazyflies_yaml)
-
         self.crazyflies = []
         self.crazyfliesById = dict()
-        for crazyflie in cfg["crazyflies"]:
+        for crazyflie in rospy.get_param("crazyflies"):
             id = int(crazyflie["id"])
             initialPosition = crazyflie["initialPosition"]
-            cf = CrazyflieROS(id, initialPosition, timeHelper)
+            cf = CrazyflieROSSim(id, initialPosition, timeHelper)
             self.crazyflies.append(cf)
             self.crazyfliesById[id] = cf
+
+        self.timeHelper = timeHelper
+        self.timeHelper.crazyflies = self.crazyflies
+
+        rospy.Service('/emergency', EmptySrv, self.handle_emergency)
+        rospy.Service('/takeoff', Takeoff, self.handle_takeoff)
+        rospy.Service('/land', Land, self.handle_land)
+        rospy.Service('/go_to', GoTo, self.handle_go_to)
+        rospy.Service('/start_trajectory', StartTrajectory, self.handle_start_trajectory)
+        rospy.Service('/update_params', UpdateParams, self.handle_update_params)
+
+    def handle_emergency(self, req):
+        self.emergency()
+        return EmptyResponse()
+
+    def handle_takeoff(self, req):
+        self.takeoff(req.height, req.duration.to_sec(), req.groupMask)
+        return TakeoffResponse()
+
+    def handle_land(self, req):
+        self.land(req.height, req.duration.to_sec(), req.groupMask)
+        return LandResponse()
+
+    def handle_go_to(self, req):
+        goal = [req.goal.x, req.goal.y, req.goal.z]
+        self.goTo(goal, req.yaw, req.duration.to_sec(),
+                  req.relative, req.groupMask)
+        return GoToResponse()
+
+    def handle_start_trajectory(self, req):
+        self.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask)
+        return StartTrajectoryResponse()
+
+    def handle_update_params(self, req):
+        rospy.logwarn("Update params not implemented in simulation!")
+        return UpdateParamsResponse()
 
 
 if __name__ == "__main__":
 
     rospy.init_node("CrazyflieROSSim", anonymous=False)
+    dt = rospy.get_param('dt', 0.1)
 
     timeHelper = TimeHelperROS()
-    srv = CrazyflieServerROS(timeHelper, rospy.get_param("crazyflies_yaml"))
+    srv = CrazyflieServerROSSim(timeHelper)
 
-    dt = 0.1
     rate = rospy.Rate(1/dt) # hz
 
     br = tf2_ros.TransformBroadcaster()

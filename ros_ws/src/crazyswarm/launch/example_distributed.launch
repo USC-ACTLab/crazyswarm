@@ -2,7 +2,7 @@
 <launch>
   <include file="$(find crazyswarm)/launch/hover_swarm.launch" pass_all_args="true" />
 
-  <node name="cf1" pkg="crazyswarm" type="example_distributed.py" output="screen">
+  <node name="cf1" pkg="crazyswarm" type="example_distributed.py">
     <param name="cfid" value="1" />
   </node>
 

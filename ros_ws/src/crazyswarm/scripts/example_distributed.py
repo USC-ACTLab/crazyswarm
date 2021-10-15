@@ -8,8 +8,7 @@ from pycrazyswarm.crazyflie import Crazyflie
 
 def run(tf, cf):
     # Use the following to get state information of neighbors
-    # position, quaternion = ctf.lookupTransform("/world", "/cf" + str(cfid), rospy.Time(0))
-    rospy.loginfo("HERE")
+    # position, quaternion = tf.lookupTransform("/world", "/cf" + str(cfid), rospy.Time(0))
     pos = cf.initialPosition.copy()
     cf.takeoff(targetHeight=0.5, duration=2.0)
     for _ in range(10):

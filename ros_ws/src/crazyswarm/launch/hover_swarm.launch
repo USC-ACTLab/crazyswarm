@@ -6,7 +6,7 @@
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflieTypes.yaml" />
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflies.yaml" />
 
-  <!-- Run crazyswarm_server, unless sim is set to True -->
+  <!-- Run crazyswarm_server, if sim is set to False -->
   <node unless="$(arg sim)" pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
       # Logging configuration (Use enable_logging to actually enable logging)
@@ -47,7 +47,7 @@
     </rosparam>
   </node>
 
-  <!-- Run crazyswarm_server simulation, unless sim is set to True -->
+  <!-- Run crazyswarm_server simulation, if sim is set to True -->
   <node if="$(arg sim)" name="sim" pkg="crazyswarm" type="sim.py" output="screen">
   </node>
 

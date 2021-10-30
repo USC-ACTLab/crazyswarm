@@ -48,7 +48,7 @@
   </node>
 
   <!-- Run crazyswarm_server simulation, if sim is set to True -->
-  <node if="$(arg sim)" name="sim" pkg="crazyswarm" type="sim.py" output="screen">
+  <node if="$(arg sim)" name="sim" pkg="crazyswarm" type="sim_ros.py" output="screen">
   </node>
 
   <node name="joy" pkg="joy" type="joy_node" output="screen">

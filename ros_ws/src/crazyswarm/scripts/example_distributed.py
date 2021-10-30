@@ -7,7 +7,7 @@ import numpy as np
 from pycrazyswarm.crazyflie import Crazyflie
 
 def run(tf, cf):
-    # Use the following to get state information of neighbors
+    # Advanced users: Use the following to get state information of neighbors
     # position, quaternion = tf.lookupTransform("/world", "/cf" + str(cfid), rospy.Time(0))
     pos = cf.initialPosition.copy()
     cf.takeoff(targetHeight=0.5, duration=2.0)

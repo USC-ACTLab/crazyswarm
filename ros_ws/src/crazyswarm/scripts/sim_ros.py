@@ -2,6 +2,7 @@
 
 import rospy
 import tf2_ros
+from tf.transformations import euler_from_quaternion
 from std_msgs.msg import Empty as EmptyMsg
 from std_srvs.srv import Empty as EmptySrv
 import geometry_msgs.msg
@@ -22,9 +23,9 @@ class TimeHelperROS:
         return (rospy.Time.now() - self.start).to_sec()
 
 
-class CrazyflieROSSim(Crazyflie):
+class CrazyflieROSSim:
     def __init__(self, id, initialPosition, timeHelper):
-        super().__init__(id, initialPosition, timeHelper)
+        self.cfsim = Crazyflie(id, initialPosition, timeHelper)
 
         prefix = "/cf" + str(id)
         rospy.Service(prefix + '/set_group_mask', SetGroupMask, self.handle_set_group_mask)
@@ -47,20 +48,20 @@ class CrazyflieROSSim(Crazyflie):
         self.stopped = False
 
     def handle_set_group_mask(self, req):
-        self.setGroupMask(req.groupMask)
+        self.cfsim.setGroupMask(req.groupMask)
         return SetGroupMaskResponse()
 
     def handle_takeoff(self, req):
-        self.takeoff(req.height, req.duration.to_sec(), req.groupMask)
+        self.cfsim.takeoff(req.height, req.duration.to_sec(), req.groupMask)
         return TakeoffResponse()
 
     def handle_land(self, req):
-        self.land(req.height, req.duration.to_sec(), req.groupMask)
+        self.cfsim.land(req.height, req.duration.to_sec(), req.groupMask)
         return LandResponse()
 
     def handle_go_to(self, req):
         goal = [req.goal.x, req.goal.y, req.goal.z]
-        self.goTo(goal, req.yaw, req.duration.to_sec(), req.relative, req.groupMask)
+        self.cfsim.goTo(goal, req.yaw, req.duration.to_sec(), req.relative, req.groupMask)
         return GoToResponse()
 
     def handle_upload_trajectory(self, req):
@@ -72,19 +73,18 @@ class CrazyflieROSSim(Crazyflie):
                 piece.duration.to_sec(), piece.poly_x, piece.poly_y, piece.poly_z, piece.poly_yaw)
             trajectory.polynomials.append(poly)
             trajectory.duration += poly.duration
-        self.uploadTrajectory(req.trajectoryId, req.pieceOffset, trajectory)
+        self.cfsim.uploadTrajectory(req.trajectoryId, req.pieceOffset, trajectory)
         return UploadTrajectoryResponse()
 
     def handle_start_trajectory(self, req):
-        self.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask)
+        self.cfsim.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask)
         return StartTrajectoryResponse()
 
     def handle_notify_setpoints_stop(self, req):
-        self.notifySetpointsStop(req.remainValidMillisecs)
+        self.cfsim.notifySetpointsStop(req.remainValidMillisecs)
         return NotifySetpointsStopResponse()
 
     def handle_update_params(self, req):
-        rospy.logwarn("Update params not implemented in simulation!")
         for param in req.params:
             if "ring/solid" in param:
                 self.updateLED()
@@ -92,6 +92,8 @@ class CrazyflieROSSim(Crazyflie):
                 v = rospy.get_param("/cf" + str(self.id) + "/ring/effect")
                 if v == 0:
                     self.removeLED()
+            else:
+                rospy.logwarn("Updating param {} not implemented in simulation!".format(param))
 
         return UpdateParamsResponse()
 
@@ -100,15 +102,16 @@ class CrazyflieROSSim(Crazyflie):
         vel = [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z]
         acc = [msg.acc.x, msg.acc.y, msg.acc.z]
         omega = [msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z]
-        # TODO: extract yaw from quat?
-        self.cmdFullState(pos, vel, acc, 0, omega)
+        xyzw = [msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z, msg.pose.orientation.w]
+        _, _, yaw = euler_from_quaternion(xyzw)
+        self.cfsim.cmdFullState(pos, vel, acc, yaw, omega)
 
     def handle_cmd_position(self, msg):
         pos = [msg.x, msg.y, msg.z]
-        self.cmdPosition(pos, msg.yaw)
+        self.cfsim.cmdPosition(pos, msg.yaw)
 
     def handle_cmd_stop(self, msg):
-        self.cmdStop()
+        self.cfsim.cmdStop()
         self.stopped = True
         self.removeLED()
 
@@ -144,21 +147,17 @@ class CrazyflieROSSim(Crazyflie):
             self.ledsPublisher.publish(marker)
 
 
-class CrazyflieServerROSSim(CrazyflieServer):
+class CrazyflieServerROSSim:
     def __init__(self, timehelper):
         """Initialize the server.
         """
+        # Populate crazyflies
         self.crazyflies = []
-        self.crazyfliesById = dict()
         for crazyflie in rospy.get_param("crazyflies"):
             id = int(crazyflie["id"])
             initialPosition = crazyflie["initialPosition"]
-            cf = CrazyflieROSSim(id, initialPosition, timeHelper)
+            cf = CrazyflieROSSim(id, initialPosition, timehelper)
             self.crazyflies.append(cf)
-            self.crazyfliesById[id] = cf
-
-        self.timeHelper = timeHelper
-        self.timeHelper.crazyflies = self.crazyflies
 
         rospy.Service('/emergency', EmptySrv, self.handle_emergency)
         rospy.Service('/takeoff', Takeoff, self.handle_takeoff)
@@ -168,41 +167,43 @@ class CrazyflieServerROSSim(CrazyflieServer):
         rospy.Service('/update_params', UpdateParams, self.handle_update_params)
 
     def handle_emergency(self, req):
-        self.emergency()
+        rospy.logwarn("Emergency not implemented in simulation!")
         return EmptyResponse()
 
     def handle_takeoff(self, req):
-        self.takeoff(req.height, req.duration.to_sec(), req.groupMask)
+        for cf in self.crazyflies:
+            cf.handle_takeoff(req)
         return TakeoffResponse()
 
     def handle_land(self, req):
-        self.land(req.height, req.duration.to_sec(), req.groupMask)
+        for cf in self.crazyflies:
+            cf.handle_land(req)
         return LandResponse()
 
     def handle_go_to(self, req):
-        goal = [req.goal.x, req.goal.y, req.goal.z]
-        self.goTo(goal, req.yaw, req.duration.to_sec(),
-                  req.relative, req.groupMask)
+        for cf in self.crazyflies:
+            cf.handle_go_to(req)
         return GoToResponse()
 
     def handle_start_trajectory(self, req):
-        self.startTrajectory(req.trajectoryId, req.timescale, req.reversed, req.relative, req.groupMask)
+        for cf in self.crazyflies:
+            cf.handle_start_trajectory(req)
         return StartTrajectoryResponse()
 
     def handle_update_params(self, req):
-        rospy.logwarn("Update params not implemented in simulation!")
+        for cf in self.crazyflies:
+            cf.handle_update_params(req)
         return UpdateParamsResponse()
 
 
-if __name__ == "__main__":
-
+def main():
     rospy.init_node("CrazyflieROSSim", anonymous=False)
     dt = rospy.get_param('dt', 0.1)
 
     timeHelper = TimeHelperROS()
     srv = CrazyflieServerROSSim(timeHelper)
 
-    rate = rospy.Rate(1/dt) # hz
+    rate = rospy.Rate(1/dt)  # hz
 
     br = tf2_ros.TransformBroadcaster()
     transform = geometry_msgs.msg.TransformStamped()
@@ -215,10 +216,10 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         transform.header.stamp = rospy.Time.now()
         for cf in srv.crazyflies:
-            cf.integrate(dt, 0, np.inf)
+            cf.cfsim.integrate(dt, 0, np.inf)
             if not cf.stopped:
-                cfid = cf.id
-                pos = cf.position()
+                cfid = cf.cfsim.id
+                pos = cf.cfsim.position()
                 if np.isfinite(pos).all():
                     transform.child_frame_id = "/cf" + str(cfid)
                     transform.transform.translation.x = pos[0]
@@ -226,5 +227,8 @@ if __name__ == "__main__":
                     transform.transform.translation.z = pos[2]
                     br.sendTransform(transform)
         for cf in srv.crazyflies:
-            cf.flip()
+            cf.cfsim.flip()
         rate.sleep()
+
+if __name__ == "__main__":
+    main()

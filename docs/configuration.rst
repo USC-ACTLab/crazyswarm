@@ -95,6 +95,9 @@ First, select your tracking system in the appropriate tab below.
 
       If using ``libobjecttracker`` as ``object_tracking_type`` disable all assets and make sure that labeled or unlabeled markers are being streamed.
 
+      .. note::
+         If you have trouble with receiving data (e.g., when using older Motive versions), try "optitrack_closed_source" as "motion_capture_type".
+
    .. tab:: Qualisys
 
       Qualisys has been tested to work with QTM 2.16 both for rigid body and point cloud. It is expected to work with any later version of QTM.

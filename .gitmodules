@@ -8,3 +8,6 @@
 [submodule "ros_ws/src/externalDependencies/libmotioncapture"]
 	path = ros_ws/src/crazyswarm/externalDependencies/libmotioncapture
 	url = https://github.com/IMRCLab/libmotioncapture.git
+[submodule "crazyswarm2/deps/crazyflie_tools"]
+	path = crazyswarm2/deps/crazyflie_tools
+	url = https://github.com/whoenig/crazyflie_tools.git

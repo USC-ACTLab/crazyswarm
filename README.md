@@ -7,6 +7,8 @@ cd ros2_ws/src
 git clone https://github.com/IMRCLab/crazyswarm2
 cd ../
 colcon build --packages-skip crazyswarm crazyflie_tools libmotioncapture cffirmware libobjecttracker
+. install/local_setup.zsh
+ros2 run crazyswarm2 console
 ```
 
 ## OLD - TO BE UPDATED

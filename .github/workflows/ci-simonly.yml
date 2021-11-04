@@ -1,6 +1,11 @@
 name: Sim-Only Conda CI
 
-on: [push, pull_request]
+# Disable for now
+on:
+  push:
+    branches-ignore:
+      - '**'
+# on: [push, pull_request]
 
 jobs:
   build:

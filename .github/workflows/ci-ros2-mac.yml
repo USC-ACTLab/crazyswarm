@@ -1,4 +1,4 @@
-name: ROS2
+name: ROS2 (Mac)
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
       # Pull the latest version here
       - name: install dependencies
         run: |
-          pip3 install git+https://github.com/dirk-thomas/vcstool.git@7d1329f296cef4b767bf7ba0bf53a29dd3d3019c
+          sudo pip3 install git+https://github.com/dirk-thomas/vcstool.git@7d1329f296cef4b767bf7ba0bf53a29dd3d3019c
 
       - name: Install dependencies
         run: |

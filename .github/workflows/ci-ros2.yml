@@ -1,4 +1,4 @@
-name: ROS2
+name: ROS2 (Ubuntu)
 
 on:
   push:

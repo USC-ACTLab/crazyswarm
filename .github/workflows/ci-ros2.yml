@@ -64,13 +64,14 @@ jobs:
       - name: build and test ROS 2
         uses: ros-tooling/action-ros-ci@v0.2
         with:
-          package-name: crazyswarm2
+          package-name: crazyswarm2 crazyswarm2_interfaces
           target-ros2-distro: ${{ matrix.ros_distribution }}
           colcon-defaults: |
                   {
                     "build": {
                       "packages-select": [
-                          "crazyswarm2"
+                          "crazyswarm2",
+                          "crazyswarm2_interfaces"
                       ]
                     }
                   }

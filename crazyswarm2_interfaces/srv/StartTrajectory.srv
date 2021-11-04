@@ -1,5 +1,5 @@
-uint8 groupMask
-uint8 trajectoryId
+uint8 group_mask
+uint8 trajectory_id
 float32 timescale
 bool reversed
 bool relative

@@ -1,6 +1,6 @@
-uint8 groupMask
+uint8 group_mask
 bool relative
 geometry_msgs/Point goal
 float32 yaw # deg
-duration duration
+builtin_interfaces/Duration duration
 ---

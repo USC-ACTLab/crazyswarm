@@ -26,7 +26,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Takeoff.srv"
   "srv/UpdateParams.srv"
   "srv/UploadTrajectory.srv"
- )
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

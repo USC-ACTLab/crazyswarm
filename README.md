@@ -1,12 +1,32 @@
+[![ROS2](https://github.com/IMRCLab/crazyswarm2/actions/workflows/ci-ros2.yml/badge.svg)](https://github.com/IMRCLab/crazyswarm2/actions/workflows/ci-ros2.yml)
+
 # Crazyswarm2
 A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
+
+## Current Status
+
+* CI for Galactic (Ubuntu only)
+* crazyswarm2 package
+  * Former crazyflie_tools, e.g., `ros2 run crazyswarm2 console`
+* crazyswarm2_interfaces package
+  * All msg/srv files similar to before (updated to follow the new style guide)
+* Standalone tracking package, see https://github.com/IMRCLab/motion_capture_tracking/tree/ros2
+
+## Missing
+
+* Former crazyswarm_server
+* Former crazyswarm_teleop
+* Simulation
+* Scripting layer
+
+## Building and Running
 
 ```
 mkdir -p ros2_ws/src
 cd ros2_ws/src
 git clone https://github.com/IMRCLab/crazyswarm2
 cd ../
-colcon build --packages-skip crazyswarm crazyflie_tools libmotioncapture cffirmware libobjecttracker
+colcon build --packages-select crazyswarm2 crazyswarm2_interfaces
 . install/local_setup.zsh
 ros2 run crazyswarm2 console
 ```

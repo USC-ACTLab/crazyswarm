@@ -1,10 +1,15 @@
 name: ROS2 (Mac)
 
+# Disable for now
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches-ignore:
+      - '**'
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
 
 jobs:
   build: # Docker is not supported on macOS and Windows.

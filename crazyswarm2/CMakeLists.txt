@@ -8,6 +8,9 @@ project(crazyswarm2)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(crazyswarm2_interfaces REQUIRED)
 
 # add dependencies
 add_subdirectory(deps/crazyflie_tools)# EXCLUDE_FROM_ALL)
@@ -19,6 +22,16 @@ include_directories(
 #  externalDependencies/libmotioncapture/include
 #  ${EIGEN3_INCLUDE_DIRS}
 #  ${PCL_INCLUDE_DIRS}
+)
+
+add_executable(teleop 
+  src/teleop.cpp
+)
+ament_target_dependencies(teleop 
+  rclcpp
+  sensor_msgs
+  std_srvs
+  crazyswarm2_interfaces
 )
 
 # # scan
@@ -47,6 +60,7 @@ include_directories(
 #target_compile_features(motion_capture_tracking_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(TARGETS
+  # crazyflie_tools
   scan
   listParams
   listLogVariables
@@ -57,6 +71,8 @@ install(TARGETS
   console
   log
   setParam
+  #
+  teleop
   DESTINATION lib/${PROJECT_NAME})
 
 

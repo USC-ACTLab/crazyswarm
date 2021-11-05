@@ -8,6 +8,7 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 * CI for Galactic (Ubuntu only)
 * crazyswarm2 package
   * Former crazyflie_tools, e.g., `ros2 run crazyswarm2 console`
+  * Former crazyswarm_teleop
 * crazyswarm2_interfaces package
   * All msg/srv files similar to before (updated to follow the new style guide)
 * Standalone tracking package, see https://github.com/IMRCLab/motion_capture_tracking/tree/ros2
@@ -15,7 +16,6 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 ## Missing
 
 * Former crazyswarm_server
-* Former crazyswarm_teleop
 * Simulation
 * Scripting layer
 

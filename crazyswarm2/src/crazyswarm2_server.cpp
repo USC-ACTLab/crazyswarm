@@ -1,3 +1,147 @@
+#include <memory>
+#include <vector>
+
+#include <crazyflie_cpp/Crazyflie.h>
+
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/joy.hpp"
+#include "std_srvs/srv/empty.hpp"
+#include "crazyswarm2_interfaces/srv/start_trajectory.hpp"
+#include "crazyswarm2_interfaces/srv/takeoff.hpp"
+#include "crazyswarm2_interfaces/srv/land.hpp"
+#include "crazyswarm2_interfaces/srv/go_to.hpp"
+
+using std::placeholders::_1;
+using std::placeholders::_2;
+
+using crazyswarm2_interfaces::srv::StartTrajectory;
+using crazyswarm2_interfaces::srv::Takeoff;
+using crazyswarm2_interfaces::srv::Land;
+using crazyswarm2_interfaces::srv::GoTo;
+using std_srvs::srv::Empty;
+
+// Helper class to convert crazyflie_cpp logging messages to ROS logging messages
+class CrazyflieLogger : public Logger
+{
+public:
+  CrazyflieLogger(rclcpp::Logger logger)
+      : Logger()
+      , logger_(logger)
+  {
+  }
+
+  virtual ~CrazyflieLogger() {}
+
+  virtual void info(const std::string &msg)
+  {
+    RCLCPP_INFO(logger_, "%s", msg.c_str());
+  }
+
+  virtual void warning(const std::string &msg)
+  {
+    RCLCPP_WARN(logger_, "%s", msg.c_str());
+  }
+
+  virtual void error(const std::string &msg)
+  {
+    RCLCPP_ERROR(logger_, "%s", msg.c_str());
+  }
+private:
+  rclcpp::Logger logger_;
+};
+
+// ROS wrapper for a single Crazyflie object
+class CrazyflieROS
+{
+public:
+  CrazyflieROS(
+    const std::string& link_uri)
+    : logger_(rclcpp::get_logger(link_uri))
+    , cf_logger_(logger_)
+    , cf_(
+      link_uri,
+      cf_logger_,
+      std::bind(&CrazyflieROS::on_console, this, std::placeholders::_1))
+  {
+  }
+
+private:
+  void on_console(const char *msg)
+  {
+    message_buffer_ += msg;
+    size_t pos = message_buffer_.find('\n');
+    if (pos != std::string::npos)
+    {
+      message_buffer_[pos] = 0;
+      RCLCPP_INFO(logger_, "%s", message_buffer_.c_str());
+      message_buffer_.erase(0, pos + 1);
+    }
+  }
+
+private:
+  rclcpp::Logger logger_;
+  CrazyflieLogger cf_logger_;
+
+  Crazyflie cf_;
+  std::string message_buffer_;
+};
+
+class CrazyflieServer : public rclcpp::Node
+{
+public:
+  CrazyflieServer()
+      : Node("crazyswarm2_server")
+  {
+    service_emergency_ = this->create_service<Empty>("emergency", std::bind(&CrazyflieServer::emergency, this, _1, _2));
+    service_start_trajectory_ = this->create_service<StartTrajectory>("start_trajectory", std::bind(&CrazyflieServer::start_trajectory, this, _1, _2));
+    service_takeoff_ = this->create_service<Takeoff>("takeoff", std::bind(&CrazyflieServer::takeoff, this, _1, _2));
+    service_land_ = this->create_service<Land>("land", std::bind(&CrazyflieServer::land, this, _1, _2));
+    service_go_to_ = this->create_service<GoTo>("go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
+  }
+
+private:
+  void emergency(const std::shared_ptr<Empty::Request> request,
+            std::shared_ptr<Empty::Response> response)
+  {
+  }
+
+  void start_trajectory(const std::shared_ptr<StartTrajectory::Request> request,
+            std::shared_ptr<StartTrajectory::Response> response)
+  {
+  }
+
+  void takeoff(const std::shared_ptr<Takeoff::Request> request,
+                        std::shared_ptr<Takeoff::Response> response)
+  {
+  }
+
+  void land(const std::shared_ptr<Land::Request> request,
+           std::shared_ptr<Land::Response> response)
+  {
+  }
+
+  void go_to(const std::shared_ptr<GoTo::Request> request,
+            std::shared_ptr<GoTo::Response> response)
+  {
+  }
+
+private:
+  rclcpp::Service<Empty>::SharedPtr service_emergency_;
+  rclcpp::Service<StartTrajectory>::SharedPtr service_start_trajectory_;
+  rclcpp::Service<Takeoff>::SharedPtr service_takeoff_;
+  rclcpp::Service<Land>::SharedPtr service_land_;
+  rclcpp::Service<GoTo>::SharedPtr service_go_to_;
+};
+
+int main(int argc, char *argv[])
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<CrazyflieServer>());
+  rclcpp::shutdown();
+  return 0;
+}
+
+#if 0
 #include "ros/ros.h"
 #include <tf/transform_broadcaster.h>
 #include <tf_conversions/tf_eigen.h>
@@ -83,34 +227,6 @@ void logWarn(const std::string& msg)
   ROS_WARN("%s", msg.c_str());
 }
 
-class ROSLogger : public Logger
-{
-public:
-  ROSLogger()
-    : Logger()
-  {
-  }
-
-  virtual ~ROSLogger() {}
-
-  virtual void info(const std::string& msg)
-  {
-    ROS_INFO("%s", msg.c_str());
-  }
-
-  virtual void warning(const std::string& msg)
-  {
-    ROS_WARN("%s", msg.c_str());
-  }
-
-  virtual void error(const std::string& msg)
-  {
-    ROS_ERROR("%s", msg.c_str());
-  }
-};
-
-static ROSLogger rosLogger;
-
 class CrazyflieROS
 {
 public:
@@ -124,10 +240,6 @@ public:
     const std::vector<crazyswarm::LogBlock>& log_blocks,
     ros::CallbackQueue& queue)
     : m_tf_prefix(tf_prefix)
-    , m_cf(
-      link_uri,
-      rosLogger,
-      std::bind(&CrazyflieROS::onConsole, this, std::placeholders::_1))
     , m_frame(frame)
     , m_worldFrame(worldFrame)
     , m_id(id)
@@ -678,16 +790,6 @@ private:
       }
   }
 
-  void onConsole(const char* msg) {
-    m_messageBuffer += msg;
-    size_t pos = m_messageBuffer.find('\n');
-    if (pos != std::string::npos) {
-      m_messageBuffer[pos] = 0;
-      ROS_INFO("[%s] %s", m_frame.c_str(), m_messageBuffer.c_str());
-      m_messageBuffer.erase(0, pos+1);
-    }
-  }
-
   void onPoseData(uint32_t time_in_ms, logPose* data) {
     if (m_enableLoggingPose) {
       geometry_msgs::PoseStamped msg;
@@ -734,7 +836,6 @@ private:
 
 private:
   std::string m_tf_prefix;
-  Crazyflie m_cf;
   std::string m_frame;
   std::string m_worldFrame;
   bool m_enableParameters;
@@ -774,7 +875,6 @@ private:
   std::ofstream m_logFile;
   bool m_forceNoCache;
   bool m_initializedPosition;
-  std::string m_messageBuffer;
 };
 
 
@@ -1945,3 +2045,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
+#endif

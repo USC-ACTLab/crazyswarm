@@ -18,6 +18,7 @@ add_subdirectory(deps/crazyflie_tools)# EXCLUDE_FROM_ALL)
 
 include_directories(
   deps/crazyflie_tools/crazyflie_cpp/include
+  deps/crazyflie_tools/crazyflie_cpp/crazyflie-link-cpp/include
 #  externalDependencies/libobjecttracker/include
 #  externalDependencies/libmotioncapture/include
 #  ${EIGEN3_INCLUDE_DIRS}
@@ -28,6 +29,16 @@ add_executable(teleop
   src/teleop.cpp
 )
 ament_target_dependencies(teleop 
+  rclcpp
+  sensor_msgs
+  std_srvs
+  crazyswarm2_interfaces
+)
+
+add_executable(crazyswarm2_server 
+  src/crazyswarm2_server.cpp
+)
+ament_target_dependencies(crazyswarm2_server 
   rclcpp
   sensor_msgs
   std_srvs

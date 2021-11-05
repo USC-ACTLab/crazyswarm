@@ -19,6 +19,12 @@ int main(int argc, char **argv)
   std::string hostname;
   nl.getParam("motion_capture_host_name", hostname);
   cfg["hostname"] = hostname;
+  if (nl.hasParam("motion_capture_interface_ip")) {
+    std::string interface_ip;
+    nl.param<std::string>("motion_capture_interface_ip", interface_ip);
+    cfg["interface_ip"] = interface_ip;
+  }
+
   std::unique_ptr<libmotioncapture::MotionCapture> mocap(libmotioncapture::MotionCapture::connect(motionCaptureType, cfg));
   if (!mocap) {
     throw std::runtime_error("Unknown motion capture type!");

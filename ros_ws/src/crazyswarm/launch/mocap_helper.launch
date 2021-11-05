@@ -4,8 +4,9 @@
   <node pkg="crazyswarm" type="mocap_helper" name="mocap_helper" output="screen" >
     <rosparam>
       # tracking
-      motion_capture_type: "vicon" # one of vicon,optitrack,qualisys,vrpn
+      motion_capture_type: "vicon" # one of vicon,optitrack,optitrack_closed_source,qualisys,vrpn
       motion_capture_host_name: "vicon"
+      # motion_capture_interface_ip: "" # optional for optitrack with multiple interfaces
     </rosparam>
   </node>
 </launch>

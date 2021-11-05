@@ -96,7 +96,10 @@ First, select your tracking system in the appropriate tab below.
       If using ``libobjecttracker`` as ``object_tracking_type`` disable all assets and make sure that labeled or unlabeled markers are being streamed.
 
       .. note::
-         If you have trouble with receiving data (e.g., when using older Motive versions), try "optitrack_closed_source" as "motion_capture_type".
+         If you have trouble with receiving data, you can try the following.
+         
+         * If your PC has multiple interfaces, set "motion_capture_interface_ip" to the IP of the interface that you want to use.
+         * If you use an older/unsupported Motive version, try setting "optitrack_closed_source" as "motion_capture_type".
 
    .. tab:: Qualisys
 

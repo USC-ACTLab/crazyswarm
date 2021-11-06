@@ -57,7 +57,7 @@ Crazyswarm's academic origins
 The Crazyswarm architecture, including some motivation for the design decisions, is described in
 `our paper <http://usc-actlab.github.io/publications/Preiss_ICRA2017.pdf>`_ [pdf].
 
-A talk at the `Aerial Swarms Workshop <https://lis2.epfl.ch/iros2019swarms/index.html>`_ at IROS 2019 includes a primer on how to use the Crazyswarm and a bibliography of papers using the Crazyswarm: `Slides <https://drive.google.com/file/d/15favAyrLLpC_O6nrAp-eIbZijFUMLgwV/view?usp=sharing>`_ [pdf].
+A talk at the `BAM days 2021 <https://www.bitcraze.io/about/events/bam2021/>`_ includes a primer on how to use the Crazyswarm and a bibliography of papers using the Crazyswarm: `Slides <https://www.bitcraze.io/about/events/documents/bam2021/hoenig_crazyswarm_bam2021.pdf>`__ [pdf], `Video <https://youtu.be/9KlfFpv6NIQ>`__ [youtube].
 
 
 If you use our work in academic research, please cite us:
@@ -90,6 +90,7 @@ Contents
    changelog
    gettingstarted
    installation
+   overview
    configuration
    tutorials/tutorials
    howto/howto

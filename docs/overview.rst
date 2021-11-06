@@ -7,7 +7,7 @@ Crazyswarm has the following software architecture.
 
     .. figure:: images/software_architecture.png
         :align: center
-        :scale: 50%
+        :scale: 70%
 
 
 - **crazyflie_tools**

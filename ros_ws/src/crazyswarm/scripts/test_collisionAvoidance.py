@@ -26,10 +26,8 @@ def setUp(args):
     return swarm.allcfs, timeHelper
 
 
-def test_velocityMode_sidestepWorstCase(args=None):
-    if args is None:
-        args = "--sim --vis null --dt 0.05 --maxvel 1.0"
-
+def test_velocityMode_sidestepWorstCase():
+    args = "--sim --vis null --dt 0.05 --maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     a, b = allcfs.crazyflies
 
@@ -309,8 +307,3 @@ def test_maxSpeed_limit():
             return
 
     assert False
-
-
-if __name__ == "__main__":
-    # test_velocityMode_sidestepWorstCase(sys.argv)
-    test_maxSpeed_limit()

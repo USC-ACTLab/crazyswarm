@@ -41,6 +41,10 @@ def crazyswarm_ctor(pytestconfig):
         # state and returns control _after the test finishes_. For details, see
         # https://docs.pytest.org/en/latest/how-to/fixtures.html#yield-fixtures-recommended
         ros_process[0].terminate()
+        # Must wait so the next test gets a fresh roscore and server.
+        # TODO: We could try to speed up the test suite by somehow reusing
+        # roscore and only restarting crazyswarm_server.
+        ros_process[0].wait(timeout=10)
     else:
         # Pycrazyswarm simulator
         def ctor(**kwargs):

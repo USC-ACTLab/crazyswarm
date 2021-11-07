@@ -1,22 +1,30 @@
 #!/usr/bin/env python
 
 import numpy as np
+import pytest
+
 from pycrazyswarm import *
+
 
 Z = 1.0
 
-def setUp(extra_args=""):
+
+@pytest.fixture
+def setUp(crazyswarm_ctor):
     crazyflies_yaml = """
     crazyflies:
     - channel: 100
       id: 1
       initialPosition: [1.0, 0.0, 0.0]
     """
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null " + extra_args)
-    timeHelper = swarm.timeHelper
-    return swarm.allcfs, timeHelper
+    def setup(args=""):
+        swarm = crazyswarm_ctor(crazyflies_yaml=crazyflies_yaml, args=args)
+        timeHelper = swarm.timeHelper
+        return swarm.allcfs, timeHelper
+    return setup
 
-def test_cmdFullState_zeroVel():
+
+def test_cmdFullState_zeroVel(setUp):
     allcfs, timeHelper = setUp()
     cf = allcfs.crazyflies[0]
 
@@ -26,7 +34,7 @@ def test_cmdFullState_zeroVel():
 
     assert np.all(np.isclose(cf.position(), pos))
 
-def test_cmdPosition():
+def test_cmdPosition(setUp):
     allcfs, timeHelper = setUp()
     cf = allcfs.crazyflies[0]
 
@@ -36,7 +44,7 @@ def test_cmdPosition():
 
     assert np.all(np.isclose(cf.position(), pos))
 
-def test_cmdVelocityWorld_checkVelocity():
+def test_cmdVelocityWorld_checkVelocity(setUp):
     allcfs, timeHelper = setUp()
     
     cf = allcfs.crazyflies[0]
@@ -46,7 +54,7 @@ def test_cmdVelocityWorld_checkVelocity():
 
     assert np.all(np.isclose(cf.velocity(), vel))
     
-def test_cmdVelocityWorld_checkIntegrate():
+def test_cmdVelocityWorld_checkIntegrate(setUp):
     allcfs, timeHelper = setUp()
 
     cf = allcfs.crazyflies[0]
@@ -57,7 +65,7 @@ def test_cmdVelocityWorld_checkIntegrate():
     pos = cf.initialPosition + vel
     assert np.all(np.isclose(cf.position(), pos))
 
-def test_cmdVelocityWorld_disturbance():
+def test_cmdVelocityWorld_disturbance(setUp):
     crazyflies_yaml = """
     crazyflies:
     - channel: 100
@@ -76,7 +84,7 @@ def test_cmdVelocityWorld_disturbance():
     pos = cf.initialPosition + vel
     assert not np.any(np.isclose(cf.position(), pos))
 
-def test_sleepResidual():
+def test_sleepResidual(setUp):
     """Verify TimeHelper's time() is consistent with its integration steps."""
     np.random.seed(0)
     TRIALS = 100

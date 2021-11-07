@@ -11,7 +11,8 @@ RADII = np.array([0.125, 0.125, 0.375])
 Z = 1.0
 
 
-def setUp(args):
+@pytest.fixture
+def setUp(crazyswarm_ctor):
     crazyflies_yaml = """
     crazyflies:
     - id: 1
@@ -21,13 +22,15 @@ def setUp(args):
       channel: 100
       initialPosition: [1.0, 0.0, 0.0]
     """
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=args)
-    timeHelper = swarm.timeHelper
-    return swarm.allcfs, timeHelper
+    def setup(args=""):
+        swarm = crazyswarm_ctor(crazyflies_yaml=crazyflies_yaml, args=args)
+        timeHelper = swarm.timeHelper
+        return swarm.allcfs, timeHelper
+    return setup
 
 
-def test_velocityMode_sidestepWorstCase():
-    args = "--sim --vis null --dt 0.05 --maxvel 1.0"
+def test_velocityMode_sidestepWorstCase(setUp):
+    args = "--dt 0.05 --maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     a, b = allcfs.crazyflies
 
@@ -48,7 +51,7 @@ def test_velocityMode_sidestepWorstCase():
     assert False
 
 
-def test_goToWithoutCA_CheckCollision():
+def test_goToWithoutCA_CheckCollision(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
@@ -66,7 +69,7 @@ def test_goToWithoutCA_CheckCollision():
     assert False
 
 
-def test_goToWithCA_CheckCollision():
+def test_goToWithCA_CheckCollision(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
@@ -84,7 +87,7 @@ def test_goToWithCA_CheckCollision():
         timeHelper.sleep(timeHelper.dt)
 
 
-def test_goToWithCA_CheckDestination():
+def test_goToWithCA_CheckDestination(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
@@ -102,7 +105,7 @@ def test_goToWithCA_CheckDestination():
     assert np.all(np.isclose(cf1.position(), goal1))
 
 
-def test_goToWithCA_changeEllipsoid():
+def test_goToWithCA_changeEllipsoid(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
@@ -132,8 +135,8 @@ def test_goToWithCA_changeEllipsoid():
     assert collisionHappend
 
 
-def test_goToWithCA_Intersection():
-    args = "--sim --vis null --dt 0.01"
+def test_goToWithCA_Intersection(setUp):
+    args = "--dt 0.01"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -156,8 +159,8 @@ def test_goToWithCA_Intersection():
     assert np.all(np.isclose(cf1.position(), goal1))
 
 
-def test_goToWithoutCA_Intersection():
-    args = "--sim --vis null --dt 0.05"
+def test_goToWithoutCA_Intersection(setUp):
+    args = "--dt 0.05"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -178,15 +181,12 @@ def test_goToWithoutCA_Intersection():
     assert False
 
 
-def test_goToWithCA_random():
+def test_goToWithCA_random(setUp):
     rows, cols = 3, 5
     N = rows * cols
     crazyflies_yaml = grid_yaml(rows, cols, spacing=0.5)
 
-    args = "--sim --vis null"
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=args)
-    timeHelper = swarm.timeHelper
-    allcfs = swarm.allcfs
+    allcfs, timeHelper = setUp()
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
 
@@ -214,8 +214,8 @@ def test_goToWithCA_random():
             assert np.all(np.isclose(cf.position(), goal, atol=1e-4))
 
 
-def test_cmdPosition():
-    args = "--sim --vis null --maxvel 1.0"
+def test_cmdPosition(setUp):
+    args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -237,8 +237,8 @@ def test_cmdPosition():
     assert np.all(np.isclose(cf1.position(), goal1))
 
 
-def test_boundingBox():
-    args = "--sim --vis null --maxvel 1.0"
+def test_boundingBox(setUp):
+    args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -264,8 +264,8 @@ def test_boundingBox():
 
 
 #@pytest.mark.xfail(reason="Bug in firmware")
-def test_maxSpeed_zero():
-    args = "--sim --vis null --maxvel 1.0"
+def test_maxSpeed_zero(setUp):
+    args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -286,8 +286,8 @@ def test_maxSpeed_zero():
     assert np.all(np.isclose(cf1.position(), goal0))
 
 
-def test_maxSpeed_limit():
-    args = "--sim --vis null --maxvel 1.0"
+def test_maxSpeed_limit(setUp):
+    args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)

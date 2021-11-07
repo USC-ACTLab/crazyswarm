@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 
 import numpy as np
+import pytest
+
 from pycrazyswarm import *
 import uav_trajectory
 
+
 Z = 1.0
 
-def setUp():
+
+@pytest.fixture
+def setUp(crazyswarm_ctor):
     crazyflies_yaml = """
     crazyflies:
     - channel: 100
@@ -16,9 +21,12 @@ def setUp():
       id: 10
       initialPosition: [0.0, -1.0, 0.0]
     """
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null")
-    timeHelper = swarm.timeHelper
-    return swarm.allcfs, timeHelper
+    def setup(args=""):
+        swarm = crazyswarm_ctor(crazyflies_yaml=crazyflies_yaml)
+        timeHelper = swarm.timeHelper
+        return swarm.allcfs, timeHelper
+    return setup
+
 
 def _collectRelativePositions(timeHelper, cf, duration):
     t0 = timeHelper.time()
@@ -29,7 +37,7 @@ def _collectRelativePositions(timeHelper, cf, duration):
     return np.stack(positions)
 
 
-def test_takeOff():
+def test_takeOff(setUp):
     allcfs, timeHelper = setUp()
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -38,7 +46,7 @@ def test_takeOff():
         pos = cf.initialPosition + np.array([0, 0, Z])
         assert np.all(np.isclose(cf.position(), pos, atol=0.0001))
 
-def test_goTo_nonRelative():
+def test_goTo_nonRelative(setUp):
     allcfs, timeHelper = setUp()
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -52,7 +60,7 @@ def test_goTo_nonRelative():
         pos = cf.initialPosition + np.array([1, 1, Z])
         assert np.all(np.isclose(cf.position(), pos))
 
-def test_goTo_relative():
+def test_goTo_relative(setUp):
     allcfs, timeHelper = setUp()
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -64,7 +72,7 @@ def test_goTo_relative():
         pos = cf.initialPosition + np.array([1.0,1.0,2*Z])
         assert np.all(np.isclose(cf.position(), pos))
 
-def test_landing():
+def test_landing(setUp):
     allcfs, timeHelper = setUp()
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
@@ -76,7 +84,7 @@ def test_landing():
         pos = cf.initialPosition + np.array([0, 0, 0.02])
         assert np.all(np.isclose(cf.position(), pos, atol=0.0001))
 
-def test_uploadTrajectory_timescale():
+def test_uploadTrajectory_timescale(setUp):
     allcfs, timeHelper = setUp()
     cf = allcfs.crazyflies[0]
 
@@ -98,7 +106,7 @@ def test_uploadTrajectory_timescale():
     timeHelper.sleep(0.75 * traj.duration)
     assert np.linalg.norm(cf.position() - cf.initialPosition) <= 0.001
 
-def test_uploadTrajectory_fig8Bounds():
+def test_uploadTrajectory_fig8Bounds(setUp):
     allcfs, timeHelper = setUp()
     cf = allcfs.crazyflies[0]
 
@@ -118,7 +126,7 @@ def test_uploadTrajectory_fig8Bounds():
     assert 0.4 < np.amax(ys) < 0.6
     assert -0.4 > np.amin(ys) > -0.6
 
-def test_uploadTrajectory_reverse():
+def test_uploadTrajectory_reverse(setUp):
     allcfs, timeHelper = setUp()
     cf = allcfs.crazyflies[0]
 
@@ -139,7 +147,7 @@ def test_uploadTrajectory_reverse():
     dists = np.linalg.norm(positions - positions2, axis=1)
     assert not np.any(dists > 0.2)
 
-def test_uploadTrajectory_broadcast():
+def test_uploadTrajectory_broadcast(setUp):
     allcfs, timeHelper = setUp()
     cf0, cf1 = allcfs.crazyflies
 
@@ -158,7 +166,7 @@ def test_uploadTrajectory_broadcast():
         assert np.all(np.isclose(relativeInitial, relative))
         timeHelper.sleep(timeHelper.dt + 1e-6)
 
-def test_setGroupMask():
+def test_setGroupMask(setUp):
     allcfs, timeHelper = setUp()
     cf0, cf1 = allcfs.crazyflies
     cf0.setGroupMask(1)
@@ -174,5 +182,6 @@ def test_setGroupMask():
     timeHelper.sleep(1.5+Z)
 
     pos1 = cf1.initialPosition + np.array([0, 0, Z])
-    assert np.all(np.isclose(cf0.position(), pos0, atol=0.0001)) 
-    assert np.all(np.isclose(cf1.position(), pos1, atol=0.0001)) 
+    assert np.all(np.isclose(cf0.position(), pos0, atol=0.0001))
+    assert np.all(np.isclose(cf1.position(), pos1, atol=0.0001))
+

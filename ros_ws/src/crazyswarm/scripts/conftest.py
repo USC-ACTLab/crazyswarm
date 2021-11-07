@@ -37,8 +37,8 @@ def crazyswarm_ctor(pytestconfig):
                 f.write(kwargs["crazyflies_yaml"])
             print("Spawning ROS")
             ros_process[0] = subprocess.Popen(
-                "source ../../../devel/setup.bash; roslaunch crazyswarm hover_swarm.launch --sim",
-                shell=True
+                "source ../../../devel/setup.bash; roslaunch crazyswarm hover_swarm.launch sim:=1",
+                shell="/usr/bin/bash",
             )
             print("Spawned ROS")
             return Crazyswarm(**kwargs)

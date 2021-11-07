@@ -23,15 +23,14 @@ def crazyswarm_ctor(pytestconfig):
     if pytestconfig.getoption("simros"):
         assert HAVE_ROS, "cannot run --simros tests without ROS installed."
         # ROS simulator - start CSW server first
-        ros_process = None
+        ros_process = [None]
         def ctor(**kwargs):
             assert "crazyflies_yaml" in kwargs
             # TODO: It might be cleaner to use some kind of filesystem mocking,
             # but does it matter?
             with open("../launch/crazyflies.yaml", "w") as f:
                 f.write(kwargs["crazyflies_yaml"])
-            nonlocal ros_process
-            ros_process = subprocess.Popen([
+            ros_process[0] = subprocess.Popen([
                 "roslaunch",
                 "crazyswarm",
                 "hover_swarm.launch",
@@ -43,7 +42,7 @@ def crazyswarm_ctor(pytestconfig):
         # `ctor()`. Instead, pytest remembers that the fixture is in `yield`
         # state and returns control _after the test finishes_. For details, see
         # https://docs.pytest.org/en/latest/how-to/fixtures.html#yield-fixtures-recommended
-        ros_process.terminate()
+        ros_process[0].terminate()
     else:
         # Pycrazyswarm simulator
         def ctor(**kwargs):

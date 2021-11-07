@@ -3,23 +3,27 @@
 """Tests for simulation-only functionality."""
 
 import numpy as np
+import pytest
 
 from pycrazyswarm import *
 
 
-def setUp():
+@pytest.fixture
+def setUp(crazyswarm_ctor):
     crazyflies_yaml = """
     crazyflies:
     - channel: 100
       id: 1
       initialPosition: [1.0, 0.0, 0.0]
     """
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null")
-    timeHelper = swarm.timeHelper
-    return swarm.allcfs, timeHelper
+    def setup():
+        swarm = crazyswarm_ctor(crazyflies_yaml=crazyflies_yaml)
+        timeHelper = swarm.timeHelper
+        return swarm.allcfs, timeHelper
+    return setup
 
 
-def test_attitudeRPY():
+def test_attitudeRPY(setUp):
     """Checks differential flatness and roll/pitch/yaw calculations."""
 
     end = 0.99 * np.pi  # Not trying to deal with wrapping here.

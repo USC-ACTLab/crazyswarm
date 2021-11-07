@@ -50,4 +50,4 @@ jobs:
       run: |
         source ros_ws/devel/setup.bash
         cd ros_ws/src/crazyswarm/scripts
-        ${{ matrix.pyVer }} -m pytest --simros
+        ${{ matrix.pyVer }} -m pytest -s --simros

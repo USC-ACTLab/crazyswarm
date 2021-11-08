@@ -66,16 +66,8 @@ def test_cmdVelocityWorld_checkIntegrate(setUp):
     assert np.all(np.isclose(cf.position(), pos))
 
 def test_cmdVelocityWorld_disturbance(setUp):
-    crazyflies_yaml = """
-    crazyflies:
-    - channel: 100
-      id: 1
-      initialPosition: [1.0, 0.0, 0.0]
-    """
-    swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args="--sim --vis null --disturbance 1.0")
-    timeHelper = swarm.timeHelper
-
-    cf = swarm.allcfs.crazyflies[0]
+    allcfs, timeHelper = setUp(args="--disturbance 1.0")
+    cf = allcfs.crazyflies[0]
 
     vel = np.ones(3)
     cf.cmdVelocityWorld(vel, yawRate=0)

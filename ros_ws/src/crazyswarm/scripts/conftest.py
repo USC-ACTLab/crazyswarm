@@ -1,3 +1,4 @@
+import os
 import signal
 import subprocess
 
@@ -34,6 +35,8 @@ def crazyswarm_ctor(pytestconfig):
             ros_process[0] = subprocess.Popen(
                 "source ../../../devel/setup.bash; exec roslaunch crazyswarm hover_swarm.launch sim:=1",
                 shell="/usr/bin/bash",
+                # Set the process group ID so our SIGINT gets from bash to roslaunch.
+                preexec_fn=os.setsid,
             )
             return Crazyswarm(**kwargs)
         yield ctor
@@ -41,11 +44,12 @@ def crazyswarm_ctor(pytestconfig):
         # `ctor()`. Instead, pytest remembers that the fixture is in `yield`
         # state and returns control _after the test finishes_. For details, see
         # https://docs.pytest.org/en/latest/how-to/fixtures.html#yield-fixtures-recommended
-        ros_process[0].send_signal(signal.SIGINT)
+        proc = ros_process[0]
+        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
         # Must wait so the next test gets a fresh roscore and server.
         # TODO: We could try to speed up the test suite by somehow reusing
         # roscore and only restarting crazyswarm_server.
-        ros_process[0].wait(timeout=10)
+        proc.wait(timeout=10)
     else:
         # Pycrazyswarm simulator
         def ctor(**kwargs):

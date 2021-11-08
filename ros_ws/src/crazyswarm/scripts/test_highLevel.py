@@ -53,8 +53,8 @@ def test_goTo_nonRelative(setUp):
     
     for cf in allcfs.crazyflies:
         pos = np.array(cf.initialPosition) + np.array([1, 1, Z])
-        cf.goTo(pos, 0, 1.0)
-    timeHelper.sleep(1.0)
+        cf.goTo(pos, 0, duration=1.0)
+    timeHelper.sleep(1.5)
 
     for cf in allcfs.crazyflies:
         pos = cf.initialPosition + np.array([1, 1, Z])
@@ -78,7 +78,7 @@ def test_landing(setUp):
     timeHelper.sleep(1.5+Z)
 
     allcfs.land(targetHeight=0.02, duration=1.0+Z)
-    timeHelper.sleep(1.0+Z)
+    timeHelper.sleep(1.5+Z)
 
     for cf in allcfs.crazyflies:
         pos = cf.initialPosition + np.array([0, 0, 0.02])
@@ -126,6 +126,8 @@ def test_uploadTrajectory_fig8Bounds(setUp):
     assert 0.4 < np.amax(ys) < 0.6
     assert -0.4 > np.amin(ys) > -0.6
 
+# Accounting for sloppy time in ROS is possible, but too much work right now.
+@pytest.mark.sync
 def test_uploadTrajectory_reverse(setUp):
     allcfs, timeHelper = setUp()
     cf = allcfs.crazyflies[0]
@@ -161,9 +163,9 @@ def test_uploadTrajectory_broadcast(setUp):
 
     allcfs.startTrajectory(trajId)
     t0 = timeHelper.time()
-    while timeHelper.time() - t0 < traj.duration:
+    while timeHelper.time() - t0 < traj.duration + 0.5:
         relative = cf1.position() - cf0.position()
-        assert np.all(np.isclose(relativeInitial, relative))
+        assert np.all(np.isclose(relativeInitial, relative, atol=0.001))
         timeHelper.sleep(timeHelper.dt + 1e-6)
 
 def test_setGroupMask(setUp):

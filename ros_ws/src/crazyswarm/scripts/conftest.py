@@ -14,6 +14,8 @@ def pytest_runtest_setup(item):
     markers = [mark.name for mark in item.iter_markers()]
     if "ros" in markers and not HAVE_ROS:
         pytest.skip("ROS is not installed.")
+    if "sync" in markers and item.config.getoption("simros"):
+        pytest.skip("Synchronous-only test cannot run in --simros")
 
 
 def pytest_addoption(parser):
@@ -33,7 +35,7 @@ def crazyswarm_ctor(pytestconfig):
             with open("../launch/crazyflies.yaml", "w") as f:
                 f.write(kwargs["crazyflies_yaml"])
             ros_process[0] = subprocess.Popen(
-                "source ../../../devel/setup.bash; exec roslaunch crazyswarm unittest.launch",
+                "source ../../../devel/setup.bash; exec roslaunch --no-summary crazyswarm unittest.launch",
                 shell="/usr/bin/bash",
                 # Set the process group ID so our SIGINT gets from bash to roslaunch.
                 preexec_fn=os.setsid,

@@ -212,7 +212,6 @@ def main():
     transform.transform.rotation.y = 0
     transform.transform.rotation.z = 0
     transform.transform.rotation.w = 1
-    br.sendTransform(transform)
 
     while not rospy.is_shutdown():
         transform.header.stamp = rospy.Time.now()

@@ -34,6 +34,9 @@ class TimeHelper:
         self.rosRate = None
         self.rateHz = None
         self.visualizer = visNull.VisNull()
+        # For unit tests, we sometimes need to know the time step used by the
+        # simulator.
+        self.dt = rospy.get_param("dt", 0.1)
 
     def time(self):
         """Returns the current time in seconds."""

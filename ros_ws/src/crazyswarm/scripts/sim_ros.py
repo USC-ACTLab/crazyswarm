@@ -221,7 +221,7 @@ def main():
                 cfid = cf.cfsim.id
                 pos = cf.cfsim.position()
                 if np.isfinite(pos).all():
-                    transform.child_frame_id = "/cf" + str(cfid)
+                    transform.child_frame_id = "cf" + str(cfid)
                     transform.transform.translation.x = pos[0]
                     transform.transform.translation.y = pos[1]
                     transform.transform.translation.z = pos[2]

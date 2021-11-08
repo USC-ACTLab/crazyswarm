@@ -11,7 +11,7 @@ from std_srvs.srv import Empty
 import std_msgs
 from crazyswarm.srv import *
 from crazyswarm.msg import TrajectoryPolynomialPiece, FullState, Position, VelocityWorld
-from tf import TransformListener
+import tf2_ros
 from .visualizer import visNull
 
 def arrayToGeometryPoint(a):
@@ -347,9 +347,10 @@ class Crazyflie:
         Returns:
             position (np.array[3]): Current position. Meters.
         """
-        self.tf.waitForTransform("/world", "/cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
-        position, quaternion = self.tf.lookupTransform("/world", "/cf" + str(self.id), rospy.Time(0))
-        return np.array(position)
+        self.tf.can_transform("world", "cf" + str(self.id), rospy.Time(0), rospy.Duration(10))
+        trans = self.tf.lookup_transform("world", "cf" + str(self.id), rospy.Time(0))
+        t = trans.transform.translation
+        return np.array([t.x, t.y, t.z])
 
     def getParam(self, name):
         """Returns the current value of the onboard named parameter.
@@ -596,7 +597,8 @@ class CrazyflieServer:
         else:
             cfg = yaml.load(crazyflies_yaml)
 
-        self.tf = TransformListener()
+        self.tf = tf2_ros.Buffer()
+        self.tfListener = tf2_ros.TransformListener(self.tf)
 
         self.crazyflies = []
         self.crazyfliesById = dict()

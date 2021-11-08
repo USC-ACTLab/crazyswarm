@@ -46,9 +46,6 @@ jobs:
         source /opt/ros/${{ matrix.ros }}/setup.bash
         CSW_PYTHON=${{ matrix.pyVer }} ./build.sh
 
-    - name: Debug Shell
-      uses: mxschmitt/action-tmate@v3
-
     - name: Test
       run: |
         source ros_ws/devel/setup.bash

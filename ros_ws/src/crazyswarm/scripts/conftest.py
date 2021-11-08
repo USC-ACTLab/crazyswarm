@@ -33,7 +33,7 @@ def crazyswarm_ctor(pytestconfig):
             with open("../launch/crazyflies.yaml", "w") as f:
                 f.write(kwargs["crazyflies_yaml"])
             ros_process[0] = subprocess.Popen(
-                "source ../../../devel/setup.bash; exec roslaunch crazyswarm hover_swarm.launch sim:=1",
+                "source ../../../devel/setup.bash; exec roslaunch crazyswarm unittest.launch",
                 shell="/usr/bin/bash",
                 # Set the process group ID so our SIGINT gets from bash to roslaunch.
                 preexec_fn=os.setsid,

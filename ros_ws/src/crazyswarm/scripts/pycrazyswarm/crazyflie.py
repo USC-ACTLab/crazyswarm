@@ -145,7 +145,7 @@ class Crazyflie:
         """
         self.setGroupMaskService(groupMask)
 
-    def enableCollisionAvoidance(self, others, ellipsoidRadii):
+    def enableCollisionAvoidance(self, others, ellipsoidRadii=None, bboxMin=None, bboxMax=None, horizonSecs=None, maxSpeed=None):
         """Enables onboard collision avoidance.
 
         When enabled, avoids colliding with other Crazyflies by using the
@@ -170,13 +170,21 @@ class Crazyflie:
             (RA-L), vol. 2, no. 2, pp. 1047 - 1054, 2017.
             https://msl.stanford.edu/fast-line-collision-avoidance-dynamic-vehicles-using-buffered-voronoi-cells
         """
-        # Set radii before enabling to ensure collision avoidance never
-        # observes a wrong radius value.
-        self.setParams({
-            "colAv/ellipsoidX": float(ellipsoidRadii[0]),
-            "colAv/ellipsoidY": float(ellipsoidRadii[1]),
-            "colAv/ellipsoidZ": float(ellipsoidRadii[2]),
-        })
+        params = {}
+        def xyzassign(prefix, vec):
+            if vec is not None:
+                for entry, name in zip(vec, "XYZ"):
+                    params[prefix + name] = float(entry)
+        xyzassign("colAv/ellipsoid", ellipsoidRadii)
+        xyzassign("colAv/bboxMin", bboxMin)
+        xyzassign("colAv/bboxMax", bboxMax)
+        if horizonSecs is not None:
+            params["colAv/horizon"] = float(horizonSecs)
+        if maxSpeed is not None:
+            params["colAv/maxSpeed"] = float(horizonSecs)
+        self.setParams(params)
+        # Set params in a separate batch before enabling to ensure collision
+        # avoidance never observes a wrong param value.
         self.setParam("colAv/enable", 1)
 
 

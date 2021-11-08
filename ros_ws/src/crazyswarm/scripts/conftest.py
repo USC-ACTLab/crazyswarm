@@ -1,3 +1,4 @@
+import signal
 import subprocess
 
 import pytest
@@ -40,7 +41,7 @@ def crazyswarm_ctor(pytestconfig):
         # `ctor()`. Instead, pytest remembers that the fixture is in `yield`
         # state and returns control _after the test finishes_. For details, see
         # https://docs.pytest.org/en/latest/how-to/fixtures.html#yield-fixtures-recommended
-        ros_process[0].terminate()
+        ros_process[0].send_signal(signal.SIGINT)
         # Must wait so the next test gets a fresh roscore and server.
         # TODO: We could try to speed up the test suite by somehow reusing
         # roscore and only restarting crazyswarm_server.

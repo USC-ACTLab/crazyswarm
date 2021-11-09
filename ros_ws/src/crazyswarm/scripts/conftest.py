@@ -1,4 +1,5 @@
 import os
+import psutil
 import signal
 import subprocess
 
@@ -8,6 +9,23 @@ from pycrazyswarm import Crazyswarm
 
 
 HAVE_ROS = subprocess.call("type roslaunch", shell=True) == 0
+
+
+def kill_proc_tree(pid, sig=signal.SIGTERM, timeout=None):
+    """Kills a process tree with signal; returns (gone, still_alive) tuple.
+
+    Copied and simplified from psutil docs.
+    """
+    assert pid != os.getpid(), "won't kill myself"
+    parent = psutil.Process(pid)
+    children = [parent] + parent.children(recursive=True)
+    for p in children:
+        try:
+            p.send_signal(sig)
+        except psutil.NoSuchProcess:
+            pass
+    gone, alive = psutil.wait_procs(children, timeout=timeout)
+    return (gone, alive)
 
 
 def pytest_runtest_setup(item):
@@ -37,8 +55,6 @@ def crazyswarm_ctor(pytestconfig):
             ros_process[0] = subprocess.Popen(
                 "source ../../../devel/setup.bash; exec roslaunch --no-summary crazyswarm unittest.launch",
                 shell="/usr/bin/bash",
-                # Set the process group ID so our SIGINT gets from bash to roslaunch.
-                preexec_fn=os.setsid,
             )
             return Crazyswarm(**kwargs)
         yield ctor
@@ -46,12 +62,13 @@ def crazyswarm_ctor(pytestconfig):
         # `ctor()`. Instead, pytest remembers that the fixture is in `yield`
         # state and returns control _after the test finishes_. For details, see
         # https://docs.pytest.org/en/latest/how-to/fixtures.html#yield-fixtures-recommended
-        proc = ros_process[0]
-        os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+
         # Must wait so the next test gets a fresh roscore and server.
         # TODO: We could try to speed up the test suite by somehow reusing
         # roscore and only restarting crazyswarm_server.
-        proc.wait(timeout=100)
+        pid = ros_process[0].pid
+        gone, alive = kill_proc_tree(pid, sig=signal.SIGINT, timeout=10.0)
+        assert not alive
     else:
         # Pycrazyswarm simulator
         def ctor(**kwargs):

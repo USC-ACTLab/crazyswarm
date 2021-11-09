@@ -181,7 +181,7 @@ class Crazyflie:
         if horizonSecs is not None:
             params["colAv/horizon"] = float(horizonSecs)
         if maxSpeed is not None:
-            params["colAv/maxSpeed"] = float(horizonSecs)
+            params["colAv/maxSpeed"] = float(maxSpeed)
         self.setParams(params)
         # Set params in a separate batch before enabling to ensure collision
         # avoidance never observes a wrong param value.

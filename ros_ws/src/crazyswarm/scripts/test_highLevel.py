@@ -72,13 +72,21 @@ def test_goTo_relative(setUp):
         pos = cf.initialPosition + np.array([1.0,1.0,2*Z])
         assert np.all(np.isclose(cf.position(), pos))
 
-def test_landing(setUp):
+def test_landing(setUp, pytestconfig):
     allcfs, timeHelper = setUp()
     allcfs.takeoff(targetHeight=Z, duration=1.0+Z)
     timeHelper.sleep(1.5+Z)
 
     allcfs.land(targetHeight=0.02, duration=1.0+Z)
-    timeHelper.sleep(1.5+Z)
+
+    if pytestconfig.getoption("simros"):
+        # Need time fudge factor. TF system remembers last good position.
+        sleep_duration = 1.5 + Z
+    else:
+        # Direct pass-thru of planner.c starts returning invalid after landing.
+        sleep_duration = 1.0 + Z
+
+    timeHelper.sleep(sleep_duration)
 
     for cf in allcfs.crazyflies:
         pos = cf.initialPosition + np.array([0, 0, 0.02])

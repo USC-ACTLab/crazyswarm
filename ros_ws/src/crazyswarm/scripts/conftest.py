@@ -51,7 +51,7 @@ def crazyswarm_ctor(pytestconfig):
         # Must wait so the next test gets a fresh roscore and server.
         # TODO: We could try to speed up the test suite by somehow reusing
         # roscore and only restarting crazyswarm_server.
-        proc.wait(timeout=10)
+        proc.wait(timeout=100)
     else:
         # Pycrazyswarm simulator
         def ctor(**kwargs):

@@ -23,6 +23,7 @@ def setUp(crazyswarm_ctor):
     return setup
 
 
+@pytest.mark.sync
 def test_attitudeRPY(setUp):
     """Checks differential flatness and roll/pitch/yaw calculations."""
 

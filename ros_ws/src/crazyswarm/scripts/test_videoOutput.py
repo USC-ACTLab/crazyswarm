@@ -57,6 +57,7 @@ def videoWriterProcess(path):
 
 @pytest.mark.skipif("TRAVIS" in os.environ or "CI" in os.environ,
                     reason="CI usually cannot create OpenGL context.")
+@pytest.mark.sync
 def test_videoOutput(tmp_path):
     # tmp_path is supplied by pytest - a directory where we can write that will
     # eventually be deleted.

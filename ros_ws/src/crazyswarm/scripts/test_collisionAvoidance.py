@@ -29,6 +29,7 @@ def setUp(crazyswarm_ctor):
     return setup
 
 
+@pytest.mark.sync
 def test_velocityMode_sidestepWorstCase(setUp):
     args = "--dt 0.05 --maxvel 1.0"
     allcfs, timeHelper = setUp(args)
@@ -51,6 +52,7 @@ def test_velocityMode_sidestepWorstCase(setUp):
     assert False
 
 
+@pytest.mark.sync
 def test_goToWithoutCA_CheckCollision(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
@@ -69,6 +71,7 @@ def test_goToWithoutCA_CheckCollision(setUp):
     assert False
 
 
+@pytest.mark.sync
 def test_goToWithCA_CheckCollision(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
@@ -87,6 +90,7 @@ def test_goToWithCA_CheckCollision(setUp):
         timeHelper.sleep(timeHelper.dt)
 
 
+@pytest.mark.sync
 def test_goToWithCA_CheckDestination(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
@@ -105,6 +109,7 @@ def test_goToWithCA_CheckDestination(setUp):
     assert np.all(np.isclose(cf1.position(), goal1))
 
 
+@pytest.mark.sync
 def test_goToWithCA_changeEllipsoid(setUp):
     args = "--sim --vis null"
     allcfs, timeHelper = setUp(args)
@@ -135,6 +140,7 @@ def test_goToWithCA_changeEllipsoid(setUp):
     assert collisionHappend
 
 
+@pytest.mark.sync
 def test_goToWithCA_Intersection(setUp):
     args = "--dt 0.01"
     allcfs, timeHelper = setUp(args)
@@ -159,6 +165,7 @@ def test_goToWithCA_Intersection(setUp):
     assert np.all(np.isclose(cf1.position(), goal1))
 
 
+@pytest.mark.sync
 def test_goToWithoutCA_Intersection(setUp):
     args = "--dt 0.05"
     allcfs, timeHelper = setUp(args)
@@ -181,6 +188,7 @@ def test_goToWithoutCA_Intersection(setUp):
     assert False
 
 
+@pytest.mark.sync
 def test_goToWithCA_random(setUp):
     rows, cols = 3, 5
     N = rows * cols
@@ -214,6 +222,7 @@ def test_goToWithCA_random(setUp):
             assert np.all(np.isclose(cf.position(), goal, atol=1e-4))
 
 
+@pytest.mark.sync
 def test_cmdPosition(setUp):
     args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
@@ -237,6 +246,7 @@ def test_cmdPosition(setUp):
     assert np.all(np.isclose(cf1.position(), goal1))
 
 
+@pytest.mark.sync
 def test_boundingBox(setUp):
     args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
@@ -263,7 +273,7 @@ def test_boundingBox(setUp):
     assert not np.all(np.isclose(cf1.position(), goal1))
 
 
-#@pytest.mark.xfail(reason="Bug in firmware")
+@pytest.mark.sync
 def test_maxSpeed_zero(setUp):
     args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)
@@ -286,6 +296,7 @@ def test_maxSpeed_zero(setUp):
     assert np.all(np.isclose(cf1.position(), goal0))
 
 
+@pytest.mark.sync
 def test_maxSpeed_limit(setUp):
     args = "--maxvel 1.0"
     allcfs, timeHelper = setUp(args)

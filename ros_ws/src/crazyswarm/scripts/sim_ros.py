@@ -39,6 +39,7 @@ class CrazyflieROSSim:
 
         rospy.Subscriber(prefix + "/cmd_full_state", FullState, self.handle_cmd_full_state)
         rospy.Subscriber(prefix + "/cmd_position", Position, self.handle_cmd_position)
+        rospy.Subscriber(prefix + "/cmd_velocity_world", VelocityWorld, self.handle_cmd_velocity_world)
         rospy.Subscriber(prefix + "/cmd_stop", EmptyMsg, self.handle_cmd_stop)
 
         # LED support
@@ -109,6 +110,10 @@ class CrazyflieROSSim:
     def handle_cmd_position(self, msg):
         pos = [msg.x, msg.y, msg.z]
         self.cfsim.cmdPosition(pos, msg.yaw)
+
+    def handle_cmd_velocity_world(self, msg):
+        vel = [msg.vel.x, msg.vel.y, msg.vel.z]
+        self.cfsim.cmdVelocityWorld(vel, msg.yawRate)
 
     def handle_cmd_stop(self, msg):
         self.cfsim.cmdStop()

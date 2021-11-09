@@ -47,6 +47,7 @@ jobs:
         CSW_PYTHON=${{ matrix.pyVer }} ./build.sh
 
     - name: Test
+      shell: bash -l {0}
       run: |
         source ros_ws/devel/setup.bash
         cd ros_ws/src/crazyswarm/scripts

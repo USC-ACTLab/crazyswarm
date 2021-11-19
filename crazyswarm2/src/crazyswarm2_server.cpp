@@ -4,7 +4,6 @@
 #include <crazyflie_cpp/Crazyflie.h>
 
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/joy.hpp"
 #include "std_srvs/srv/empty.hpp"
 #include "crazyswarm2_interfaces/srv/start_trajectory.hpp"
 #include "crazyswarm2_interfaces/srv/takeoff.hpp"
@@ -50,20 +49,98 @@ private:
   rclcpp::Logger logger_;
 };
 
+std::set<std::string> extract_names(
+    const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides,
+    const std::string &pattern)
+{
+  std::set<std::string> result;
+  for (const auto &i : parameter_overrides)
+  {
+    if (i.first.find(pattern) == 0)
+    {
+      size_t start = pattern.size() + 1;
+      size_t end = i.first.find(".", start);
+      result.insert(i.first.substr(start, end - start));
+    }
+  }
+  return result;
+}
+
 // ROS wrapper for a single Crazyflie object
 class CrazyflieROS
 {
 public:
   CrazyflieROS(
-    const std::string& link_uri)
+    const std::string& link_uri,
+    const std::string& name,
+    rclcpp::Node* node,
+    bool enable_parameters = true)
     : logger_(rclcpp::get_logger(link_uri))
     , cf_logger_(logger_)
     , cf_(
       link_uri,
       cf_logger_,
       std::bind(&CrazyflieROS::on_console, this, std::placeholders::_1))
+    , name_(name)
   {
+
+    auto start = std::chrono::system_clock::now();
+
+    cf_.logReset();
+
+    if (enable_parameters) {
+      int numParams = 0;
+      RCLCPP_INFO(logger_, "Requesting parameters...");
+      cf_.requestParamToc(/*forceNoCache*/);
+      for (auto iter = cf_.paramsBegin(); iter != cf_.paramsEnd(); ++iter) {
+        auto entry = *iter;
+        std::string paramName = name + "/params/" + entry.group + "/" + entry.name;
+        switch (entry.type)
+        {
+        case Crazyflie::ParamTypeUint8:
+          node->declare_parameter(paramName, cf_.getParam<uint8_t>(entry.id));
+          break;
+        case Crazyflie::ParamTypeInt8:
+          node->declare_parameter(paramName, cf_.getParam<int8_t>(entry.id));
+          break;
+        case Crazyflie::ParamTypeUint16:
+          node->declare_parameter(paramName, cf_.getParam<uint16_t>(entry.id));
+          break;
+        case Crazyflie::ParamTypeInt16:
+          node->declare_parameter(paramName, cf_.getParam<int16_t>(entry.id));
+          break;
+        case Crazyflie::ParamTypeUint32:
+          node->declare_parameter<int64_t>(paramName, cf_.getParam<uint32_t>(entry.id));
+          break;
+        case Crazyflie::ParamTypeInt32:
+          node->declare_parameter(paramName, cf_.getParam<int32_t>(entry.id));
+          break;
+        case Crazyflie::ParamTypeFloat:
+          node->declare_parameter(paramName, cf_.getParam<float>(entry.id));
+          break;
+        default:
+          RCLCPP_WARN(logger_, "Unknown param type for %s/%s", entry.group.c_str(), entry.name.c_str());
+          break;
+        }
+        ++numParams;
+        // cb_handles_.emplace_back(param_subscriber_->add_parameter_callback(paramName, std::bind(&CrazyflieROS::on_parameter_changed, this, _1)));
+      }
+      auto end1 = std::chrono::system_clock::now();
+      std::chrono::duration<double> elapsedSeconds1 = end1 - start;
+      RCLCPP_INFO(logger_, "reqParamTOC: %f s (%d params)", elapsedSeconds1.count(), numParams);
+      
+      // Create a parameter subscriber that can be used to monitor parameter changes
+      param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(node);
+      cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieROS::on_parameter_event, this, _1));
+    }
   }
+
+  void spin_some()
+  {
+    cf_.sendPing();
+  }
+
+  // CrazyflieROS(CrazyflieROS &&) = default;
 
 private:
   void on_console(const char *msg)
@@ -78,12 +155,79 @@ private:
     }
   }
 
+  // void on_parameter_changed(const rclcpp::Parameter &p)
+  // {
+  //   RCLCPP_INFO(
+  //       logger_,
+  //       "Received an update to parameter \"%s\" of type: %s: \"%s\"",
+  //       p.get_name().c_str(),
+  //       p.get_type_name().c_str(),
+  //       p.value_to_string().c_str());
+  // }
+
+  void on_parameter_event(const rcl_interfaces::msg::ParameterEvent &event)
+  {
+    if (event.node == "/crazyswarm2_server") {
+      auto params = param_subscriber_->get_parameters_from_event(event);
+      for (auto &p : params) {
+        std::string prefix = name_ + "/params/";
+        if (p.get_name().find(prefix) == 0) {
+          RCLCPP_INFO(
+              logger_,
+              "Received an update to parameter \"%s\" of type: %s: \"%s\"",
+              p.get_name().c_str(),
+              p.get_type_name().c_str(),
+              p.value_to_string().c_str());
+
+          size_t pos = p.get_name().find("/", prefix.size());
+          std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
+          std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
+
+          auto entry = cf_.getParamTocEntry(group, name);
+          if (entry) {
+            switch (entry->type)
+            {
+            case Crazyflie::ParamTypeUint8:
+              cf_.setParam<uint8_t>(entry->id, p.as_int());
+              break;
+            case Crazyflie::ParamTypeInt8:
+              cf_.setParam<int8_t>(entry->id, p.as_int());
+              break;
+            case Crazyflie::ParamTypeUint16:
+              cf_.setParam<uint16_t>(entry->id, p.as_int());
+              break;
+            case Crazyflie::ParamTypeInt16:
+              cf_.setParam<int16_t>(entry->id, p.as_int());
+              break;
+            case Crazyflie::ParamTypeUint32:
+              cf_.setParam<uint32_t>(entry->id, p.as_int());
+              break;
+            case Crazyflie::ParamTypeInt32:
+              cf_.setParam<int32_t>(entry->id, p.as_int());
+              break;
+            case Crazyflie::ParamTypeFloat:
+              cf_.setParam<float>(entry->id, p.as_double());
+              break;
+            }
+          } else {
+            RCLCPP_ERROR(logger_, "Could not find param %s/%s", group.c_str(), name.c_str());
+          }
+        }
+      }
+    }
+  }
+
 private:
   rclcpp::Logger logger_;
   CrazyflieLogger cf_logger_;
 
   Crazyflie cf_;
   std::string message_buffer_;
+  std::string name_;
+
+  std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
+  std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
+  // std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> cb_handles_;
 };
 
 class CrazyflieServer : public rclcpp::Node
@@ -97,6 +241,25 @@ public:
     service_takeoff_ = this->create_service<Takeoff>("takeoff", std::bind(&CrazyflieServer::takeoff, this, _1, _2));
     service_land_ = this->create_service<Land>("land", std::bind(&CrazyflieServer::land, this, _1, _2));
     service_go_to_ = this->create_service<GoTo>("go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
+
+    // load crazyflies from params
+    auto node_parameters_iface = this->get_node_parameters_interface();
+    const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
+        node_parameters_iface->get_parameter_overrides();
+
+    auto cf_names = extract_names(parameter_overrides, "crazyflies");
+    for (const auto &name : cf_names)
+    {
+      std::string uri = parameter_overrides.at("crazyflies." + name + ".uri").get<std::string>();
+      crazyflies_.push_back(new CrazyflieROS(uri, name, this));
+    }
+  }
+
+  void spin_some()
+  {
+    for (auto cf : crazyflies_) {
+      cf->spin_some();
+    }
   }
 
 private:
@@ -131,12 +294,22 @@ private:
   rclcpp::Service<Takeoff>::SharedPtr service_takeoff_;
   rclcpp::Service<Land>::SharedPtr service_land_;
   rclcpp::Service<GoTo>::SharedPtr service_go_to_;
+
+  std::vector<CrazyflieROS*> crazyflies_;
 };
 
 int main(int argc, char *argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<CrazyflieServer>());
+
+  // rclcpp::spin(std::make_shared<CrazyflieServer>());
+  auto node = std::make_shared<CrazyflieServer>();
+  while (true)
+  {
+    node->spin_some();
+    rclcpp::spin_some(node);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
   rclcpp::shutdown();
   return 0;
 }

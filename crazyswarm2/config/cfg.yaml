@@ -1,0 +1,8 @@
+/crazyswarm2_server:
+  ros__parameters:
+    crazyflies:
+      cf1:
+        uri: "radio://0/80/2M/E7E7E7E701"
+        # channel: 80
+        initial_position: [0,0,0]
+        type: "cf21"

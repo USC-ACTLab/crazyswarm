@@ -13,7 +13,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(crazyswarm2_interfaces REQUIRED)
 
 # add dependencies
-add_subdirectory(deps/crazyflie_tools)# EXCLUDE_FROM_ALL)
+add_subdirectory(deps/crazyflie_tools)
 # add_subdirectory(externalDependencies/libmotioncapture)
 
 include_directories(
@@ -38,7 +38,10 @@ ament_target_dependencies(teleop
 add_executable(crazyswarm2_server 
   src/crazyswarm2_server.cpp
 )
-ament_target_dependencies(crazyswarm2_server 
+target_link_libraries(crazyswarm2_server
+  crazyflie_cpp
+)
+ament_target_dependencies(crazyswarm2_server
   rclcpp
   sensor_msgs
   std_srvs
@@ -84,9 +87,15 @@ install(TARGETS
   setParam
   #
   teleop
+  crazyswarm2_server
   DESTINATION lib/${PROJECT_NAME})
 
-
+# Install launch and config files.
+install(DIRECTORY
+  launch
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 # if(BUILD_TESTING)
 #   find_package(ament_lint_auto REQUIRED)

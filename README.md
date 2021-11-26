@@ -11,11 +11,14 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
   * Former crazyswarm_teleop
 * crazyswarm2_interfaces package
   * All msg/srv files similar to before (updated to follow the new style guide)
+* crazyswarm2_server package
+  * Firmware parameters (mapping to parameter server with callback on updates)
 * Standalone tracking package, see https://github.com/IMRCLab/motion_capture_tracking/tree/ros2
 
 ## Missing
 
 * Former crazyswarm_server
+  * Most features are still missing
 * Simulation
 * Scripting layer
 

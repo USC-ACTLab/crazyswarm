@@ -27,10 +27,10 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 ```
 mkdir -p ros2_ws/src
 cd ros2_ws/src
-git clone https://github.com/IMRCLab/crazyswarm2
+git clone https://github.com/IMRCLab/crazyswarm2 --recursive
 cd ../
 colcon build --packages-select crazyswarm2 crazyswarm2_interfaces
-. install/local_setup.zsh
+. install/local_setup.zsh (OR . install/local_setup.bash)
 ros2 run crazyswarm2 console
 ```
 

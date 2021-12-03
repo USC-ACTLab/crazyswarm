@@ -29,7 +29,7 @@ mkdir -p ros2_ws/src
 cd ros2_ws/src
 git clone https://github.com/IMRCLab/crazyswarm2 --recursive
 cd ../
-colcon build --packages-select crazyswarm2 crazyswarm2_interfaces py_crazyswarm2 crayzswarm2_examples
+colcon build
 . install/local_setup.zsh (OR . install/local_setup.bash)
 ros2 run crazyswarm2 console
 ```
@@ -42,6 +42,13 @@ ros2 run crazyswarm2 console
 ros2 param set cf1/params/commander/enHighLevel 1
 ros2 service call cf1/takeoff crazyswarm2_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
 ros2 service call cf1/land crazyswarm2_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
+```
+
+### crazyswarm2_examples
+
+```
+ros2 param set cf1/params/commander/enHighLevel 1
+ros2 run crazyswarm2_examples hello_world
 ```
 
 ## OLD - TO BE UPDATED

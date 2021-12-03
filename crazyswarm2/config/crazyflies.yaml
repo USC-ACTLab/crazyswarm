@@ -1,5 +1,8 @@
-crazyflies:
-- channel: 100
-  id: 1
-  initialPosition: [1.5, 1.5, 0.0]
-  type: medium
+cf1:
+  # Use URI -OR- id + channel
+  # uri: "radio://0/80/2M/E7E7E7E701"
+  uri: "radio://0/80/2M/E7E7E7E703"
+  # id: 1
+  # channel: 80
+  initial_position: [0,0,0]
+  type: "cf21"

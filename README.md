@@ -13,6 +13,11 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
   * All msg/srv files similar to before (updated to follow the new style guide)
 * crazyswarm2_server package
   * Firmware parameters (mapping to parameter server with callback on updates)
+  * High-level Takeoff/Landing/GoTo/StartTrajectory (per CF, no broadcasts)
+* py_crazyswarm2
+  * Former Python API (currently: very limited; physical flight only)
+* crazyswarm2_examples
+  * Former example scripts (currently: only hello_world)
 * Standalone tracking package, see https://github.com/IMRCLab/motion_capture_tracking/tree/ros2
 
 ## Missing
@@ -21,6 +26,8 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
   * Most features are still missing
 * Simulation
 * Scripting layer
+  * very limited feature set
+  * No simulation backend, yet
 
 ## Building and Running
 

@@ -83,6 +83,10 @@ public:
       std::bind(&CrazyflieROS::on_console, this, std::placeholders::_1))
     , name_(name)
   {
+    service_start_trajectory_ = node->create_service<StartTrajectory>(name + "/start_trajectory", std::bind(&CrazyflieROS::start_trajectory, this, _1, _2));
+    service_takeoff_ = node->create_service<Takeoff>(name + "/takeoff", std::bind(&CrazyflieROS::takeoff, this, _1, _2));
+    service_land_ = node->create_service<Land>(name + "/land", std::bind(&CrazyflieROS::land, this, _1, _2));
+    service_go_to_ = node->create_service<GoTo>(name + "/go_to", std::bind(&CrazyflieROS::go_to, this, _1, _2));
 
     auto start = std::chrono::system_clock::now();
 
@@ -155,6 +159,55 @@ private:
     }
   }
 
+  void start_trajectory(const std::shared_ptr<StartTrajectory::Request> request,
+                        std::shared_ptr<StartTrajectory::Response> response)
+  {
+    RCLCPP_INFO(logger_, "start_trajectory(id=%d, timescale=%f, reversed=%d, relative=%d, group_mask=%d)",
+      request->trajectory_id,
+      request->timescale,
+      request->reversed,
+      request->relative,
+      request->group_mask);
+    cf_.startTrajectory(request->trajectory_id,
+      request->timescale,
+      request->reversed,
+      request->relative,
+      request->group_mask);
+  }
+
+  void takeoff(const std::shared_ptr<Takeoff::Request> request,
+               std::shared_ptr<Takeoff::Response> response)
+  {
+    RCLCPP_INFO(logger_, "takeoff(height=%f m, duration=%f s, group_mask=%d)", 
+                request->height,
+                rclcpp::Duration(request->duration).seconds(),
+                request->group_mask);
+    cf_.takeoff(request->height, rclcpp::Duration(request->duration).seconds(), request->group_mask);
+  }
+
+  void land(const std::shared_ptr<Land::Request> request,
+            std::shared_ptr<Land::Response> response)
+  {
+    RCLCPP_INFO(logger_, "land(height=%f m, duration=%f s, group_mask=%d)",
+                request->height,
+                rclcpp::Duration(request->duration).seconds(),
+                request->group_mask);
+    cf_.land(request->height, rclcpp::Duration(request->duration).seconds(), request->group_mask);
+  }
+
+  void go_to(const std::shared_ptr<GoTo::Request> request,
+             std::shared_ptr<GoTo::Response> response)
+  {
+    RCLCPP_INFO(logger_, "go_to(position=%f,%f,%f m, yaw=%f rad, duration=%f s, relative=%d, group_mask=%d)",
+                request->goal.x, request->goal.y, request->goal.z, request->yaw,
+                rclcpp::Duration(request->duration).seconds(),
+                request->relative,
+                request->group_mask);
+    cf_.goTo(request->goal.x, request->goal.y, request->goal.z, request->yaw, 
+              rclcpp::Duration(request->duration).seconds(),
+              request->relative, request->group_mask);
+  }
+
   // void on_parameter_changed(const rclcpp::Parameter &p)
   // {
   //   RCLCPP_INFO(
@@ -224,6 +277,11 @@ private:
   Crazyflie cf_;
   std::string message_buffer_;
   std::string name_;
+
+  rclcpp::Service<StartTrajectory>::SharedPtr service_start_trajectory_;
+  rclcpp::Service<Takeoff>::SharedPtr service_takeoff_;
+  rclcpp::Service<Land>::SharedPtr service_land_;
+  rclcpp::Service<GoTo>::SharedPtr service_go_to_;
 
   std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
   std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;

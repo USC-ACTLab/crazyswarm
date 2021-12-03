@@ -1,6 +1,7 @@
 """Takeoff-hover-land for one CF. Useful to validate hardware config."""
 
-from pycrazyswarm import Crazyswarm
+# from pycrazyswarm import Crazyswarm
+from py_crazyswarm2 import Crazyswarm
 
 
 TAKEOFF_DURATION = 2.5

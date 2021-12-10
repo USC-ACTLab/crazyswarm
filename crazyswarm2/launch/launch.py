@@ -60,15 +60,21 @@ def generate_launch_description():
             output='screen',
             parameters=[motion_capture_params]
         ),
-        # Node(
-        #     package='crazyswarm2',
-        #     executable='teleop',
-        #     name='teleop',
-        #     remappings=[
-        #         ('takeoff', 'cf1/takeoff'),
-        #         ('land', 'cf1/land'),
-        #     ]
-        # ),
+        Node(
+            package='joy',
+            executable='joy_node',
+            name='joy_node',
+        ),
+        Node(
+            package='crazyswarm2',
+            executable='teleop',
+            name='teleop',
+            # Use the following to map to a specific CF (otherwise broadcasts are used)
+            # remappings=[
+            #     ('takeoff', 'cf3/takeoff'),
+            #     ('land', 'cf3/land'),
+            # ]
+        ),
         Node(
             package='crazyswarm2',
             executable='crazyswarm2_server',

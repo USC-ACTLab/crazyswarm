@@ -13,7 +13,8 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
   * All msg/srv files similar to before (updated to follow the new style guide)
 * crazyswarm2_server package
   * Firmware parameters (mapping to parameter server with callback on updates)
-  * High-level Takeoff/Landing/GoTo/StartTrajectory (per CF, no broadcasts)
+  * High-level Takeoff/Landing/GoTo/StartTrajectory (per CF, and broadcasts)
+  * Broadcasting motion capture information
 * py_crazyswarm2
   * Former Python API (currently: very limited; physical flight only)
 * crazyswarm2_examples
@@ -46,7 +47,7 @@ ros2 run crazyswarm2 console
 ### Basic High-Level Flight
 
 ```
-ros2 param set cf1/params/commander/enHighLevel 1
+ros2 param set crazyswarm2_server cf1/params/commander/enHighLevel 1
 ros2 service call cf1/takeoff crazyswarm2_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
 ros2 service call cf1/land crazyswarm2_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
 ```

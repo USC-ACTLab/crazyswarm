@@ -13,6 +13,7 @@
   <depend>std_srvs</depend>
   <depend>sensor_msgs</depend>
   <depend>crazyswarm2_interfaces</depend>
+  <depend>motion_capture_tracking_interfaces</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

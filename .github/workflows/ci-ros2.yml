@@ -59,19 +59,13 @@ jobs:
 
       - name: install dependencies
         run: |
-          sudo apt-get install -y libusb-1.0-0-dev
+          sudo apt update
+          sudo apt install -y libusb-1.0-0-dev
 
+      - uses: actions/checkout@v2
       - name: build and test ROS 2
         uses: ros-tooling/action-ros-ci@v0.2
         with:
           package-name: crazyswarm2 crazyswarm2_interfaces
           target-ros2-distro: ${{ matrix.ros_distribution }}
-          colcon-defaults: |
-                  {
-                    "build": {
-                      "packages-select": [
-                          "crazyswarm2",
-                          "crazyswarm2_interfaces"
-                      ]
-                    }
-                  }
+          vcs-repo-file-url: rosinstall

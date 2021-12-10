@@ -36,6 +36,7 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 mkdir -p ros2_ws/src
 cd ros2_ws/src
 git clone https://github.com/IMRCLab/crazyswarm2 --recursive
+git clone --branch ros2 --recursive https://github.com/IMRCLab/motion_capture_tracking.git
 cd ../
 colcon build
 . install/local_setup.zsh (OR . install/local_setup.bash)

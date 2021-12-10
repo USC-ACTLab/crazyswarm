@@ -1,0 +1,5 @@
+repositories:
+  motion_capture_tracking:
+    type: git
+    url: https://github.com/IMRCLab/motion_capture_tracking.git
+    version: ros2

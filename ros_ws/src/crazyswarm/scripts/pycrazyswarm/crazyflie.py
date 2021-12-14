@@ -345,7 +345,7 @@ class Crazyflie:
 
         Parameters are named values of various primitive C types that control
         the firmware's behavior. For more information, see
-        https://www.bitcraze.io/docs/crazyflie-firmware/master/logparam/.
+        https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/userguides/logparam/.
 
         Parameters are read at system startup over the radio and cached.
         The ROS launch file can also be used to set parameter values at startup.

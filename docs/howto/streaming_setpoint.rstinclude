@@ -45,7 +45,7 @@ CRTP radio packet definition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 First, we define our radio packet.
 Radio packets follow the CRTP (Crazyflie Real-Time Protocol)
-defined by Bitcraze: `<https://www.bitcraze.io/docs/crazyflie-firmware/master/ctrp_index/>`_.
+defined by Bitcraze: `<https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/functional-areas/crtp/>`_.
 On that page we see the following diagram of the one-byte CRTP header: ::
 
 	   7    6    5    4    3    2    1    0

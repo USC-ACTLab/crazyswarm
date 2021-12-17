@@ -18,7 +18,7 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 * py_crazyswarm2
   * Former Python API (currently: very limited; physical flight only)
 * crazyswarm2_examples
-  * Former example scripts (currently: only hello_world)
+  * Former example scripts (currently: only hello_world, nice_hover, figure8)
 * Standalone tracking package, see https://github.com/IMRCLab/motion_capture_tracking/tree/ros2
 
 ## Missing

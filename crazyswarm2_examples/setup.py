@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'hello_world = crazyswarm2_examples.hello_world:main',
             'nice_hover = crazyswarm2_examples.nice_hover:main',
+            'figure8 = crazyswarm2_examples.figure8:main',
         ],
     },
 )

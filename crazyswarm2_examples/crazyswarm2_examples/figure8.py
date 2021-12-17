@@ -2,16 +2,16 @@
 
 import numpy as np
 
-from pycrazyswarm import *
-import uav_trajectory
+from py_crazyswarm2 import *
+from py_crazyswarm2.uav_trajectory import Trajectory
 
-if __name__ == "__main__":
+def main():
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
 
-    traj1 = uav_trajectory.Trajectory()
-    traj1.loadcsv("figure8.csv")
+    traj1 = Trajectory()
+    traj1.loadcsv("/home/whoenig/projects/crazyflie/ros2_ws/src/crazyswarm2/crazyswarm2_examples/resource/figure8.csv")
 
     TRIALS = 1
     TIMESCALE = 1.0
@@ -33,3 +33,7 @@ if __name__ == "__main__":
 
         allcfs.land(targetHeight=0.06, duration=2.0)
         timeHelper.sleep(3.0)
+
+
+if __name__ == "__main__":
+    main()

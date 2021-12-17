@@ -143,6 +143,9 @@ public:
       param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(node);
       cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieROS::on_parameter_event, this, _1));
     }
+
+    RCLCPP_INFO(logger_, "Requesting memories...");
+    cf_.requestMemoryToc();
   }
 
   void spin_some()

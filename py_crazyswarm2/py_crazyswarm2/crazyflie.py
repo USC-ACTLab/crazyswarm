@@ -300,10 +300,10 @@ class Crazyflie:
         for poly in trajectory.polynomials:
             piece = TrajectoryPolynomialPiece()
             piece.duration = rclpy.duration.Duration(seconds=poly.duration).to_msg()
-            piece.poly_x   = poly.px.p
-            piece.poly_y   = poly.py.p
-            piece.poly_z   = poly.pz.p
-            piece.poly_yaw = poly.pyaw.p
+            piece.poly_x   = poly.px.p.tolist()
+            piece.poly_y   = poly.py.p.tolist()
+            piece.poly_z   = poly.pz.p.tolist()
+            piece.poly_yaw = poly.pyaw.p.tolist()
             pieces.append(piece)
         req = UploadTrajectory.Request()
         req.trajectory_id = trajectoryId

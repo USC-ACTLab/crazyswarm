@@ -4,7 +4,7 @@
 # import sys
 # import yaml
 # import rospy
-# import numpy as np
+import numpy as np
 # import time
 # import tf_conversions
 # from std_srvs.srv import Empty
@@ -17,10 +17,16 @@
 import rclpy
 import rclpy.node
 from std_srvs.srv import Empty
-from crazyswarm2_interfaces.srv import Takeoff, Land
+from geometry_msgs.msg import Point
+from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory
+from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece
 
 def arrayToGeometryPoint(a):
-    return geometry_msgs.msg.Point(a[0], a[1], a[2])
+    result = Point()
+    result.x = a[0]
+    result.y = a[1]
+    result.z = a[2]
+    return result
 
 class TimeHelper:
     """Object containing all time-related functionality.
@@ -70,7 +76,7 @@ class Crazyflie:
     The bulk of the module's functionality is contained in this class.
     """
 
-    def __init__(self, node, id):
+    def __init__(self, node, id, initialPosition):
         """Constructor.
 
         Args:
@@ -85,29 +91,24 @@ class Crazyflie:
         self.id = id
         prefix = "/cf" + str(id)
         self.prefix = prefix
-        # self.initialPosition = np.array(initialPosition)
+        self.initialPosition = np.array(initialPosition)
 
         # self.tf = tf
 
+        # rospy.wait_for_service(prefix + "/set_group_mask")
+        # self.setGroupMaskService = rospy.ServiceProxy(prefix + "/set_group_mask", SetGroupMask)
         self.takeoffService = node.create_client(Takeoff, prefix + "/takeoff")
         self.takeoffService.wait_for_service()
         self.landService = node.create_client(Land, prefix + "/land")
         self.landService.wait_for_service()
-
-        # rospy.wait_for_service(prefix + "/set_group_mask")
-        # self.setGroupMaskService = rospy.ServiceProxy(prefix + "/set_group_mask", SetGroupMask)
-        # rospy.wait_for_service(prefix + "/takeoff")
-        # self.takeoffService = rospy.ServiceProxy(prefix + "/takeoff", Takeoff)
-        # rospy.wait_for_service(prefix + "/land")
-        # self.landService = rospy.ServiceProxy(prefix + "/land", Land)
         # # rospy.wait_for_service(prefix + "/stop")
         # # self.stopService = rospy.ServiceProxy(prefix + "/stop", Stop)
-        # rospy.wait_for_service(prefix + "/go_to")
-        # self.goToService = rospy.ServiceProxy(prefix + "/go_to", GoTo)
-        # rospy.wait_for_service(prefix + "/upload_trajectory")
-        # self.uploadTrajectoryService = rospy.ServiceProxy(prefix + "/upload_trajectory", UploadTrajectory)
-        # rospy.wait_for_service(prefix + "/start_trajectory")
-        # self.startTrajectoryService = rospy.ServiceProxy(prefix + "/start_trajectory", StartTrajectory)
+        self.goToService = node.create_client(GoTo, prefix + "/go_to")
+        self.goToService.wait_for_service()
+        self.uploadTrajectoryService = node.create_client(UploadTrajectory, prefix + "/upload_trajectory")
+        self.uploadTrajectoryService.wait_for_service()
+        self.startTrajectoryService = node.create_client(StartTrajectory, prefix + "/start_trajectory")
+        self.startTrajectoryService.wait_for_service()
         # rospy.wait_for_service(prefix + "/notify_setpoints_stop")
         # self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", NotifySetpointsStop)
         # rospy.wait_for_service(prefix + "/update_params")
@@ -242,82 +243,97 @@ class Crazyflie:
     #     """
     #     self.stopService(groupMask)
 
-    # def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
-    #     """Move smoothly to the goal, then hover indefinitely.
+    def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
+        """Move smoothly to the goal, then hover indefinitely.
 
-    #     Asynchronous command; returns immediately.
+        Asynchronous command; returns immediately.
 
-    #     Plans a smooth trajectory from the current state to the goal position.
-    #     Will stop smoothly at the goal with minimal overshoot. If the current
-    #     state is at hover, the planned trajectory will be a straight line;
-    #     however, if the current velocity is nonzero, the planned trajectory
-    #     will be a smooth curve.
+        Plans a smooth trajectory from the current state to the goal position.
+        Will stop smoothly at the goal with minimal overshoot. If the current
+        state is at hover, the planned trajectory will be a straight line;
+        however, if the current velocity is nonzero, the planned trajectory
+        will be a smooth curve.
 
-    #     Plans the trajectory by solving for the unique degree-7 polynomial that
-    #     satisfies the initial conditions of the current position, velocity,
-    #     and acceleration, and ends at the goal position with zero velocity and
-    #     acceleration. The jerk (derivative of acceleration) is fixed at zero at
-    #     both boundary conditions.
+        Plans the trajectory by solving for the unique degree-7 polynomial that
+        satisfies the initial conditions of the current position, velocity,
+        and acceleration, and ends at the goal position with zero velocity and
+        acceleration. The jerk (derivative of acceleration) is fixed at zero at
+        both boundary conditions.
 
-    #     Note: it is the user's responsibility to ensure that the goTo command
-    #     is feasible. If the duration is too short, the trajectory will require
-    #     impossible accelerations and velocities. The planner will not correct
-    #     this, and the failure to achieve the desired states will cause the
-    #     controller to become unstable.
+        Note: it is the user's responsibility to ensure that the goTo command
+        is feasible. If the duration is too short, the trajectory will require
+        impossible accelerations and velocities. The planner will not correct
+        this, and the failure to achieve the desired states will cause the
+        controller to become unstable.
 
-    #     Args:
-    #         goal (iterable of 3 floats): The goal position. Meters.
-    #         yaw (float): The goal yaw angle (heading). Radians.
-    #         duration (float): How long until the goal is reached. Seconds.
-    #         relative (bool): If true, the goal position is interpreted as a
-    #             relative offset from the current position. Otherwise, the goal
-    #             position is interpreted as absolute coordintates in the global
-    #             reference frame.
-    #         groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
-    #     """
-    #     gp = arrayToGeometryPoint(goal)
-    #     self.goToService(groupMask, relative, gp, yaw, rospy.Duration.from_sec(duration))
+        Args:
+            goal (iterable of 3 floats): The goal position. Meters.
+            yaw (float): The goal yaw angle (heading). Radians.
+            duration (float): How long until the goal is reached. Seconds.
+            relative (bool): If true, the goal position is interpreted as a
+                relative offset from the current position. Otherwise, the goal
+                position is interpreted as absolute coordintates in the global
+                reference frame.
+            groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
+        """
+        req = GoTo.Request()
+        req.group_mask = groupMask
+        req.relative = relative
+        req.goal = arrayToGeometryPoint(goal)
+        req.yaw = float(yaw)
+        req.duration = rclpy.duration.Duration(seconds=duration).to_msg()
+        self.goToService.call_async(req)
 
-    # def uploadTrajectory(self, trajectoryId, pieceOffset, trajectory):
-    #     """Uploads a piecewise polynomial trajectory for later execution.
+    def uploadTrajectory(self, trajectoryId, pieceOffset, trajectory):
+        """Uploads a piecewise polynomial trajectory for later execution.
 
-    #     See uav_trajectory.py for more information about piecewise polynomial
-    #     trajectories.
+        See uav_trajectory.py for more information about piecewise polynomial
+        trajectories.
 
-    #     Args:
-    #         trajectoryId (int): ID number of this trajectory. Multiple
-    #             trajectories can be uploaded. TODO: what is the maximum ID?
-    #         pieceOffset (int): TODO(whoenig): explain this.
-    #         trajectory (:obj:`pycrazyswarm.uav_trajectory.Trajectory`): Trajectory object.
-    #     """
-    #     pieces = []
-    #     for poly in trajectory.polynomials:
-    #         piece = TrajectoryPolynomialPiece()
-    #         piece.duration = rospy.Duration.from_sec(poly.duration)
-    #         piece.poly_x   = poly.px.p
-    #         piece.poly_y   = poly.py.p
-    #         piece.poly_z   = poly.pz.p
-    #         piece.poly_yaw = poly.pyaw.p
-    #         pieces.append(piece)
-    #     self.uploadTrajectoryService(trajectoryId, pieceOffset, pieces)
+        Args:
+            trajectoryId (int): ID number of this trajectory. Multiple
+                trajectories can be uploaded. TODO: what is the maximum ID?
+            pieceOffset (int): TODO(whoenig): explain this.
+            trajectory (:obj:`pycrazyswarm.uav_trajectory.Trajectory`): Trajectory object.
+        """
+        pieces = []
+        for poly in trajectory.polynomials:
+            piece = TrajectoryPolynomialPiece()
+            piece.duration = rclpy.duration.Duration(seconds=poly.duration).to_msg()
+            piece.poly_x   = poly.px.p
+            piece.poly_y   = poly.py.p
+            piece.poly_z   = poly.pz.p
+            piece.poly_yaw = poly.pyaw.p
+            pieces.append(piece)
+        req = UploadTrajectory.Request()
+        req.trajectory_id = trajectoryId
+        req.piece_offset = pieceOffset
+        req.pieces = pieces
+        self.uploadTrajectoryService.call_async(req)
 
-    # def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
-    #     """Begins executing a previously uploaded trajectory.
+    def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
+        """Begins executing a previously uploaded trajectory.
 
-    #     Asynchronous command; returns immediately.
+        Asynchronous command; returns immediately.
 
-    #     Args:
-    #         trajectoryId (int): ID number as given to :meth:`uploadTrajectory()`.
-    #         timescale (float): Scales the trajectory duration by this factor.
-    #             For example if timescale == 2.0, the trajectory will take twice
-    #             as long to execute as the nominal duration.
-    #         reverse (bool): If true, executes the trajectory backwards in time.
-    #         relative (bool): If true (default), the position of the trajectory
-    #             is shifted such that it begins at the current position setpoint.
-    #             This is usually the desired behavior.
-    #         groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
-    #     """
-    #     self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
+        Args:
+            trajectoryId (int): ID number as given to :meth:`uploadTrajectory()`.
+            timescale (float): Scales the trajectory duration by this factor.
+                For example if timescale == 2.0, the trajectory will take twice
+                as long to execute as the nominal duration.
+            reverse (bool): If true, executes the trajectory backwards in time.
+            relative (bool): If true (default), the position of the trajectory
+                is shifted such that it begins at the current position setpoint.
+                This is usually the desired behavior.
+            groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
+        """
+        req = StartTrajectory.Request()
+        req.group_mask = groupMask
+        req.trajectory_id = trajectoryId
+        req.timescale = timescale
+        req.reversed = reverse
+        req.relative = relative
+        self.startTrajectoryService.call_async(req)
 
     # def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
     #     """Informs that streaming low-level setpoint packets are about to stop.
@@ -589,16 +605,15 @@ class CrazyflieServer(rclpy.node.Node):
         super().__init__("CrazyflieAPI")
         self.emergencyService = self.create_client(Empty, "emergency")
         self.emergencyService.wait_for_service()
-        # rospy.wait_for_service("/takeoff")
-        # self.takeoffService = rospy.ServiceProxy("/takeoff", Takeoff)
-        # rospy.wait_for_service("/land")
-        # self.landService = rospy.ServiceProxy("/land", Land)
-        # # rospy.wait_for_service("/stop")
-        # # self.stopService = rospy.ServiceProxy("/stop", Stop)
-        # rospy.wait_for_service("/go_to")
-        # self.goToService = rospy.ServiceProxy("/go_to", GoTo)
-        # rospy.wait_for_service("/start_trajectory");
-        # self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", StartTrajectory)
+
+        self.takeoffService = self.create_client(Takeoff, "takeoff")
+        self.takeoffService.wait_for_service()
+        self.landService = self.create_client(Land, "land")
+        self.landService.wait_for_service()
+        self.goToService = self.create_client(GoTo, "go_to")
+        self.goToService.wait_for_service()
+        self.startTrajectoryService = self.create_client(StartTrajectory, "start_trajectory")
+        self.startTrajectoryService.wait_for_service()
 
         # # if crazyflies_yaml.endswith(".yaml"):
         # #     with open(crazyflies_yaml, 'r') as ymlfile:
@@ -611,11 +626,12 @@ class CrazyflieServer(rclpy.node.Node):
         self.crazyflies = []
         self.crazyfliesById = dict()
         # for crazyflie in cfg["crazyflies"]:
-        for cfid in [1]:
+        for cfid in [3]:
             # id = int(crazyflie["id"])
             # initialPosition = crazyflie["initialPosition"]
+            initialPosition = [0, 0, 0]
             # cf = Crazyflie(id, initialPosition, self.tf)
-            cf = Crazyflie(self, cfid)
+            cf = Crazyflie(self, cfid, initialPosition)
             self.crazyflies.append(cf)
             self.crazyfliesById[id] = cf
 
@@ -633,80 +649,96 @@ class CrazyflieServer(rclpy.node.Node):
         """
         self.emergencyService.call_async(Empty.Request)
 
-    # def takeoff(self, targetHeight, duration, groupMask = 0):
-    #     """Broadcasted takeoff - fly straight up, then hover indefinitely.
+    def takeoff(self, targetHeight, duration, groupMask = 0):
+        """Broadcasted takeoff - fly straight up, then hover indefinitely.
 
-    #     Broadcast version of :meth:`Crazyflie.takeoff()`. All robots that match the
-    #     groupMask take off at exactly the same time. Use for synchronized
-    #     movement. Asynchronous command; returns immediately.
+        Broadcast version of :meth:`Crazyflie.takeoff()`. All robots that match the
+        groupMask take off at exactly the same time. Use for synchronized
+        movement. Asynchronous command; returns immediately.
 
-    #     Args:
-    #         targetHeight (float): The z-coordinate at which to hover.
-    #         duration (float): How long until the height is reached. Seconds.
-    #         groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
-    #     """
-    #     self.takeoffService(groupMask, targetHeight, rospy.Duration.from_sec(duration))
+        Args:
+            targetHeight (float): The z-coordinate at which to hover.
+            duration (float): How long until the height is reached. Seconds.
+            groupMask (int): Group mask bits. See :meth:`setGroupMask()` doc.
+        """
+        req = Takeoff.Request()
+        req.group_mask = groupMask
+        req.height = targetHeight
+        req.duration = rclpy.duration.Duration(seconds=duration).to_msg()
+        self.takeoffService.call_async(req)
 
-    # def land(self, targetHeight, duration, groupMask = 0):
-    #     """Broadcasted landing - fly straight down. User must cut power after.
+    def land(self, targetHeight, duration, groupMask = 0):
+        """Broadcasted landing - fly straight down. User must cut power after.
 
-    #     Broadcast version of :meth:`Crazyflie.land()`. All robots that match the
-    #     groupMask land at exactly the same time. Use for synchronized
-    #     movement. Asynchronous command; returns immediately.
+        Broadcast version of :meth:`Crazyflie.land()`. All robots that match the
+        groupMask land at exactly the same time. Use for synchronized
+        movement. Asynchronous command; returns immediately.
 
-    #     Args:
-    #         targetHeight (float): The z-coordinate at which to land. Meters.
-    #             Usually should be a few centimeters above the initial position
-    #             to ensure that the controller does not try to penetrate the
-    #             floor if the mocap coordinate origin is not perfect.
-    #         duration (float): How long until the height is reached. Seconds.
-    #         groupMask (int): Group mask bits. See :meth:`Crazyflie.setGroupMask()` doc.
-    #     """
-    #     self.landService(groupMask, targetHeight, rospy.Duration.from_sec(duration))
+        Args:
+            targetHeight (float): The z-coordinate at which to land. Meters.
+                Usually should be a few centimeters above the initial position
+                to ensure that the controller does not try to penetrate the
+                floor if the mocap coordinate origin is not perfect.
+            duration (float): How long until the height is reached. Seconds.
+            groupMask (int): Group mask bits. See :meth:`Crazyflie.setGroupMask()` doc.
+        """
+        req = Land.Request()
+        req.group_mask = groupMask
+        req.height = targetHeight
+        req.duration = rclpy.duration.Duration(seconds=duration).to_msg()
+        self.landService.call_async(req)
 
-    # # def stop(self, groupMask = 0):
-    # #     self.stopService(groupMask)
+    def goTo(self, goal, yaw, duration, groupMask = 0):
+        """Broadcasted goTo - Move smoothly to goal, then hover indefinitely.
 
-    # def goTo(self, goal, yaw, duration, groupMask = 0):
-    #     """Broadcasted goTo - Move smoothly to goal, then hover indefinitely.
+        Broadcast version of :meth:`Crazyflie.goTo()`. All robots that match the
+        groupMask start moving at exactly the same time. Use for synchronized
+        movement. Asynchronous command; returns immediately.
 
-    #     Broadcast version of :meth:`Crazyflie.goTo()`. All robots that match the
-    #     groupMask start moving at exactly the same time. Use for synchronized
-    #     movement. Asynchronous command; returns immediately.
+        While the individual goTo() supports both relative and absolute
+        coordinates, the broadcasted goTo only makes sense with relative
+        coordinates (since absolute broadcasted goTo() would cause a collision).
+        Therefore, there is no `relative` kwarg.
 
-    #     While the individual goTo() supports both relative and absolute
-    #     coordinates, the broadcasted goTo only makes sense with relative
-    #     coordinates (since absolute broadcasted goTo() would cause a collision).
-    #     Therefore, there is no `relative` kwarg.
+        See docstring of :meth:`Crazyflie.goTo()` for additional details.
 
-    #     See docstring of :meth:`Crazyflie.goTo()` for additional details.
+        Args:
+            goal (iterable of 3 floats): The goal offset. Meters.
+            yaw (float): The goal yaw angle (heading). Radians.
+            duration (float): How long until the goal is reached. Seconds.
+            groupMask (int): Group mask bits. See :meth:`Crazyflie.setGroupMask()` doc.
+        """
+        req = GoTo.Request()
+        req.group_mask = groupMask
+        req.relative = True
+        req.goal = arrayToGeometryPoint(goal)
+        req.yaw = yaw
+        req.duration = rclpy.duration.Duration(seconds=duration).to_msg()
+        self.goToService.call_async(req)
 
-    #     Args:
-    #         goal (iterable of 3 floats): The goal offset. Meters.
-    #         yaw (float): The goal yaw angle (heading). Radians.
-    #         duration (float): How long until the goal is reached. Seconds.
-    #         groupMask (int): Group mask bits. See :meth:`Crazyflie.setGroupMask()` doc.
-    #     """
-    #     gp = arrayToGeometryPoint(goal)
-    #     self.goToService(groupMask, True, gp, yaw, rospy.Duration.from_sec(duration))
+    def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
+        """Broadcasted - begins executing a previously uploaded trajectory.
 
-    # def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
-    #     """Broadcasted - begins executing a previously uploaded trajectory.
+        Broadcast version of :meth:`Crazyflie.startTrajectory()`.
+        Asynchronous command; returns immediately.
 
-    #     Broadcast version of :meth:`Crazyflie.startTrajectory()`.
-    #     Asynchronous command; returns immediately.
-
-    #     Args:
-    #         trajectoryId (int): ID number as given to :meth:`Crazyflie.uploadTrajectory()`.
-    #         timescale (float): Scales the trajectory duration by this factor.
-    #             For example if timescale == 2.0, the trajectory will take twice
-    #             as long to execute as the nominal duration.
-    #         reverse (bool): If true, executes the trajectory backwards in time.
-    #         relative (bool): If true (default), the position of the trajectory
-    #             is shifted such that it begins at the current position setpoint.
-    #         groupMask (int): Group mask bits. See :meth:`Crazyflie.setGroupMask()` doc.
-    #     """
-    #     self.startTrajectoryService(groupMask, trajectoryId, timescale, reverse, relative)
+        Args:
+            trajectoryId (int): ID number as given to :meth:`Crazyflie.uploadTrajectory()`.
+            timescale (float): Scales the trajectory duration by this factor.
+                For example if timescale == 2.0, the trajectory will take twice
+                as long to execute as the nominal duration.
+            reverse (bool): If true, executes the trajectory backwards in time.
+            relative (bool): If true (default), the position of the trajectory
+                is shifted such that it begins at the current position setpoint.
+            groupMask (int): Group mask bits. See :meth:`Crazyflie.setGroupMask()` doc.
+        """
+        req = StartTrajectory.Request()
+        req.group_mask = groupMask
+        req.trajectory_id = trajectoryId
+        req.timescale = timescale
+        req.reversed = reverse
+        req.relative = relative
+        self.startTrajectoryService.call_async(req)
 
     # def setParam(self, name, value):
     #     """Broadcasted setParam. See Crazyflie.setParam() for details."""

@@ -9,6 +9,7 @@
 #include "crazyswarm2_interfaces/srv/takeoff.hpp"
 #include "crazyswarm2_interfaces/srv/land.hpp"
 #include "crazyswarm2_interfaces/srv/go_to.hpp"
+#include "crazyswarm2_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
 
 using std::placeholders::_1;
@@ -18,6 +19,7 @@ using crazyswarm2_interfaces::srv::StartTrajectory;
 using crazyswarm2_interfaces::srv::Takeoff;
 using crazyswarm2_interfaces::srv::Land;
 using crazyswarm2_interfaces::srv::GoTo;
+using crazyswarm2_interfaces::srv::UploadTrajectory;
 using std_srvs::srv::Empty;
 
 using motion_capture_tracking_interfaces::msg::NamedPoseArray;
@@ -90,6 +92,7 @@ public:
     service_takeoff_ = node->create_service<Takeoff>(name + "/takeoff", std::bind(&CrazyflieROS::takeoff, this, _1, _2));
     service_land_ = node->create_service<Land>(name + "/land", std::bind(&CrazyflieROS::land, this, _1, _2));
     service_go_to_ = node->create_service<GoTo>(name + "/go_to", std::bind(&CrazyflieROS::go_to, this, _1, _2));
+    service_upload_trajectory_ = node->create_service<UploadTrajectory>(name + "/upload_trajectory", std::bind(&CrazyflieROS::upload_trajectory, this, _1, _2));
 
     auto start = std::chrono::system_clock::now();
 
@@ -221,6 +224,36 @@ private:
               request->relative, request->group_mask);
   }
 
+  void upload_trajectory(const std::shared_ptr<UploadTrajectory::Request> request,
+                        std::shared_ptr<UploadTrajectory::Response> response)
+  {
+    RCLCPP_INFO(logger_, "upload_trajectory(id=%d, offset=%d)",
+                request->trajectory_id,
+                request->piece_offset);
+
+    std::vector<Crazyflie::poly4d> pieces(request->pieces.size());
+    for (size_t i = 0; i < pieces.size(); ++i)
+    {
+      if (   request->pieces[i].poly_x.size() != 8 
+          || request->pieces[i].poly_y.size() != 8
+          || request->pieces[i].poly_z.size() != 8
+          || request->pieces[i].poly_yaw.size() != 8)
+      {
+        RCLCPP_FATAL(logger_, "Wrong number of pieces!");
+        return;
+      }
+      pieces[i].duration = rclcpp::Duration(request->pieces[i].duration).seconds();
+      for (size_t j = 0; j < 8; ++j)
+      {
+        pieces[i].p[0][j] = request->pieces[i].poly_x[j];
+        pieces[i].p[1][j] = request->pieces[i].poly_y[j];
+        pieces[i].p[2][j] = request->pieces[i].poly_z[j];
+        pieces[i].p[3][j] = request->pieces[i].poly_yaw[j];
+      }
+    }
+    cf_.uploadTrajectory(request->trajectory_id, request->piece_offset, pieces);
+  }
+
   // void on_parameter_changed(const rclcpp::Parameter &p)
   // {
   //   RCLCPP_INFO(
@@ -295,6 +328,7 @@ private:
   rclcpp::Service<Takeoff>::SharedPtr service_takeoff_;
   rclcpp::Service<Land>::SharedPtr service_land_;
   rclcpp::Service<GoTo>::SharedPtr service_go_to_;
+  rclcpp::Service<UploadTrajectory>::SharedPtr service_upload_trajectory_;
 
   std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
   std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
@@ -425,9 +459,11 @@ private:
       }
     }
 
-    for (auto &bc : broadcaster_) {
-      auto &cfbc = bc.second;
-      cfbc->sendExternalPositions(data);
+    if (data.size() > 0) {
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->sendExternalPositions(data);
+      }
     }
   }
 

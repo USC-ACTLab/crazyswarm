@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import numpy as np
-from pycrazyswarm import *
+from py_crazyswarm2 import *
 
-Z = 1.0
 
-if __name__ == "__main__":
+def main():
+    Z = 1.0
+    
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
@@ -21,3 +22,6 @@ if __name__ == "__main__":
 
     allcfs.land(targetHeight=0.02, duration=1.0+Z)
     timeHelper.sleep(1.0+Z)
+
+if __name__ == "__main__":
+    main()

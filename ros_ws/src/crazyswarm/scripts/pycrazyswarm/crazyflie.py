@@ -566,6 +566,14 @@ class CrazyflieServer:
         rospy.init_node("CrazyflieAPI", anonymous=False)
         rospy.wait_for_service("/emergency")
         self.emergencyService = rospy.ServiceProxy("/emergency", Empty)
+        rospy.wait_for_service("/start_planning")
+        self.startPlanningService = rospy.ServiceProxy("/start_planning", Empty)
+        rospy.wait_for_service("/stop_planning")
+        self.stopPlanningService = rospy.ServiceProxy("/stop_planning", Empty)
+        rospy.wait_for_service("/start_patrol")
+        self.startPatrolService = rospy.ServiceProxy("/start_patrol", Empty)
+        rospy.wait_for_service("/stop_patrol")
+        self.stopPatrolService = rospy.ServiceProxy("/stop_patrol", Empty)
         rospy.wait_for_service("/takeoff")
         self.takeoffService = rospy.ServiceProxy("/takeoff", Takeoff)
         rospy.wait_for_service("/land")
@@ -574,7 +582,7 @@ class CrazyflieServer:
         # self.stopService = rospy.ServiceProxy("/stop", Stop)
         rospy.wait_for_service("/go_to")
         self.goToService = rospy.ServiceProxy("/go_to", GoTo)
-        rospy.wait_for_service("/start_trajectory");
+        rospy.wait_for_service("/start_trajectory")
         self.startTrajectoryService = rospy.ServiceProxy("/start_trajectory", StartTrajectory)
         rospy.wait_for_service("/update_params")
         self.updateParamsService = rospy.ServiceProxy("/update_params", UpdateParams)
@@ -609,6 +617,30 @@ class CrazyflieServer:
         are a physical hard reset or an nRF51 Reboot command.
         """
         self.emergencyService()
+
+    def startPlanning(self):
+        """
+        start planning
+        """
+        self.startPlanningService()
+
+    def stopPlanning(self):
+        """
+        stop planning
+        """
+        self.stopPlanningService()
+
+    def startPatrol(self):
+        """
+        start patrol
+        """
+        self.startPatrolService()
+
+    def stopPatrol(self):
+        """
+        stop patrol
+        """
+        self.stopPatrolService()
 
     def takeoff(self, targetHeight, duration, groupMask = 0):
         """Broadcasted takeoff - fly straight up, then hover indefinitely.

@@ -57,8 +57,6 @@ ros2 service call cf1/land crazyswarm2_interfaces/srv/Land "{height: 0.0, durati
 ### crazyswarm2_examples
 
 ```
-ros2 param set crazyswarm2_server cf1/params/commander/enHighLevel 1
-ros2 param set crazyswarm2_server cf3/params/stabilizer/estimator 2
 ros2 run crazyswarm2_examples hello_world
 ```
 

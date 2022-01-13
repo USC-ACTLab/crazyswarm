@@ -5,30 +5,30 @@ cf21:
   battery:
     voltage_warning: 3.8  # V
     voltage_critical: 3.7 # V
-  params:
-    kalman:
-      pNAcc_xy: 1.0 # default 0.5
-      pNAcc_z: 2.0 # default 1.0
-      mNGyro_rollpitch: 0.1 # default 0.1
-      mNGyro_yaw: 0.1 # default 0.1
-    ctrlMel:
-      kp_xy: 0.4 #0.6 # p for position
-      kd_xy: 0.2 # 0.35 # d for position
-      ki_xy: 0.05
-      i_range_xy: 2.0
-      kR_xy: 70000 # p for attitude
-      kw_xy: 20000 # d for attitude
-      kR_z: 60000 # 70000 # p for yaw
-      kw_z: 12000 # 30000  # d for yaw
-      ki_m_z: 500 #0 #20000     # i for yaw
-      i_range_m_z: 1500 # i range for yaw
-      kd_omega_rp: 200 # roll and pitch angular velocity d gain
-      kp_z: 1.25
-      kd_z: 0.4
-      ki_z: 0.05
-      i_range_z: 0.4
-      mass: 0.032
-      massThrust: 132000
+  # firmware_params:
+  #   kalman:
+  #     pNAcc_xy: 1.0 # default 0.5
+  #     pNAcc_z: 2.0 # default 1.0
+  #     mNGyro_rollpitch: 0.1 # default 0.1
+  #     mNGyro_yaw: 0.1 # default 0.1
+  #   ctrlMel:
+  #     kp_xy: 0.4 #0.6 # p for position
+  #     kd_xy: 0.2 # 0.35 # d for position
+  #     ki_xy: 0.05
+  #     i_range_xy: 2.0
+  #     kR_xy: 70000 # p for attitude
+  #     kw_xy: 20000 # d for attitude
+  #     kR_z: 60000 # 70000 # p for yaw
+  #     kw_z: 12000 # 30000  # d for yaw
+  #     ki_m_z: 500 #0 #20000     # i for yaw
+  #     i_range_m_z: 1500 # i range for yaw
+  #     kd_omega_rp: 200 # roll and pitch angular velocity d gain
+  #     kp_z: 1.25
+  #     kd_z: 0.4
+  #     ki_z: 0.05
+  #     i_range_z: 0.4
+  #     mass: 0.032
+  #     massThrust: 132000
 
 
 # crazyflieTypes:

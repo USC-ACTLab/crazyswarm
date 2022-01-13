@@ -1,5 +1,6 @@
 #include <memory>
 #include <vector>
+#include <regex>
 
 #include <crazyflie_cpp/Crazyflie.h>
 
@@ -77,6 +78,7 @@ class CrazyflieROS
 public:
   CrazyflieROS(
     const std::string& link_uri,
+    const std::string& cf_type,
     const std::string& name,
     rclcpp::Node* node,
     bool enable_parameters = true)
@@ -142,6 +144,43 @@ public:
       // Create a parameter subscriber that can be used to monitor parameter changes
       param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(node);
       cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieROS::on_parameter_event, this, _1));
+
+      // Set parameters as specified in the configuration files, as in the following order
+      // 1.) check crazyswarm2_server.yaml
+      // 2.) check crazyflie_types.yaml
+      // 3.) check crazyflies.yaml
+      // where the higher order is used if defined on multiple levels.
+      auto node_parameters_iface = node->get_node_parameters_interface();
+      const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
+          node_parameters_iface->get_parameter_overrides();
+
+      // <group>.<name> -> value map
+      std::map<std::string, rclcpp::ParameterValue> set_param_map;
+
+      // declares a lambda, to be used as local function
+      auto update_map = [&set_param_map, &parameter_overrides](const std::string& pattern)
+      {
+        for (const auto &i : parameter_overrides) {
+          if (i.first.find(pattern) == 0) {
+            size_t start = pattern.size() + 1;
+            const auto group_and_name = i.first.substr(start);
+            set_param_map[group_and_name] = i.second;
+          }
+        }
+      };
+
+      // check crazyswarm2_server.yaml
+      update_map("firmware_params");
+      // check crazyflie_types.yaml
+      update_map("crazyflie_types." + cf_type + ".firmware_params");
+      // check crazyflies.yaml
+      update_map("crazyflies." + name_ + ".firmware_params");
+
+      // Update parameters
+      for (const auto&i : set_param_map) {
+        std::string paramName = name + "/params/" + std::regex_replace(i.first, std::regex("\\."), "/");
+        node->set_parameter(rclcpp::Parameter(paramName, i.second));
+      }
     }
 
     RCLCPP_INFO(logger_, "Requesting memories...");
@@ -274,16 +313,16 @@ private:
       for (auto &p : params) {
         std::string prefix = name_ + "/params/";
         if (p.get_name().find(prefix) == 0) {
-          RCLCPP_INFO(
-              logger_,
-              "Received an update to parameter \"%s\" of type: %s: \"%s\"",
-              p.get_name().c_str(),
-              p.get_type_name().c_str(),
-              p.value_to_string().c_str());
-
           size_t pos = p.get_name().find("/", prefix.size());
           std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
           std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
+
+          RCLCPP_INFO(
+              logger_,
+              "Update parameter \"%s.%s\" to %s",
+              group.c_str(),
+              name.c_str(),
+              p.value_to_string().c_str());
 
           auto entry = cf_.getParamTocEntry(group, name);
           if (entry) {
@@ -359,7 +398,8 @@ public:
     auto cf_names = extract_names(parameter_overrides, "crazyflies");
     for (const auto &name : cf_names) {
       std::string uri = parameter_overrides.at("crazyflies." + name + ".uri").get<std::string>();
-      crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, name, this));
+      std::string cftype = parameter_overrides.at("crazyflies." + name + ".type").get<std::string>();
+      crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, cftype, name, this));
 
       auto broadcastUri = crazyflies_.back()->broadcastUri();
       RCLCPP_INFO(logger_, "%s", broadcastUri.c_str());

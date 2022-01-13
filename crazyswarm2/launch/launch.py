@@ -47,10 +47,17 @@ def generate_launch_description():
         }
 
     # construct crazyswarm2_server configuration
-    server_params = dict()
+    server_yaml = os.path.join(
+        get_package_share_directory('crazyswarm2'),
+        'config',
+        'crazyswarm2_server.yaml')
+    
+    with open(server_yaml, 'r') as ymlfile:
+        server_params = yaml.safe_load(ymlfile)
+
+    server_params = server_params["/crazyswarm2_server"]["ros__parameters"]
     server_params["crazyflies"] = crazyflies
     server_params["crazyflie_types"] = crazyflie_types
-
 
     return LaunchDescription([
         Node(

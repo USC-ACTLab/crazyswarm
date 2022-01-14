@@ -38,13 +38,11 @@ def generate_launch_description():
     for key, value in crazyflies.items():
         type = crazyflie_types[value["type"]]
         
-        motion_capture_params["rigid_bodies"] = {key: 
-            {
+        motion_capture_params["rigid_bodies"][key] =  {
                 "initial_position": value["initial_position"],
                 "marker": type["marker"],
                 "dynamics": type["dynamics"],
             }
-        }
 
     # construct crazyswarm2_server configuration
     server_yaml = os.path.join(

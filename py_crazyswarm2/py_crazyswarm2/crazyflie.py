@@ -18,6 +18,8 @@ import rclpy
 import rclpy.node
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Point
+from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
+from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory
 from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece
 
@@ -111,8 +113,46 @@ class Crazyflie:
         self.startTrajectoryService.wait_for_service()
         # rospy.wait_for_service(prefix + "/notify_setpoints_stop")
         # self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", NotifySetpointsStop)
-        # rospy.wait_for_service(prefix + "/update_params")
-        # self.updateParamsService = rospy.ServiceProxy(prefix + "/update_params", UpdateParams)
+        self.setParamsService = node.create_client(SetParameters, "/crazyswarm2_server/set_parameters")
+        self.setParamsService.wait_for_service()
+
+        # Query all parameters
+        listParamsService = node.create_client(ListParameters, "/crazyswarm2_server/list_parameters")
+        listParamsService.wait_for_service()
+        req = ListParameters.Request()
+        req.depth = ListParameters.Request.DEPTH_RECURSIVE
+        req.prefixes = []
+        future = listParamsService.call_async(req)
+        params = []
+        while rclpy.ok():
+            rclpy.spin_once(node)
+            if future.done():
+                # Filter the parameters that belong to this Crazyflie
+                response = future.result()
+                for p in response.result.names:
+                    param_prefix = "{}/params/".format(prefix[1:])
+                    if p.startswith(param_prefix):
+                        # params.append(p[len(param_prefix):])
+                        params.append(p)
+                break
+
+        # Find the types for the parameters and store them
+        getParamTypesService = node.create_client(GetParameterTypes, "/crazyswarm2_server/get_parameter_types")
+        getParamTypesService.wait_for_service()
+        req = GetParameterTypes.Request()
+        req.names = params
+        future = getParamTypesService.call_async(req)
+        self.paramTypeDict = dict()
+        while rclpy.ok():
+            rclpy.spin_once(node)
+            if future.done():
+                # Filter the parameters that belong to this Crazyflie
+                response = future.result()
+                for p, t in zip(params, response.types):
+                    self.paramTypeDict[p[len(param_prefix):]] = t
+                break
+
+        # print(params)
 
         # self.cmdFullStatePublisher = rospy.Publisher(prefix + "/cmd_full_state", FullState, queue_size=1)
         # self.cmdFullStateMsg = FullState()
@@ -399,17 +439,24 @@ class Crazyflie:
     #     """
     #     return rospy.get_param(self.prefix + "/" + name)
 
-    # def setParam(self, name, value):
-    #     """Changes the value of the given parameter.
+    def setParam(self, name, value):
+        """Changes the value of the given parameter.
 
-    #     See :meth:`getParam()` docs for overview of the parameter system.
+        See :meth:`getParam()` docs for overview of the parameter system.
 
-    #     Args:
-    #         name (str): The parameter's name.
-    #         value (Any): The parameter's value.
-    #     """
-    #     rospy.set_param(self.prefix + "/" + name, value)
-    #     self.updateParamsService([name])
+        Args:
+            name (str): The parameter's name.
+            value (Any): The parameter's value.
+        """
+        param_name = self.prefix[1:] + "/params/" + name.replace(".", "/")
+        param_type = self.paramTypeDict[name.replace(".", "/")]
+        if param_type == ParameterType.PARAMETER_INTEGER:
+            param_value = ParameterValue(type=param_type, integer_value=int(value))
+        elif param_type == ParameterType.PARAMETER_DOUBLE:
+            param_value = ParameterValue(type=param_type, double_value=float(value))
+        req = SetParameters.Request()
+        req.parameters = [Parameter(name=param_name, value=param_value)]
+        self.setParamsService.call_async(req)
 
     # def setParams(self, params):
     #     """Changes the value of several parameters at once.

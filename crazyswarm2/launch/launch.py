@@ -59,6 +59,12 @@ def generate_launch_description():
     server_params["crazyflies"] = crazyflies
     server_params["crazyflie_types"] = crazyflie_types
 
+    # teleop params
+    teleop_yaml = os.path.join(
+        get_package_share_directory('crazyswarm2'),
+        'config',
+        'teleop.yaml')
+
     return LaunchDescription([
         Node(
             package='motion_capture_tracking',
@@ -71,11 +77,12 @@ def generate_launch_description():
             package='crazyswarm2',
             executable='teleop',
             name='teleop',
-            remappings=[
-                ('takeoff', 'cf1/takeoff'),
-                ('land', 'cf1/land'),
-                ('cmd_vel', 'cf1/cmd_vel')
-            ]
+            # remappings=[
+            #     ('takeoff', 'cf3/takeoff'),
+            #     ('land', 'cf3/land'),
+            #     ('cmd_vel', 'cf3/cmd_vel')
+            # ],
+            parameters=[teleop_yaml]
         ),
         Node(
             package='joy',

@@ -69,10 +69,9 @@ public:
         this->declare_parameter<double>("yaw_velocity_max", -200.0);
         axes_.yaw.max = this->get_parameter("yaw_velocity_max").as_double();
 
-
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
-
-       
+        if (frequency_ > 0) {
+            timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
+        }
 
         client_emergency_ = this->create_client<Empty>("emergency");
         client_emergency_->wait_for_service();

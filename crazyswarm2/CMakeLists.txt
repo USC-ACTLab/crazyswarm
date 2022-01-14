@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(crazyswarm2_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(motion_capture_tracking_interfaces REQUIRED)
 
 # add dependencies
@@ -34,6 +35,7 @@ ament_target_dependencies(teleop
   sensor_msgs
   std_srvs
   crazyswarm2_interfaces
+  geometry_msgs
 )
 
 add_executable(crazyswarm2_server 

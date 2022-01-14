@@ -10,6 +10,7 @@
 #include "crazyswarm2_interfaces/srv/takeoff.hpp"
 #include "crazyswarm2_interfaces/srv/land.hpp"
 #include "crazyswarm2_interfaces/srv/go_to.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 #include "crazyswarm2_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
 
@@ -96,6 +97,7 @@ public:
     service_go_to_ = node->create_service<GoTo>(name + "/go_to", std::bind(&CrazyflieROS::go_to, this, _1, _2));
     service_upload_trajectory_ = node->create_service<UploadTrajectory>(name + "/upload_trajectory", std::bind(&CrazyflieROS::upload_trajectory, this, _1, _2));
 
+    subscription_cmd_vel_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_changed, this, _1)); 
     auto start = std::chrono::system_clock::now();
 
     cf_.logReset();
@@ -205,6 +207,18 @@ public:
   // CrazyflieROS(CrazyflieROS &&) = default;
 
 private:
+
+  void cmd_vel_changed(const geometry_msgs::msg::Twist::SharedPtr msg)
+  {
+    // RCLCPP_INFO(logger_, "Callback function is called...");
+    float roll = msg->linear.y;
+    float pitch = - (msg->linear.x);
+    float yawrate = msg->angular.z;
+    uint16_t thrust = std::min<uint16_t>(std::max<float>(msg->linear.z, 0.0), 60000);
+    // RCLCPP_INFO(logger_, "roll: %f, pitch: %f, yaw: %f, thrust: %u", roll, pitch, yawrate, (unsigned int)thrust);
+    cf_.sendSetpoint(roll, pitch, yawrate, thrust);
+  }
+
   void on_console(const char *msg)
   {
     message_buffer_ += msg;
@@ -375,6 +389,8 @@ private:
   std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
   std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
   // std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> cb_handles_;
+
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_;
 };
 
 class CrazyflieServer : public rclcpp::Node
@@ -539,6 +555,7 @@ int main(int argc, char *argv[])
   {
     node->spin_some();
     rclcpp::spin_some(node);
+    
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   rclcpp::shutdown();

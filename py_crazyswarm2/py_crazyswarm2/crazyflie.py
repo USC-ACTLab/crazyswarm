@@ -2,7 +2,7 @@
 
 
 # import sys
-# import yaml
+import yaml
 # import rospy
 import numpy as np
 # import time
@@ -639,8 +639,7 @@ class CrazyflieServer(rclpy.node.Node):
         crazyfliesById (Dict[int, Crazyflie]): Index to the same Crazyflie
             objects by their ID number (last byte of radio address).
     """
-    # def __init__(self, crazyflies_yaml="../launch/crazyflies.yaml"):
-    def __init__(self):
+    def __init__(self, crazyflies_yaml="../launch/crazyflies.yaml"):
         """Initialize the server. Waits for all ROS services before returning.
 
         Args:
@@ -662,21 +661,23 @@ class CrazyflieServer(rclpy.node.Node):
         self.startTrajectoryService = self.create_client(StartTrajectory, "start_trajectory")
         self.startTrajectoryService.wait_for_service()
 
-        # # if crazyflies_yaml.endswith(".yaml"):
-        # #     with open(crazyflies_yaml, 'r') as ymlfile:
-        # #         cfg = yaml.load(ymlfile)
-        # # else:
-        # #     cfg = yaml.load(crazyflies_yaml)
+        if crazyflies_yaml.endswith(".yaml"):
+            with open(crazyflies_yaml, 'r') as ymlfile:
+                cfg = yaml.safe_load(ymlfile)
+        else:
+            cfg = yaml.safe_load(crazyflies_yaml)
 
         # self.tf = TransformListener()
 
         self.crazyflies = []
         self.crazyfliesById = dict()
-        # for crazyflie in cfg["crazyflies"]:
-        for cfid in [3]:
-            # id = int(crazyflie["id"])
-            # initialPosition = crazyflie["initialPosition"]
-            initialPosition = [0, 0, 0]
+        for cfname, cfsettings in cfg.items():
+            initialPosition = np.array(cfsettings["initial_position"])
+            if "id" in cfsettings:
+                cfid = int(cfsettings["id"])
+            elif "uri" in cfsettings:
+                cfid = int(cfsettings["uri"][-2:], 16)
+            print(cfid)
             # cf = Crazyflie(id, initialPosition, self.tf)
             cf = Crazyflie(self, cfid, initialPosition)
             self.crazyflies.append(cf)

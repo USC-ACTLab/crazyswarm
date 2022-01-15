@@ -1,5 +1,6 @@
 import argparse
 import atexit
+import os
 
 import numpy as np
 
@@ -36,10 +37,14 @@ class Crazyswarm:
             args = args.split()
         args, unknown = parser.parse_known_args(args)
 
-        # if crazyflies_yaml is None:
-        #     crazyflies_yaml = "../launch/crazyflies.yaml"
-        # if crazyflies_yaml.endswith(".yaml"):
-        #     crazyflies_yaml = open(crazyflies_yaml, 'r').read()
+        if crazyflies_yaml is None:
+            from ament_index_python.packages import get_package_share_directory
+            crazyflies_yaml = os.path.join(
+                get_package_share_directory('crazyswarm2'),
+                'config',
+                'crazyflies.yaml')
+        if crazyflies_yaml.endswith(".yaml"):
+            crazyflies_yaml = open(crazyflies_yaml, 'r').read()
 
         if args.sim:
             # from .crazyflieSim import TimeHelper, CrazyflieServer
@@ -51,8 +56,7 @@ class Crazyswarm:
             from .crazyflie import TimeHelper, CrazyflieServer
             import rclpy
             rclpy.init()
-            # self.allcfs = CrazyflieServer(crazyflies_yaml)
-            self.allcfs = CrazyflieServer()
+            self.allcfs = CrazyflieServer(crazyflies_yaml)
             self.timeHelper = TimeHelper(self.allcfs)
             if args.writecsv:
                 print("WARNING: writecsv argument ignored! This is only available in simulation.")

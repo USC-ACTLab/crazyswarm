@@ -7,6 +7,7 @@ project(crazyswarm2)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -77,6 +78,7 @@ ament_target_dependencies(crazyswarm2_server
 #  $<INSTALL_INTERFACE:include>)
 #target_compile_features(motion_capture_tracking_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
+# Install C++ executables
 install(TARGETS
   # crazyflie_tools
   scan
@@ -93,6 +95,12 @@ install(TARGETS
   teleop
   crazyswarm2_server
   DESTINATION lib/${PROJECT_NAME})
+
+# Install Python executables
+install(PROGRAMS
+  scripts/chooser.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 # Install launch and config files.
 install(DIRECTORY

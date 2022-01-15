@@ -9,12 +9,14 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 * crazyswarm2 package
   * Former crazyflie_tools, e.g., `ros2 run crazyswarm2 console`
   * Former crazyswarm_teleop
+  * Former chooser.py
+  * crazyswarm_server
+    * Firmware parameters (mapping to parameter server with callback on updates)
+    * High-level Takeoff/Landing/GoTo/StartTrajectory (per CF, and broadcasts)
+    * Broadcasting motion capture information (position only)
 * crazyswarm2_interfaces package
   * All msg/srv files similar to before (updated to follow the new style guide)
-* crazyswarm2_server package
-  * Firmware parameters (mapping to parameter server with callback on updates)
-  * High-level Takeoff/Landing/GoTo/StartTrajectory (per CF, and broadcasts)
-  * Broadcasting motion capture information
+
 * py_crazyswarm2
   * Former Python API (currently: very limited; physical flight only)
 * crazyswarm2_examples
@@ -24,11 +26,16 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 ## Missing
 
 * Former crazyswarm_server
-  * Most features are still missing
+  * Data logging
+  * broadcast motion capture full pose information
 * Simulation
 * Scripting layer
-  * very limited feature set
+  * limited feature set
   * No simulation backend, yet
+* Chooser.py
+  * No support for flashing firmware
+  * Might only work with `--symlink-install`
+  * TODO: should be replaced by a tool that connects to the server instead
 
 ## Building and Running
 
@@ -38,7 +45,12 @@ cd ros2_ws/src
 git clone https://github.com/IMRCLab/crazyswarm2 --recursive
 git clone --branch ros2 --recursive https://github.com/IMRCLab/motion_capture_tracking.git
 cd ../
-colcon build
+colcon build --symlink-install
+```
+Note: symlink-install allows you to edit Python and config files without running `colcon build` every time.
+
+In a separate terminal:
+```
 . install/local_setup.zsh (OR . install/local_setup.bash)
 ros2 run crazyswarm2 console
 ```
@@ -52,6 +64,12 @@ ros2 param set crazyswarm2_server cf1/params/commander/enHighLevel 1
 ros2 param set crazyswarm2_server cf3/params/stabilizer/estimator 2
 ros2 service call cf1/takeoff crazyswarm2_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
 ros2 service call cf1/land crazyswarm2_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
+```
+
+### Chooser.py
+
+```
+ros2 run crazyswarm2 chooser.py
 ```
 
 ### crazyswarm2_examples

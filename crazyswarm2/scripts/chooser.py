@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 try:
 	import Tkinter
@@ -15,7 +17,7 @@ if __name__ == '__main__':
 	parser.add_argument(
 		"--configpath",
 		type=str,
-		default=os.path.join(os.path.dirname(os.path.realpath(__file__)), "../launch/"),
+		default=os.path.join(os.path.dirname(os.path.realpath(__file__)), "../config/"),
 		help="Path to the configuration *.yaml files")
 	parser.add_argument(
 		"--stm32Fw",
@@ -29,8 +31,8 @@ if __name__ == '__main__':
 		help="Path to cf2_nrf.bin")
 	args = parser.parse_args()
 
-	if not os.path.exists(os.path.join(args.configpath, "allCrazyflies.yaml")) or \
-		not os.path.exists(os.path.join(args.configpath, "crazyflieTypes.yaml")) or \
+	if not os.path.exists(os.path.join(args.configpath, "all_crazyflies.yaml")) or \
+		not os.path.exists(os.path.join(args.configpath, "crazyflie_types.yaml")) or \
 		not os.path.exists(os.path.join(args.configpath, "crazyflies.yaml")):
 		print("ERROR: Could not find all yaml configuration files in configpath ({}).".format(args.configpath))
 		exit()
@@ -42,32 +44,28 @@ if __name__ == '__main__':
 		print("WARNING: Could not find NRF51 firmware ({}).".format(args.nrf51Fw))
 
 	# read a yaml file
-	def read_by_id(path):
-		by_id = {}
+	def read_by_name(path):
 		with open(path, 'r') as ymlfile:
-			root = yaml.load(ymlfile)
-			for node in root["crazyflies"]:
-				id = int(node["id"])
-				by_id[id] = node
-		return by_id
+			root = yaml.safe_load(ymlfile)
+		return root
 
 	def selected_cfs():
-		nodes = [node for id, node in allCrazyflies.items() if widgets[id].checked.get()]
+		nodes = {name: node for name, node in allCrazyflies.items() if widgets[name].checked.get()}
 		return nodes
 
 	def save():
 		nodes = selected_cfs()
 		with open(os.path.join(args.configpath, "crazyflies.yaml"), 'w') as outfile:
-			yaml.dump({"crazyflies": nodes}, outfile)
+			yaml.dump(nodes, outfile)
 
-	allCrazyflies = read_by_id(os.path.join(args.configpath, "allCrazyflies.yaml"))
-	enabled = read_by_id(os.path.join(args.configpath, "crazyflies.yaml")).keys()
-	with open(os.path.join(args.configpath, "crazyflieTypes.yaml"), 'r') as ymlfile:
-		data = yaml.load(ymlfile)
-		cfTypes = data["crazyflieTypes"]
+	allCrazyflies = read_by_name(os.path.join(args.configpath, "all_crazyflies.yaml"))
+	enabled = read_by_name(os.path.join(args.configpath, "crazyflies.yaml")).keys()
+	with open(os.path.join(args.configpath, "crazyflie_types.yaml"), 'r') as ymlfile:
+		data = yaml.safe_load(ymlfile)
+		cfTypes = data
 
 	# compute absolute pixel coordinates from the initial positions
-	positions = [node["initialPosition"] for node in allCrazyflies.values()]
+	positions = [node["initial_position"] for node in allCrazyflies.values()]
 	DOWN_DIR = [-1, 0]
 	RIGHT_DIR = [0, -1]
 	def dot(a, b):
@@ -171,34 +169,30 @@ if __name__ == '__main__':
 	# construct bottom buttons for utility scripts
 	def sysOff():
 		nodes = selected_cfs()
-		for crazyflie in nodes:
-			id = "{0:02X}".format(crazyflie["id"])
-			uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
-			subprocess.call(["rosrun crazyflie_tools reboot --uri " + uri + " --mode sysoff"], shell=True)
+		for name, crazyflie in nodes.items():
+			uri = crazyflie["uri"]
+			subprocess.call(["ros2 run crazyswarm2 reboot --uri " + uri + " --mode sysoff"], shell=True)
 
 	def reboot():
 		nodes = selected_cfs()
-		for crazyflie in nodes:
-			id = "{0:02X}".format(crazyflie["id"])
-			uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
-			print(crazyflie["id"])
-			subprocess.call(["rosrun crazyflie_tools reboot --uri " + uri], shell=True)
+		for name, crazyflie in nodes.items():
+			uri = crazyflie["uri"]
+			print(name)
+			subprocess.call(["ros2 run crazyswarm2 reboot --uri " + uri], shell=True)
 
 	def flashSTM():
 		nodes = selected_cfs()
-		for crazyflie in nodes:
-			id = "{0:02X}".format(crazyflie["id"])
-			uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
+		for name, crazyflie in nodes.items():
+			uri = crazyflie["uri"]
 			print("Flash STM32 FW to {}".format(uri))
-			subprocess.call(["rosrun crazyflie_tools flash --uri " + uri + " --target stm32 --filename " + args.stm32Fw], shell=True)
+			subprocess.call(["ros2 run crazyswarm2 flash --uri " + uri + " --target stm32 --filename " + args.stm32Fw], shell=True)
 
 	def flashNRF():
 		nodes = selected_cfs()
-		for crazyflie in nodes:
-			id = "{0:02X}".format(crazyflie["id"])
-			uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
+		for name, crazyflie in nodes.items():
+			uri = crazyflie["uri"]
 			print("Flash NRF51 FW to {}".format(uri))
-			subprocess.call(["rosrun crazyflie_tools flash --uri " + uri + " --target nrf51 --filename " + args.nrf51Fw], shell=True)
+			subprocess.call(["ros2 run crazyswarm2 flash --uri " + uri + " --target nrf51 --filename " + args.nrf51Fw], shell=True)
 
 	def checkBattery():
 		# reset color
@@ -207,32 +201,31 @@ if __name__ == '__main__':
 
 		# query each CF
 		nodes = selected_cfs()
-		for crazyflie in nodes:
-			id = "{0:02X}".format(crazyflie["id"])
-			uri = "radio://0/{}/2M/E7E7E7E7{}".format(crazyflie["channel"], id)
+		for name, crazyflie in nodes.items():
+			uri = crazyflie["uri"]
 			cfType = crazyflie["type"]
-			bigQuad = cfTypes[cfType]["bigQuad"]
+			bigQuad = cfTypes[cfType]["big_quad"]
 			
 			try:
 				if not bigQuad:
-					voltage = subprocess.check_output(["rosrun crazyflie_tools battery --uri " + uri], shell=True)
+					voltage = subprocess.check_output(["ros2 run crazyswarm2 battery --uri " + uri], shell=True)
 				else:
-					voltage = subprocess.check_output(["rosrun crazyflie_tools battery --uri " + uri + " --external 1"], shell=True)
+					voltage = subprocess.check_output(["ros2 run crazyswarm2 battery --uri " + uri + " --external 1"], shell=True)
 			except subprocess.CalledProcessError:
 				voltage = None  # CF not available
 
 			color = '#000000'
 			if voltage is not None:
 				voltage = float(voltage)
-				if voltage < cfTypes[cfType]["batteryVoltageWarning"]:
+				if voltage < cfTypes[cfType]["battery"]["voltage_warning"]:
 					color = '#FF8800'
-				if voltage < cfTypes[cfType]["batteryVoltateCritical"]:
+				if voltage < cfTypes[cfType]["battery"]["voltage_critical"]:
 					color = '#FF0000'
 				widgetText = "{:.2f} v".format(voltage)
 			else:
 				widgetText = "Err"
 
-			widgets[crazyflie["id"]].batteryLabel.config(foreground=color, text=widgetText)
+			widgets[name].batteryLabel.config(foreground=color, text=widgetText)
 
 	# def checkVersion():
 	# 	for id, w in widgets.items():
@@ -272,8 +265,8 @@ if __name__ == '__main__':
 	# mkbutton(scriptButtons, "version", checkVersion)
 	mkbutton(scriptButtons, "sysOff", sysOff)
 	mkbutton(scriptButtons, "reboot", reboot)
-	mkbutton(scriptButtons, "flash (STM)", flashSTM)
-	mkbutton(scriptButtons, "flash (NRF)", flashNRF)
+	# mkbutton(scriptButtons, "flash (STM)", flashSTM)
+	# mkbutton(scriptButtons, "flash (NRF)", flashNRF)
 
 	# start background threads
 	def checkBatteryLoop():

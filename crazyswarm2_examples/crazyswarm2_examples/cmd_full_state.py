@@ -2,12 +2,12 @@
 
 import numpy as np
 
-from pycrazyswarm import *
-import uav_trajectory
+from py_crazyswarm2 import *
+from py_crazyswarm2.uav_trajectory import Trajectory
 
 
 def executeTrajectory(timeHelper, cf, trajpath, rate=100, offset=np.zeros(3)):
-    traj = uav_trajectory.Trajectory()
+    traj = Trajectory()
     traj.loadcsv(trajpath)
 
     start_time = timeHelper.time()

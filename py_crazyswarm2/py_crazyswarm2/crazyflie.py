@@ -16,11 +16,13 @@ import numpy as np
 
 import rclpy
 import rclpy.node
+import tf_transformations
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Point
 from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
+from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece, FullState
 
 def arrayToGeometryPoint(a):
     result = Point()
@@ -153,10 +155,9 @@ class Crazyflie:
 
         # print(params)
 
-        # self.cmdFullStatePublisher = rospy.Publisher(prefix + "/cmd_full_state", FullState, queue_size=1)
-        # self.cmdFullStateMsg = FullState()
-        # self.cmdFullStateMsg.header.seq = 0
-        # self.cmdFullStateMsg.header.frame_id = "/world"
+        self.cmdFullStatePublisher = node.create_publisher(prefix + "/cmd_full_state", FullState, 1)
+        self.cmdFullStateMsg = FullState()
+        self.cmdFullStateMsg.header.frame_id = "/world"
 
         # self.cmdStopPublisher = rospy.Publisher(prefix + "/cmd_stop", std_msgs.msg.Empty, queue_size=1)
 
@@ -472,45 +473,48 @@ class Crazyflie:
     #         rospy.set_param(self.prefix + "/" + name, value)
     #     self.updateParamsService(params.keys())
 
-    # def cmdFullState(self, pos, vel, acc, yaw, omega):
-    #     """Sends a streaming full-state controller setpoint command.
+    def cmdFullState(self, pos, vel, acc, yaw, omega):
+        """Sends a streaming full-state controller setpoint command.
 
-    #     The full-state setpoint is most useful for aggressive maneuvers where
-    #     feedforward inputs for acceleration and angular velocity are critical
-    #     to obtaining good tracking performance. Full-state setpoints can be
-    #     obtained from any trajectory parameterization that is at least three
-    #     times differentiable, e.g. piecewise polynomials.
+        The full-state setpoint is most useful for aggressive maneuvers where
+        feedforward inputs for acceleration and angular velocity are critical
+        to obtaining good tracking performance. Full-state setpoints can be
+        obtained from any trajectory parameterization that is at least three
+        times differentiable, e.g. piecewise polynomials.
 
-    #     Sending a streaming setpoint of any type will force a change from
-    #     high-level to low-level command mode. Currently, there is no mechanism
-    #     to change back, but it is a high-priority feature to implement.
-    #     This means it is not possible to use e.g. :meth:`land()` or
-    #     :meth:`goTo()` after a streaming setpoint has been sent.
+        Sending a streaming setpoint of any type will force a change from
+        high-level to low-level command mode. Currently, there is no mechanism
+        to change back, but it is a high-priority feature to implement.
+        This means it is not possible to use e.g. :meth:`land()` or
+        :meth:`goTo()` after a streaming setpoint has been sent.
 
-    #     Args:
-    #         pos (array-like of float[3]): Position. Meters.
-    #         vel (array-like of float[3]): Velocity. Meters / second.
-    #         acc (array-like of float[3]): Acceleration. Meters / second^2.
-    #         yaw (float): Yaw angle. Radians.
-    #         omega (array-like of float[3]): Angular velocity in body frame.
-    #             Radians / sec.
-    #     """
-    #     self.cmdFullStateMsg.header.stamp = rospy.Time.now()
-    #     self.cmdFullStateMsg.header.seq += 1
-    #     self.cmdFullStateMsg.pose.position.x    = pos[0]
-    #     self.cmdFullStateMsg.pose.position.y    = pos[1]
-    #     self.cmdFullStateMsg.pose.position.z    = pos[2]
-    #     self.cmdFullStateMsg.twist.linear.x     = vel[0]
-    #     self.cmdFullStateMsg.twist.linear.y     = vel[1]
-    #     self.cmdFullStateMsg.twist.linear.z     = vel[2]
-    #     self.cmdFullStateMsg.acc.x              = acc[0]
-    #     self.cmdFullStateMsg.acc.y              = acc[1]
-    #     self.cmdFullStateMsg.acc.z              = acc[2]
-    #     self.cmdFullStateMsg.pose.orientation   = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0, 0, yaw))
-    #     self.cmdFullStateMsg.twist.angular.x    = omega[0]
-    #     self.cmdFullStateMsg.twist.angular.y    = omega[1]
-    #     self.cmdFullStateMsg.twist.angular.z    = omega[2]
-    #     self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
+        Args:
+            pos (array-like of float[3]): Position. Meters.
+            vel (array-like of float[3]): Velocity. Meters / second.
+            acc (array-like of float[3]): Acceleration. Meters / second^2.
+            yaw (float): Yaw angle. Radians.
+            omega (array-like of float[3]): Angular velocity in body frame.
+                Radians / sec.
+        """
+        self.cmdFullStateMsg.header.stamp = self.node.get_clock().now().to_msg()
+        self.cmdFullStateMsg.pose.position.x    = pos[0]
+        self.cmdFullStateMsg.pose.position.y    = pos[1]
+        self.cmdFullStateMsg.pose.position.z    = pos[2]
+        self.cmdFullStateMsg.twist.linear.x     = vel[0]
+        self.cmdFullStateMsg.twist.linear.y     = vel[1]
+        self.cmdFullStateMsg.twist.linear.z     = vel[2]
+        self.cmdFullStateMsg.acc.x              = acc[0]
+        self.cmdFullStateMsg.acc.y              = acc[1]
+        self.cmdFullStateMsg.acc.z              = acc[2]
+        q = tf_transformations.quaternion_from_euler(0, 0, yaw)
+        self.cmdFullStateMsg.pose.orientation.x = q[0]
+        self.cmdFullStateMsg.pose.orientation.y = q[1]
+        self.cmdFullStateMsg.pose.orientation.z = q[2]
+        self.cmdFullStateMsg.pose.orientation.w = q[3]
+        self.cmdFullStateMsg.twist.angular.x    = omega[0]
+        self.cmdFullStateMsg.twist.angular.y    = omega[1]
+        self.cmdFullStateMsg.twist.angular.z    = omega[2]
+        self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
 
     # def cmdVelocityWorld(self, vel, yawRate):
     #     """Sends a streaming velocity-world controller setpoint command.

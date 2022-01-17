@@ -73,7 +73,7 @@ class VisMatplotlib:
                 self.graph_lines[k, 1, :] = xs[j], ys[j], zs[j]
                 self.graph.set_segments(self.graph_lines)
 
-        self.timeAnnotation.set_text("{} s".format(t))
+        self.timeAnnotation.set_text("{:.1f} s".format(t))
         plt.pause(0.0001)
 
     def render(self):

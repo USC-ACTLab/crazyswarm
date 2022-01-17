@@ -47,11 +47,10 @@ class Crazyswarm:
             crazyflies_yaml = open(crazyflies_yaml, 'r').read()
 
         if args.sim:
-            # from .crazyflieSim import TimeHelper, CrazyflieServer
-            # self.timeHelper = TimeHelper(args.vis, args.dt, args.writecsv, disturbanceSize=args.disturbance, maxVel=args.maxvel, videopath=args.video)
-            # self.allcfs = CrazyflieServer(self.timeHelper, crazyflies_yaml)
-            # atexit.register(self.timeHelper._atexit)
-            pass
+            from .crazyflieSim import TimeHelper, CrazyflieServer
+            self.timeHelper = TimeHelper(args.vis, args.dt, args.writecsv, disturbanceSize=args.disturbance, maxVel=args.maxvel, videopath=args.video)
+            self.allcfs = CrazyflieServer(self.timeHelper, crazyflies_yaml)
+            atexit.register(self.timeHelper._atexit)
         else:
             from .crazyflie import TimeHelper, CrazyflieServer
             import rclpy

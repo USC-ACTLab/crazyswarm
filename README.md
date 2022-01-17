@@ -18,7 +18,7 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
   * All msg/srv files similar to before (updated to follow the new style guide)
 
 * py_crazyswarm2
-  * Former Python API (currently: very limited; physical flight only)
+  * Former Python API (not all functions are ported)
 * crazyswarm2_examples
   * Former example scripts (currently: only hello_world, nice_hover, figure8)
 * Standalone tracking package, see https://github.com/IMRCLab/motion_capture_tracking/tree/ros2
@@ -28,10 +28,8 @@ A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
 * Former crazyswarm_server
   * Data logging
   * broadcast motion capture full pose information
-* Simulation
 * Scripting layer
   * limited feature set
-  * No simulation backend, yet
 * Chooser.py
   * No support for flashing firmware
   * Might only work with `--symlink-install`
@@ -53,6 +51,19 @@ In a separate terminal:
 ```
 . install/local_setup.zsh (OR . install/local_setup.bash)
 ros2 run crazyswarm2 console
+```
+
+### Simulator with Software In The Loop
+
+```
+cd py_crazyswarm2/py_crazyswarm2/cfsim
+make
+```
+
+To run, use the `--sim` flag, e.g., 
+
+```
+ros2 run crazyswarm2_examples hello_world
 ```
 
 ## Notes

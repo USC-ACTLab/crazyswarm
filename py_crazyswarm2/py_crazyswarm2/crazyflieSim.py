@@ -459,10 +459,13 @@ class CrazyflieServer:
 
         self.crazyflies = []
         self.crazyfliesById = dict()
-        for crazyflie in cfg["crazyflies"]:
-            id = int(crazyflie["id"])
-            initialPosition = crazyflie["initialPosition"]
-            cf = Crazyflie(id, initialPosition, timeHelper)
+        for cfname, cfsettings in cfg.items():
+            initialPosition = cfsettings["initial_position"]
+            if "id" in cfsettings:
+                cfid = int(cfsettings["id"])
+            elif "uri" in cfsettings:
+                cfid = int(cfsettings["uri"][-2:], 16)
+            cf = Crazyflie(cfid, initialPosition, timeHelper)
             self.crazyflies.append(cf)
             self.crazyfliesById[id] = cf
 

@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 
-fw_dir = "../../../../../../crazyflie-firmware"
+fw_dir = "../../../crazyflie-firmware"
 include = [
     os.path.join(fw_dir, "src/modules/interface"),
     os.path.join(fw_dir, "src/hal/interface"),

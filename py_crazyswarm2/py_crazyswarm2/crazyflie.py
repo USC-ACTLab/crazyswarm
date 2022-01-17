@@ -59,12 +59,12 @@ class TimeHelper:
         while self.time() < end:
             rclpy.spin_once(self.node, timeout_sec=0)
 
-    # def sleepForRate(self, rateHz):
-    #     """Sleeps so that, if called in a loop, executes at specified rate."""
-    #     if self.rosRate is None or self.rateHz != rateHz:
-    #         self.rosRate = rospy.Rate(rateHz)
-    #         self.rateHz = rateHz
-    #     self.rosRate.sleep()
+    def sleepForRate(self, rateHz):
+        """Sleeps so that, if called in a loop, executes at specified rate."""
+        if self.rosRate is None or self.rateHz != rateHz:
+            self.rosRate = self.node.create_rate(rateHz)
+            self.rateHz = rateHz
+        self.rosRate.sleep()
 
     def isShutdown(self):
         """Returns true if the script should abort, e.g. from Ctrl-C."""

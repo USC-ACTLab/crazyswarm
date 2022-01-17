@@ -13,6 +13,7 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "crazyswarm2_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
+#include "crazyswarm2_interfaces/msg/full_state.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -25,6 +26,7 @@ using crazyswarm2_interfaces::srv::UploadTrajectory;
 using std_srvs::srv::Empty;
 
 using motion_capture_tracking_interfaces::msg::NamedPoseArray;
+using crazyswarm2_interfaces::msg::FullState;
 
 // Helper class to convert crazyflie_cpp logging messages to ROS logging messages
 class CrazyflieLogger : public Logger
@@ -98,6 +100,8 @@ public:
     service_upload_trajectory_ = node->create_service<UploadTrajectory>(name + "/upload_trajectory", std::bind(&CrazyflieROS::upload_trajectory, this, _1, _2));
 
     subscription_cmd_vel_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_changed, this, _1)); 
+    subscription_cmd_full_state_ = node->create_subscription<crazyswarm2_interfaces::msg::FullState>(name + "/cmd_full_state", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_full_state_changed, this, _1)); 
+
     auto start = std::chrono::system_clock::now();
 
     cf_.logReset();
@@ -207,6 +211,35 @@ public:
   // CrazyflieROS(CrazyflieROS &&) = default;
 
 private:
+
+  void cmd_full_state_changed(const crazyswarm2_interfaces::msg::FullState::SharedPtr msg)
+  { 
+    float x = msg->pose.position.x;
+    float y = msg->pose.position.y;
+    float z = msg->pose.position.z;
+    float vx = msg->twist.linear.x;
+    float vy = msg->twist.linear.y;
+    float vz = msg->twist.linear.z;
+    float ax = msg->acc.x;
+    float ay = msg->acc.y;
+    float az = msg->acc.z;
+
+    float qx = msg->pose.orientation.x;
+    float qy = msg->pose.orientation.y;
+    float qz = msg->pose.orientation.z;
+    float qw = msg->pose.orientation.w;
+    float rollRate = msg->twist.angular.x;
+    float pitchRate = msg->twist.angular.y;
+    float yawRate = msg->twist.angular.z;
+
+    cf_.sendFullStateSetpoint(
+    x, y, z,
+    vx, vy, vz,
+    ax, ay, az,
+    qx, qy, qz, qw,
+    rollRate, pitchRate, yawRate);
+
+  }
 
   void cmd_vel_changed(const geometry_msgs::msg::Twist::SharedPtr msg)
   {
@@ -391,6 +424,7 @@ private:
   // std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> cb_handles_;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_;
+  rclcpp::Subscription<crazyswarm2_interfaces::msg::FullState>::SharedPtr subscription_cmd_full_state_;
 };
 
 class CrazyflieServer : public rclcpp::Node

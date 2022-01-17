@@ -20,8 +20,7 @@ from std_srvs.srv import Empty
 from geometry_msgs.msg import Point
 from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
-from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory
-from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece
+from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
 
 def arrayToGeometryPoint(a):
     result = Point()
@@ -111,8 +110,8 @@ class Crazyflie:
         self.uploadTrajectoryService.wait_for_service()
         self.startTrajectoryService = node.create_client(StartTrajectory, prefix + "/start_trajectory")
         self.startTrajectoryService.wait_for_service()
-        # rospy.wait_for_service(prefix + "/notify_setpoints_stop")
-        # self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", NotifySetpointsStop)
+        self.notifySetpointsStopService = node.create_client(NotifySetpointsStop, prefix + "/notify_setpoints_stop")
+        self.notifySetpointsStopService.wait_for_service()
         self.setParamsService = node.create_client(SetParameters, "/crazyswarm2_server/set_parameters")
         self.setParamsService.wait_for_service()
 
@@ -375,32 +374,35 @@ class Crazyflie:
         req.relative = relative
         self.startTrajectoryService.call_async(req)
 
-    # def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
-    #     """Informs that streaming low-level setpoint packets are about to stop.
+    def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
+        """Informs that streaming low-level setpoint packets are about to stop.
 
-    #     Streaming setpoints are :meth:`cmdVelocityWorld`, :meth:`cmdFullState`,
-    #     and so on. For safety purposes, they normally preempt onboard high-level
-    #     commands such as :meth:`goTo`.
+        Streaming setpoints are :meth:`cmdVelocityWorld`, :meth:`cmdFullState`,
+        and so on. For safety purposes, they normally preempt onboard high-level
+        commands such as :meth:`goTo`.
 
-    #     Once preempted, the Crazyflie will not switch back to high-level
-    #     commands (or other behaviors determined by onboard planning/logic) until
-    #     a significant amount of time has elapsed where no low-level setpoint
-    #     was received.
+        Once preempted, the Crazyflie will not switch back to high-level
+        commands (or other behaviors determined by onboard planning/logic) until
+        a significant amount of time has elapsed where no low-level setpoint
+        was received.
 
-    #     This command short-circuits that waiting period to a user-chosen time.
-    #     It should be called after sending the last low-level setpoint, and
-    #     before sending any high-level command.
+        This command short-circuits that waiting period to a user-chosen time.
+        It should be called after sending the last low-level setpoint, and
+        before sending any high-level command.
 
-    #     A common use case is to execute the :meth:`land` command after using
-    #     streaming setpoint modes.
+        A common use case is to execute the :meth:`land` command after using
+        streaming setpoint modes.
 
-    #     Args:
-    #         remainValidMillisecs (int): Number of milliseconds that the last
-    #             streaming setpoint should be followed before reverting to the
-    #             onboard-determined behavior. May be longer e.g. if one radio
-    #             is controlling many robots.
-    #     """
-    #     self.notifySetpointsStopService(groupMask, remainValidMillisecs)
+        Args:
+            remainValidMillisecs (int): Number of milliseconds that the last
+                streaming setpoint should be followed before reverting to the
+                onboard-determined behavior. May be longer e.g. if one radio
+                is controlling many robots.
+        """
+        req = NotifySetpointsStop.Request()
+        req.remain_valid_millisecs = remainValidMillisecs
+        req.group_mask = groupMask
+        self.notifySetpointsStopService.call_async(req)
 
     # def position(self):
     #     """Returns the last true position measurement from motion capture.

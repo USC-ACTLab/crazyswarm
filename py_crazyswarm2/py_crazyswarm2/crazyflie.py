@@ -16,7 +16,7 @@ import numpy as np
 
 import rclpy
 import rclpy.node
-import tf_transformations
+import rowan
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Point
 from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
@@ -46,8 +46,9 @@ class TimeHelper:
     """
     def __init__(self, node):
         self.node = node
-        self.rosRate = None
+        # self.rosRate = None
         self.rateHz = None
+        self.nextTime = None
         # self.visualizer = visNull.VisNull()
 
     def time(self):
@@ -63,10 +64,19 @@ class TimeHelper:
 
     def sleepForRate(self, rateHz):
         """Sleeps so that, if called in a loop, executes at specified rate."""
-        if self.rosRate is None or self.rateHz != rateHz:
-            self.rosRate = self.node.create_rate(rateHz)
+        # Note: The following ROS2 construct cannot easily be used, because in ROS2
+        #       there is no implicit threading anymore. Thus, the rosRate.sleep() call
+        #       is blocking. Instead, we simulate the rate behavior ourselves.
+        # if self.rosRate is None or self.rateHz != rateHz:
+        #     self.rosRate = self.node.create_rate(rateHz)
+        #     self.rateHz = rateHz
+        # self.rosRate.sleep()
+        if self.nextTime is None or self.rateHz != rateHz:
             self.rateHz = rateHz
-        self.rosRate.sleep()
+            self.nextTime = self.time() + 1.0 / rateHz
+        while self.time() < self.nextTime:
+            rclpy.spin_once(self.node, timeout_sec=0)
+        self.nextTime += 1.0 / rateHz
 
     def isShutdown(self):
         """Returns true if the script should abort, e.g. from Ctrl-C."""
@@ -95,6 +105,7 @@ class Crazyflie:
         prefix = "/cf" + str(id)
         self.prefix = prefix
         self.initialPosition = np.array(initialPosition)
+        self.node = node
 
         # self.tf = tf
 
@@ -155,7 +166,7 @@ class Crazyflie:
 
         # print(params)
 
-        self.cmdFullStatePublisher = node.create_publisher(prefix + "/cmd_full_state", FullState, 1)
+        self.cmdFullStatePublisher = node.create_publisher(FullState, prefix + "/cmd_full_state", 1)
         self.cmdFullStateMsg = FullState()
         self.cmdFullStateMsg.header.frame_id = "/world"
 
@@ -506,11 +517,11 @@ class Crazyflie:
         self.cmdFullStateMsg.acc.x              = acc[0]
         self.cmdFullStateMsg.acc.y              = acc[1]
         self.cmdFullStateMsg.acc.z              = acc[2]
-        q = tf_transformations.quaternion_from_euler(0, 0, yaw)
-        self.cmdFullStateMsg.pose.orientation.x = q[0]
-        self.cmdFullStateMsg.pose.orientation.y = q[1]
-        self.cmdFullStateMsg.pose.orientation.z = q[2]
-        self.cmdFullStateMsg.pose.orientation.w = q[3]
+        q = rowan.from_euler(0, 0, yaw)
+        self.cmdFullStateMsg.pose.orientation.w = q[0]
+        self.cmdFullStateMsg.pose.orientation.x = q[1]
+        self.cmdFullStateMsg.pose.orientation.y = q[2]
+        self.cmdFullStateMsg.pose.orientation.z = q[3]
         self.cmdFullStateMsg.twist.angular.x    = omega[0]
         self.cmdFullStateMsg.twist.angular.y    = omega[1]
         self.cmdFullStateMsg.twist.angular.z    = omega[2]

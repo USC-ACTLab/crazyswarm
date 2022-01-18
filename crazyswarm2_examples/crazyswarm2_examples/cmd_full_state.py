@@ -27,7 +27,7 @@ def executeTrajectory(timeHelper, cf, trajpath, rate=100, offset=np.zeros(3)):
         timeHelper.sleepForRate(rate)
 
 
-if __name__ == "__main__":
+def main():
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     cf = swarm.allcfs.crazyflies[0]
@@ -38,8 +38,13 @@ if __name__ == "__main__":
     cf.takeoff(targetHeight=Z, duration=Z+1.0)
     timeHelper.sleep(Z+2.0)
 
-    executeTrajectory(timeHelper, cf, "figure8.csv", rate, offset=np.array([0, 0, 0.5]))
+    executeTrajectory(timeHelper, cf, "/home/whoenig/projects/crazyflie/ros2_ws/src/crazyswarm2/crazyswarm2_examples/resource/figure8.csv",
+                      rate, offset=np.array([0, 0, 0.5]))
 
     cf.notifySetpointsStop()
     cf.land(targetHeight=0.03, duration=Z+1.0)
     timeHelper.sleep(Z+2.0)
+
+
+if __name__ == "__main__":
+    main()

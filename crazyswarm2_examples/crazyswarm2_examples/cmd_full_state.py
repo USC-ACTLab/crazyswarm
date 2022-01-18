@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 import numpy as np
+from pathlib import Path
 
-from pycrazyswarm import *
-import uav_trajectory
+from py_crazyswarm2 import *
+from py_crazyswarm2.uav_trajectory import Trajectory
 
 
 def executeTrajectory(timeHelper, cf, trajpath, rate=100, offset=np.zeros(3)):
-    traj = uav_trajectory.Trajectory()
+    traj = Trajectory()
     traj.loadcsv(trajpath)
 
     start_time = timeHelper.time()
@@ -27,7 +28,7 @@ def executeTrajectory(timeHelper, cf, trajpath, rate=100, offset=np.zeros(3)):
         timeHelper.sleepForRate(rate)
 
 
-if __name__ == "__main__":
+def main():
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     cf = swarm.allcfs.crazyflies[0]
@@ -38,8 +39,12 @@ if __name__ == "__main__":
     cf.takeoff(targetHeight=Z, duration=Z+1.0)
     timeHelper.sleep(Z+2.0)
 
-    executeTrajectory(timeHelper, cf, "figure8.csv", rate, offset=np.array([0, 0, 0.5]))
+    executeTrajectory(timeHelper, cf, Path(__file__).parent / "data/figure8.csv", rate, offset=np.array([0, 0, 0.5]))
 
     cf.notifySetpointsStop()
     cf.land(targetHeight=0.03, duration=Z+1.0)
     timeHelper.sleep(Z+2.0)
+
+
+if __name__ == "__main__":
+    main()

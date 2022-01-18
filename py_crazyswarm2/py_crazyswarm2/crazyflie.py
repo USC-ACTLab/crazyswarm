@@ -16,12 +16,13 @@ import numpy as np
 
 import rclpy
 import rclpy.node
+import rowan
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Point
 from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
-from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory
-from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece
+from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
+from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece, FullState
 
 def arrayToGeometryPoint(a):
     result = Point()
@@ -45,8 +46,9 @@ class TimeHelper:
     """
     def __init__(self, node):
         self.node = node
-        self.rosRate = None
+        # self.rosRate = None
         self.rateHz = None
+        self.nextTime = None
         # self.visualizer = visNull.VisNull()
 
     def time(self):
@@ -60,12 +62,21 @@ class TimeHelper:
         while self.time() < end:
             rclpy.spin_once(self.node, timeout_sec=0)
 
-    # def sleepForRate(self, rateHz):
-    #     """Sleeps so that, if called in a loop, executes at specified rate."""
-    #     if self.rosRate is None or self.rateHz != rateHz:
-    #         self.rosRate = rospy.Rate(rateHz)
-    #         self.rateHz = rateHz
-    #     self.rosRate.sleep()
+    def sleepForRate(self, rateHz):
+        """Sleeps so that, if called in a loop, executes at specified rate."""
+        # Note: The following ROS2 construct cannot easily be used, because in ROS2
+        #       there is no implicit threading anymore. Thus, the rosRate.sleep() call
+        #       is blocking. Instead, we simulate the rate behavior ourselves.
+        # if self.rosRate is None or self.rateHz != rateHz:
+        #     self.rosRate = self.node.create_rate(rateHz)
+        #     self.rateHz = rateHz
+        # self.rosRate.sleep()
+        if self.nextTime is None or self.rateHz != rateHz:
+            self.rateHz = rateHz
+            self.nextTime = self.time() + 1.0 / rateHz
+        while self.time() < self.nextTime:
+            rclpy.spin_once(self.node, timeout_sec=0)
+        self.nextTime += 1.0 / rateHz
 
     def isShutdown(self):
         """Returns true if the script should abort, e.g. from Ctrl-C."""
@@ -94,6 +105,7 @@ class Crazyflie:
         prefix = "/cf" + str(id)
         self.prefix = prefix
         self.initialPosition = np.array(initialPosition)
+        self.node = node
 
         # self.tf = tf
 
@@ -111,8 +123,8 @@ class Crazyflie:
         self.uploadTrajectoryService.wait_for_service()
         self.startTrajectoryService = node.create_client(StartTrajectory, prefix + "/start_trajectory")
         self.startTrajectoryService.wait_for_service()
-        # rospy.wait_for_service(prefix + "/notify_setpoints_stop")
-        # self.notifySetpointsStopService = rospy.ServiceProxy(prefix + "/notify_setpoints_stop", NotifySetpointsStop)
+        self.notifySetpointsStopService = node.create_client(NotifySetpointsStop, prefix + "/notify_setpoints_stop")
+        self.notifySetpointsStopService.wait_for_service()
         self.setParamsService = node.create_client(SetParameters, "/crazyswarm2_server/set_parameters")
         self.setParamsService.wait_for_service()
 
@@ -154,10 +166,9 @@ class Crazyflie:
 
         # print(params)
 
-        # self.cmdFullStatePublisher = rospy.Publisher(prefix + "/cmd_full_state", FullState, queue_size=1)
-        # self.cmdFullStateMsg = FullState()
-        # self.cmdFullStateMsg.header.seq = 0
-        # self.cmdFullStateMsg.header.frame_id = "/world"
+        self.cmdFullStatePublisher = node.create_publisher(FullState, prefix + "/cmd_full_state", 1)
+        self.cmdFullStateMsg = FullState()
+        self.cmdFullStateMsg.header.frame_id = "/world"
 
         # self.cmdStopPublisher = rospy.Publisher(prefix + "/cmd_stop", std_msgs.msg.Empty, queue_size=1)
 
@@ -375,32 +386,35 @@ class Crazyflie:
         req.relative = relative
         self.startTrajectoryService.call_async(req)
 
-    # def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
-    #     """Informs that streaming low-level setpoint packets are about to stop.
+    def notifySetpointsStop(self, remainValidMillisecs=100, groupMask=0):
+        """Informs that streaming low-level setpoint packets are about to stop.
 
-    #     Streaming setpoints are :meth:`cmdVelocityWorld`, :meth:`cmdFullState`,
-    #     and so on. For safety purposes, they normally preempt onboard high-level
-    #     commands such as :meth:`goTo`.
+        Streaming setpoints are :meth:`cmdVelocityWorld`, :meth:`cmdFullState`,
+        and so on. For safety purposes, they normally preempt onboard high-level
+        commands such as :meth:`goTo`.
 
-    #     Once preempted, the Crazyflie will not switch back to high-level
-    #     commands (or other behaviors determined by onboard planning/logic) until
-    #     a significant amount of time has elapsed where no low-level setpoint
-    #     was received.
+        Once preempted, the Crazyflie will not switch back to high-level
+        commands (or other behaviors determined by onboard planning/logic) until
+        a significant amount of time has elapsed where no low-level setpoint
+        was received.
 
-    #     This command short-circuits that waiting period to a user-chosen time.
-    #     It should be called after sending the last low-level setpoint, and
-    #     before sending any high-level command.
+        This command short-circuits that waiting period to a user-chosen time.
+        It should be called after sending the last low-level setpoint, and
+        before sending any high-level command.
 
-    #     A common use case is to execute the :meth:`land` command after using
-    #     streaming setpoint modes.
+        A common use case is to execute the :meth:`land` command after using
+        streaming setpoint modes.
 
-    #     Args:
-    #         remainValidMillisecs (int): Number of milliseconds that the last
-    #             streaming setpoint should be followed before reverting to the
-    #             onboard-determined behavior. May be longer e.g. if one radio
-    #             is controlling many robots.
-    #     """
-    #     self.notifySetpointsStopService(groupMask, remainValidMillisecs)
+        Args:
+            remainValidMillisecs (int): Number of milliseconds that the last
+                streaming setpoint should be followed before reverting to the
+                onboard-determined behavior. May be longer e.g. if one radio
+                is controlling many robots.
+        """
+        req = NotifySetpointsStop.Request()
+        req.remain_valid_millisecs = remainValidMillisecs
+        req.group_mask = groupMask
+        self.notifySetpointsStopService.call_async(req)
 
     # def position(self):
     #     """Returns the last true position measurement from motion capture.
@@ -470,45 +484,48 @@ class Crazyflie:
     #         rospy.set_param(self.prefix + "/" + name, value)
     #     self.updateParamsService(params.keys())
 
-    # def cmdFullState(self, pos, vel, acc, yaw, omega):
-    #     """Sends a streaming full-state controller setpoint command.
+    def cmdFullState(self, pos, vel, acc, yaw, omega):
+        """Sends a streaming full-state controller setpoint command.
 
-    #     The full-state setpoint is most useful for aggressive maneuvers where
-    #     feedforward inputs for acceleration and angular velocity are critical
-    #     to obtaining good tracking performance. Full-state setpoints can be
-    #     obtained from any trajectory parameterization that is at least three
-    #     times differentiable, e.g. piecewise polynomials.
+        The full-state setpoint is most useful for aggressive maneuvers where
+        feedforward inputs for acceleration and angular velocity are critical
+        to obtaining good tracking performance. Full-state setpoints can be
+        obtained from any trajectory parameterization that is at least three
+        times differentiable, e.g. piecewise polynomials.
 
-    #     Sending a streaming setpoint of any type will force a change from
-    #     high-level to low-level command mode. Currently, there is no mechanism
-    #     to change back, but it is a high-priority feature to implement.
-    #     This means it is not possible to use e.g. :meth:`land()` or
-    #     :meth:`goTo()` after a streaming setpoint has been sent.
+        Sending a streaming setpoint of any type will force a change from
+        high-level to low-level command mode. Currently, there is no mechanism
+        to change back, but it is a high-priority feature to implement.
+        This means it is not possible to use e.g. :meth:`land()` or
+        :meth:`goTo()` after a streaming setpoint has been sent.
 
-    #     Args:
-    #         pos (array-like of float[3]): Position. Meters.
-    #         vel (array-like of float[3]): Velocity. Meters / second.
-    #         acc (array-like of float[3]): Acceleration. Meters / second^2.
-    #         yaw (float): Yaw angle. Radians.
-    #         omega (array-like of float[3]): Angular velocity in body frame.
-    #             Radians / sec.
-    #     """
-    #     self.cmdFullStateMsg.header.stamp = rospy.Time.now()
-    #     self.cmdFullStateMsg.header.seq += 1
-    #     self.cmdFullStateMsg.pose.position.x    = pos[0]
-    #     self.cmdFullStateMsg.pose.position.y    = pos[1]
-    #     self.cmdFullStateMsg.pose.position.z    = pos[2]
-    #     self.cmdFullStateMsg.twist.linear.x     = vel[0]
-    #     self.cmdFullStateMsg.twist.linear.y     = vel[1]
-    #     self.cmdFullStateMsg.twist.linear.z     = vel[2]
-    #     self.cmdFullStateMsg.acc.x              = acc[0]
-    #     self.cmdFullStateMsg.acc.y              = acc[1]
-    #     self.cmdFullStateMsg.acc.z              = acc[2]
-    #     self.cmdFullStateMsg.pose.orientation   = geometry_msgs.msg.Quaternion(*tf_conversions.transformations.quaternion_from_euler(0, 0, yaw))
-    #     self.cmdFullStateMsg.twist.angular.x    = omega[0]
-    #     self.cmdFullStateMsg.twist.angular.y    = omega[1]
-    #     self.cmdFullStateMsg.twist.angular.z    = omega[2]
-    #     self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
+        Args:
+            pos (array-like of float[3]): Position. Meters.
+            vel (array-like of float[3]): Velocity. Meters / second.
+            acc (array-like of float[3]): Acceleration. Meters / second^2.
+            yaw (float): Yaw angle. Radians.
+            omega (array-like of float[3]): Angular velocity in body frame.
+                Radians / sec.
+        """
+        self.cmdFullStateMsg.header.stamp = self.node.get_clock().now().to_msg()
+        self.cmdFullStateMsg.pose.position.x    = pos[0]
+        self.cmdFullStateMsg.pose.position.y    = pos[1]
+        self.cmdFullStateMsg.pose.position.z    = pos[2]
+        self.cmdFullStateMsg.twist.linear.x     = vel[0]
+        self.cmdFullStateMsg.twist.linear.y     = vel[1]
+        self.cmdFullStateMsg.twist.linear.z     = vel[2]
+        self.cmdFullStateMsg.acc.x              = acc[0]
+        self.cmdFullStateMsg.acc.y              = acc[1]
+        self.cmdFullStateMsg.acc.z              = acc[2]
+        q = rowan.from_euler(0, 0, yaw)
+        self.cmdFullStateMsg.pose.orientation.w = q[0]
+        self.cmdFullStateMsg.pose.orientation.x = q[1]
+        self.cmdFullStateMsg.pose.orientation.y = q[2]
+        self.cmdFullStateMsg.pose.orientation.z = q[3]
+        self.cmdFullStateMsg.twist.angular.x    = omega[0]
+        self.cmdFullStateMsg.twist.angular.y    = omega[1]
+        self.cmdFullStateMsg.twist.angular.z    = omega[2]
+        self.cmdFullStatePublisher.publish(self.cmdFullStateMsg)
 
     # def cmdVelocityWorld(self, vel, yawRate):
     #     """Sends a streaming velocity-world controller setpoint command.

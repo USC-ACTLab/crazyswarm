@@ -6,6 +6,7 @@ setup(
     name=package_name,
     version='2.0.0',
     packages=[package_name],
+    package_data={'package_name': ['data/*.csv']},
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -23,6 +24,7 @@ setup(
             'hello_world = crazyswarm2_examples.hello_world:main',
             'nice_hover = crazyswarm2_examples.nice_hover:main',
             'figure8 = crazyswarm2_examples.figure8:main',
+            'cmd_full_state = crazyswarm2_examples.cmd_full_state:main',
         ],
     },
 )

@@ -10,6 +10,7 @@
 #include "crazyswarm2_interfaces/srv/takeoff.hpp"
 #include "crazyswarm2_interfaces/srv/land.hpp"
 #include "crazyswarm2_interfaces/srv/go_to.hpp"
+#include "crazyswarm2_interfaces/srv/notify_setpoints_stop.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "crazyswarm2_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
@@ -23,6 +24,7 @@ using crazyswarm2_interfaces::srv::Takeoff;
 using crazyswarm2_interfaces::srv::Land;
 using crazyswarm2_interfaces::srv::GoTo;
 using crazyswarm2_interfaces::srv::UploadTrajectory;
+using crazyswarm2_interfaces::srv::NotifySetpointsStop;
 using std_srvs::srv::Empty;
 
 using motion_capture_tracking_interfaces::msg::NamedPoseArray;
@@ -98,6 +100,7 @@ public:
     service_land_ = node->create_service<Land>(name + "/land", std::bind(&CrazyflieROS::land, this, _1, _2));
     service_go_to_ = node->create_service<GoTo>(name + "/go_to", std::bind(&CrazyflieROS::go_to, this, _1, _2));
     service_upload_trajectory_ = node->create_service<UploadTrajectory>(name + "/upload_trajectory", std::bind(&CrazyflieROS::upload_trajectory, this, _1, _2));
+    service_notify_setpoints_stop_ = node->create_service<NotifySetpointsStop>(name + "/notify_setpoints_stop", std::bind(&CrazyflieROS::notify_setpoints_stop, this, _1, _2));
 
     subscription_cmd_vel_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_changed, this, _1)); 
     subscription_cmd_full_state_ = node->create_subscription<crazyswarm2_interfaces::msg::FullState>(name + "/cmd_full_state", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_full_state_changed, this, _1)); 
@@ -343,6 +346,16 @@ private:
     cf_.uploadTrajectory(request->trajectory_id, request->piece_offset, pieces);
   }
 
+  void notify_setpoints_stop(const std::shared_ptr<NotifySetpointsStop::Request> request,
+                         std::shared_ptr<NotifySetpointsStop::Response> response)
+  {
+    RCLCPP_INFO(logger_, "notify_setpoints_stop(remain_valid_millisecs%d, group_mask=%d)",
+                request->remain_valid_millisecs,
+                request->group_mask);
+
+    cf_.notifySetpointsStop(request->remain_valid_millisecs);
+  }
+
   // void on_parameter_changed(const rclcpp::Parameter &p)
   // {
   //   RCLCPP_INFO(
@@ -418,6 +431,7 @@ private:
   rclcpp::Service<Land>::SharedPtr service_land_;
   rclcpp::Service<GoTo>::SharedPtr service_go_to_;
   rclcpp::Service<UploadTrajectory>::SharedPtr service_upload_trajectory_;
+  rclcpp::Service<NotifySetpointsStop>::SharedPtr service_notify_setpoints_stop_;
 
   std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
   std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;

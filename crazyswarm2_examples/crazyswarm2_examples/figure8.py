@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+from pathlib import Path
 
 from py_crazyswarm2 import *
 from py_crazyswarm2.uav_trajectory import Trajectory
@@ -11,7 +12,7 @@ def main():
     allcfs = swarm.allcfs
 
     traj1 = Trajectory()
-    traj1.loadcsv("/home/whoenig/projects/crazyflie/ros2_ws/src/crazyswarm2/crazyswarm2_examples/resource/figure8.csv")
+    traj1.loadcsv(Path(__file__).parent / "data/figure8.csv")
 
     TRIALS = 1
     TIMESCALE = 1.0

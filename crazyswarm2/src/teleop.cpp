@@ -18,7 +18,7 @@ using crazyswarm2_interfaces::srv::Land;
 
 using namespace std::chrono_literals;
 
-
+const float dt = 0.01;
 namespace Xbox360Buttons {
 
     enum { Green = 0,
@@ -85,7 +85,15 @@ public:
     }
 
 private:
-    
+    struct 
+    {
+        float x = 0.0;
+        float y = 0.0;
+        float z = 0.0;
+        float yaw = 0.0;
+
+    }state_;
+
     struct Axis
     { 
         int axis;
@@ -99,6 +107,14 @@ private:
         Axis yaw;
     } axes_;
 
+    void positionChanged(const geometry_msgs::msg::Twist::SharedPtr msg)
+    {
+        state_.x = state_.x + msg->linear.x;
+        state_.y = state_.y + msg->linear.y;
+        state_.z = state_.z + msg->linear.z;
+        state_.yaw = state_.yaw + msg->angular.z;
+    }
+    
     void publish() 
     {
         publisher_->publish(twist_);
@@ -146,7 +162,6 @@ private:
         }
         return sign * msg->axes[a.axis - 1]*a.max;
     }
-
     
     void emergency()
     {

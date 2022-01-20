@@ -8,6 +8,7 @@
 #include "crazyswarm2_interfaces/srv/takeoff.hpp"
 #include "crazyswarm2_interfaces/srv/land.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "crazyswarm2_interfaces/msg/full_state.hpp"
 
 
 using std::placeholders::_1;
@@ -15,10 +16,11 @@ using std::placeholders::_1;
 using std_srvs::srv::Empty;
 using crazyswarm2_interfaces::srv::Takeoff;
 using crazyswarm2_interfaces::srv::Land;
+using crazyswarm2_interfaces::msg::FullState;
 
 using namespace std::chrono_literals;
 
-const float dt = 0.01;
+
 namespace Xbox360Buttons {
 
     enum { Green = 0,
@@ -43,7 +45,9 @@ public:
         subscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
             "joy", 1, std::bind(&TeleopNode::joyChanged, this, _1));
 
-        publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+        pub_cmd_vel_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+        pub_cmd_full_state_ = this->create_publisher<crazyswarm2_interfaces::msg::FullState>("cmd_full_state", 10);
+
         
         this->declare_parameter<int>("frequency", 100);
         frequency_ = this->get_parameter("frequency").as_int();
@@ -69,6 +73,10 @@ public:
         this->declare_parameter<double>("yaw_velocity_max", -200.0);
         axes_.yaw.max = this->get_parameter("yaw_velocity_max").as_double();
 
+        this->declare_parameter<std::string>("mode", "cmd_vel");
+        this->get_parameter("mode", mode_);
+        
+        dt_ = 1.0f/frequency_;
         if (frequency_ > 0) {
             timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
         }
@@ -107,18 +115,39 @@ private:
         Axis yaw;
     } axes_;
 
-    void positionChanged(const geometry_msgs::msg::Twist::SharedPtr msg)
-    {
-        state_.x = state_.x + msg->linear.x;
-        state_.y = state_.y + msg->linear.y;
-        state_.z = state_.z + msg->linear.z;
-        state_.yaw = state_.yaw + msg->angular.z;
-    }
-    
     void publish() 
     {
-        publisher_->publish(twist_);
-            
+        if (mode_ == "cmd_vel") {
+            pub_cmd_vel_->publish(twist_);
+        }
+        if (mode_ == "new_mode") {
+
+            state_.x = state_.x + twist_.linear.x*dt_;
+            state_.y = state_.y + twist_.linear.y*dt_;
+            state_.z = state_.z + twist_.linear.z*dt_;
+            state_.yaw = state_.yaw + twist_.angular.z*dt_;
+
+            // TODO: publish pos + vel to cmd_full_state
+            fullstate_.pose.position.x = state_.x; 
+            fullstate_.pose.position.y = state_.y;
+            fullstate_.pose.position.z = state_.z;
+            fullstate_.twist.linear.x = twist_.linear.x;
+            fullstate_.twist.linear.y = twist_.linear.y;
+            fullstate_.twist.linear.z = twist_.linear.z;
+            fullstate_.acc.x = 0;
+            fullstate_.acc.y = 0;
+            fullstate_.acc.z = 0;
+            fullstate_.pose.orientation.x = 0; // change
+            fullstate_.pose.orientation.y = 0; // change
+            fullstate_.pose.orientation.z = 0; // change
+            fullstate_.pose.orientation.w = 0; // change
+            fullstate_.twist.angular.x = 0;
+            fullstate_.twist.angular.y = 0;
+            fullstate_.twist.angular.z = twist_.angular.z;
+
+            pub_cmd_full_state_->publish(fullstate_);
+        }
+
     }
 
     void joyChanged(const sensor_msgs::msg::Joy::SharedPtr msg)
@@ -144,6 +173,7 @@ private:
         twist_.linear.y = getAxis(msg, axes_.y);
         twist_.linear.z = getAxis(msg, axes_.z);
         twist_.angular.z = getAxis(msg, axes_.yaw);
+
     }
 
     sensor_msgs::msg::Joy::_axes_type::value_type getAxis(const sensor_msgs::msg::Joy::SharedPtr &msg, Axis a)
@@ -191,10 +221,14 @@ private:
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr client_emergency_;
     rclcpp::Client<Takeoff>::SharedPtr client_takeoff_;
     rclcpp::Client<Land>::SharedPtr client_land_;
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_vel_;
+    rclcpp::Publisher<crazyswarm2_interfaces::msg::FullState>::SharedPtr pub_cmd_full_state_;
     rclcpp::TimerBase::SharedPtr timer_;
     geometry_msgs::msg::Twist twist_;
+    crazyswarm2_interfaces::msg::FullState fullstate_;
     int frequency_;
+    float dt_;
+    std::string mode_;
     
 };
 

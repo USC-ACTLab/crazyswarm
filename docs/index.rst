@@ -6,7 +6,7 @@ Welcome to Crazyswarm's documentation!
 The Crazyswarm platform allows you to fly a swarm of
 `Bitcraze Crazyflie 2.x <https://www.bitcraze.io/products/crazyflie-2-1/>`_ and `Bitcraze Crazyflie Bolt-based <https://store.bitcraze.io/products/crazyflie-bolt>`_ 
 quadcopters in tight, synchronized formations.
-Different localization systems are supported: LightHouse, LPS, and motion capture. The Crazyswarm is particularly optimized for motion capture systems and supports VICON, OptiTrack, and Qualisys.
+Different localization systems are supported: LightHouse, LPS, and motion capture. The Crazyswarm is particularly optimized for motion capture systems and supports VICON, NOKOV, OptiTrack, and Qualisys.
 We successfully flew 49 Crazyflies using three Crazyradios.
 An example video for what you can do is shown below:
 

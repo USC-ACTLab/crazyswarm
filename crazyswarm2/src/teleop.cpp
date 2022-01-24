@@ -11,6 +11,8 @@
 #include "crazyswarm2_interfaces/msg/full_state.hpp"
 
 
+#include <Eigen/Geometry>
+
 using std::placeholders::_1;
 
 using std_srvs::srv::Empty;
@@ -19,7 +21,7 @@ using crazyswarm2_interfaces::srv::Land;
 using crazyswarm2_interfaces::msg::FullState;
 
 using namespace std::chrono_literals;
-
+using namespace Eigen;
 
 namespace Xbox360Buttons {
 
@@ -48,35 +50,22 @@ public:
         pub_cmd_vel_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
         pub_cmd_full_state_ = this->create_publisher<crazyswarm2_interfaces::msg::FullState>("cmd_full_state", 10);
 
-        
-        this->declare_parameter<int>("frequency", 100);
-        frequency_ = this->get_parameter("frequency").as_int();
-
-        this->declare_parameter<int>("x_axis", 5);
-        axes_.x.axis = this->get_parameter("x_axis").as_int();
-        this->declare_parameter<int>("y_axis", 4);
-        axes_.y.axis = this->get_parameter("y_axis").as_int();
-        this->declare_parameter<int>("z_axis", 2);
-        axes_.z.axis = this->get_parameter("z_axis").as_int();
-        this->declare_parameter<int>("yaw_axis", 1);
-        axes_.yaw.axis = this->get_parameter("yaw_axis").as_int();
-
-
-        this->declare_parameter<double>("x_velocity_max", 30.0);
-        axes_.x.max = this->get_parameter("x_velocity_max").as_double();
-        this->declare_parameter<double>("y_velocity_max", -30.0);
-        axes_.y.max = this->get_parameter("y_velocity_max").as_double();
-        this->declare_parameter<double>("z_velocity_max", 60000.0);
-        axes_.z.max = this->get_parameter("z_velocity_max").as_double();
-
-        // this->declare_parameter<double>("yaw_velocity_max", 90.0 * M_PI / 180.0);
-        this->declare_parameter<double>("yaw_velocity_max", -200.0);
-        axes_.yaw.max = this->get_parameter("yaw_velocity_max").as_double();
-
-        this->declare_parameter<std::string>("mode", "cmd_vel");
-        this->get_parameter("mode", mode_);
-        
+        this->get_parameter<int>("frequency", frequency_);
+        this->get_parameter<int>("x_axis", axes_.x.axis);
+        this->get_parameter<int>("y_axis", axes_.y.axis);
+        this->get_parameter<int>("z_axis", axes_.z.axis);
+        this->get_parameter<int>("yaw_axis", axes_.yaw.axis);
+        this->get_parameter<double>("x_velocity_max", axes_.x.max);
+        this->get_parameter<double>("y_velocity_max", axes_.y.max);
+        this->get_parameter<double>("z_velocity_max", axes_.z.max);
+        this->get_parameter<double>("yaw_velocity_max", axes_.yaw.max);
+        this->get_parameter<std::string>("mode", mode_);
+        this->get_parameter("xy_limit", xy_params);
+        xy_limits_ = xy_params.as_double_array();
+        this->get_parameter("z_limit", z_params);
+        z_limits_ = z_params.as_double_array();
         dt_ = 1.0f/frequency_;
+        
         if (frequency_ > 0) {
             timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
         }
@@ -88,8 +77,7 @@ public:
         client_takeoff_->wait_for_service();
 
         client_land_ = this->create_client<Land>("land");
-        client_land_->wait_for_service();
-        
+        client_land_->wait_for_service();   
     }
 
 private:
@@ -97,8 +85,8 @@ private:
     {
         float x = 0.0;
         float y = 0.0;
-        float z = 0.0;
-        float yaw = 0.0;
+        float z = 0.10;
+        float yaw_rate = 0.0;
 
     }state_;
 
@@ -117,17 +105,32 @@ private:
 
     void publish() 
     {
-        if (mode_ == "cmd_vel") {
+        if (mode_ == "cmd_vel") { 
             pub_cmd_vel_->publish(twist_);
         }
         if (mode_ == "new_mode") {
+            if (state_.x <= xy_limits_[0] || state_.x  >= xy_limits_[1]){
+                state_.x = state_.x;
+            }
+            else if (state_.y <= xy_limits_[0] || state_.y >= xy_limits_[1]){
+                state_.y = state_.y;
+            }
+            else if (state_.z <= z_limits_[0] || state_.z >= z_limits_[1]){
+                state_.z = state_.z;
+            }
+            else {
+                state_.x = state_.x + twist_.linear.x*dt_;
+                state_.y = state_.y + twist_.linear.y*dt_;
+                state_.z = state_.z + twist_.linear.z*dt_;
 
-            state_.x = state_.x + twist_.linear.x*dt_;
-            state_.y = state_.y + twist_.linear.y*dt_;
-            state_.z = state_.z + twist_.linear.z*dt_;
-            state_.yaw = state_.yaw + twist_.angular.z*dt_;
+            }
+            state_.yaw_rate = state_.yaw_rate + twist_.angular.z*dt_;
+            Quaternionf q;
+            q = AngleAxisf(0, Vector3f::UnitX())
+                    * AngleAxisf(0, Vector3f::UnitY())
+                    * AngleAxisf(state_.yaw_rate, Vector3f::UnitZ());
+            // std::cout << "Quaternion" << std::endl << q.coeffs() << std::endl;
 
-            // TODO: publish pos + vel to cmd_full_state
             fullstate_.pose.position.x = state_.x; 
             fullstate_.pose.position.y = state_.y;
             fullstate_.pose.position.z = state_.z;
@@ -137,13 +140,13 @@ private:
             fullstate_.acc.x = 0;
             fullstate_.acc.y = 0;
             fullstate_.acc.z = 0;
-            fullstate_.pose.orientation.x = 0; // change
-            fullstate_.pose.orientation.y = 0; // change
-            fullstate_.pose.orientation.z = 0; // change
-            fullstate_.pose.orientation.w = 0; // change
-            fullstate_.twist.angular.x = 0;
-            fullstate_.twist.angular.y = 0;
-            fullstate_.twist.angular.z = twist_.angular.z;
+            fullstate_.pose.orientation.x = q.coeffs().coeffRef(0); 
+            fullstate_.pose.orientation.y = q.coeffs().coeffRef(1);
+            fullstate_.pose.orientation.z = q.coeffs().coeffRef(2);
+            fullstate_.pose.orientation.w = q.coeffs().coeffRef(3);
+            fullstate_.twist.angular.x = 0;       // roll 
+            fullstate_.twist.angular.y = 0;       // pitch 
+            fullstate_.twist.angular.z = state_.yaw_rate; // yaw rate 
 
             pub_cmd_full_state_->publish(fullstate_);
         }
@@ -229,6 +232,11 @@ private:
     int frequency_;
     float dt_;
     std::string mode_;
+    std::vector<double> xy_limits_;
+    std::vector<double> z_limits_;
+    rclcpp::Parameter xy_params;
+    rclcpp::Parameter z_params;
+    
     
 };
 

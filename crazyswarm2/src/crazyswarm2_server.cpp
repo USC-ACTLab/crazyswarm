@@ -234,7 +234,7 @@ private:
     float rollRate = msg->twist.angular.x;
     float pitchRate = msg->twist.angular.y;
     float yawRate = msg->twist.angular.z;
-
+    // RCLCPP_INFO(logger_, "qx: %f, qy: %f, qz: %f, qw: %f", qx, qy, qz, qw);
     cf_.sendFullStateSetpoint(
     x, y, z,
     vx, vy, vz,

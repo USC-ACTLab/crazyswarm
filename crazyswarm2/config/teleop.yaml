@@ -1,3 +1,15 @@
 /teleop:
   ros__parameters:
-    frequency: 0
+    xy_limit: [-1.5, 1.5]
+    z_limit: [0, 2.5]
+    frequency: 100
+    mode: "new_mode"
+    x_axis: 5
+    y_axis: 4
+    z_axis: 2
+    yaw_axis: 1
+    x_velocity_max: 0.5
+    y_velocity_max: 0.5
+    z_velocity_max: 0.5
+    yaw_velocity_max: -0.5
+

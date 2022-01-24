@@ -14,6 +14,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(crazyswarm2_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(motion_capture_tracking_interfaces REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 # add dependencies
 add_subdirectory(deps/crazyflie_tools)
@@ -24,7 +25,7 @@ include_directories(
   deps/crazyflie_tools/crazyflie_cpp/crazyflie-link-cpp/include
 #  externalDependencies/libobjecttracker/include
 #  externalDependencies/libmotioncapture/include
-#  ${EIGEN3_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
 #  ${PCL_INCLUDE_DIRS}
 )
 

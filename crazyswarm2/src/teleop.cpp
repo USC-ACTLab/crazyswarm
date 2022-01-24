@@ -65,7 +65,7 @@ public:
         this->get_parameter("z_limit", z_params);
         z_limits_ = z_params.as_double_array();
         dt_ = 1.0f/frequency_;
-        
+
         if (frequency_ > 0) {
             timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
         }
@@ -112,17 +112,20 @@ private:
             if (state_.x <= xy_limits_[0] || state_.x  >= xy_limits_[1]){
                 state_.x = state_.x;
             }
-            else if (state_.y <= xy_limits_[0] || state_.y >= xy_limits_[1]){
+            else {
+                state_.x = state_.x + twist_.linear.x*dt_;
+            }
+            if (state_.y <= xy_limits_[0] || state_.y >= xy_limits_[1]){
                 state_.y = state_.y;
             }
-            else if (state_.z <= z_limits_[0] || state_.z >= z_limits_[1]){
+            else{
+                state_.y = state_.y + twist_.linear.y*dt_;
+            }
+            if (state_.z <= z_limits_[0] || state_.z >= z_limits_[1]){
                 state_.z = state_.z;
             }
             else {
-                state_.x = state_.x + twist_.linear.x*dt_;
-                state_.y = state_.y + twist_.linear.y*dt_;
                 state_.z = state_.z + twist_.linear.z*dt_;
-
             }
             state_.yaw_rate = state_.yaw_rate + twist_.angular.z*dt_;
             Quaternionf q;

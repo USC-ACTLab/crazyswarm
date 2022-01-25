@@ -1,7 +1,7 @@
 #include <memory>
 #include <vector>
 #include <chrono>
-
+#include <math.h>
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 #include "std_srvs/srv/empty.hpp"
@@ -51,19 +51,25 @@ public:
         pub_cmd_full_state_ = this->create_publisher<crazyswarm2_interfaces::msg::FullState>("cmd_full_state", 10);
 
         this->get_parameter<int>("frequency", frequency_);
-        this->get_parameter<int>("x_axis", axes_.x.axis);
-        this->get_parameter<int>("y_axis", axes_.y.axis);
-        this->get_parameter<int>("z_axis", axes_.z.axis);
-        this->get_parameter<int>("yaw_axis", axes_.yaw.axis);
-        this->get_parameter<double>("x_velocity_max", axes_.x.max);
-        this->get_parameter<double>("y_velocity_max", axes_.y.max);
-        this->get_parameter<double>("z_velocity_max", axes_.z.max);
-        this->get_parameter<double>("yaw_velocity_max", axes_.yaw.max);
         this->get_parameter<std::string>("mode", mode_);
-        this->get_parameter("xy_limit", xy_params);
-        xy_limits_ = xy_params.as_double_array();
-        this->get_parameter("z_limit", z_params);
-        z_limits_ = z_params.as_double_array();
+
+        this->get_parameter<int>(mode_ + ".x_velocity_axis", axes_.x.axis);
+        this->get_parameter<int>(mode_ + ".y_velocity_axis", axes_.y.axis);
+        this->get_parameter<int>(mode_ + ".z_velocity_axis", axes_.z.axis);
+        this->get_parameter<int>(mode_ + ".yaw_velocity_axis", axes_.yaw.axis);
+        this->get_parameter<double>(mode_ + ".x_velocity_max", axes_.x.max);
+        this->get_parameter<double>(mode_ + ".y_velocity_max", axes_.y.max);
+        this->get_parameter<double>(mode_ + ".z_velocity_max", axes_.z.max);
+        this->get_parameter<double>(mode_ + ".yaw_velocity_max", axes_.yaw.max);
+
+        if (mode_ == "cmd_vel_world"){
+            this->get_parameter(mode_ + ".x_limit", x_param);
+            x_limit_ = x_param.as_double_array();
+            this->get_parameter(mode_ + ".y_limit", y_param);
+            y_limit_ = y_param.as_double_array();
+            this->get_parameter(mode_ + ".z_limit", z_param);
+            z_limit_ = z_param.as_double_array();
+        }
         dt_ = 1.0f/frequency_;
 
         if (frequency_ > 0) {
@@ -86,8 +92,7 @@ private:
         float x = 0.0;
         float y = 0.0;
         float z = 0.10;
-        float yaw_rate = 0.0;
-
+        float yaw = 0.0;
     }state_;
 
     struct Axis
@@ -103,36 +108,30 @@ private:
         Axis yaw;
     } axes_;
 
+    float angle_normalize(float a){ 
+        a = fmod(a, 2*M_PI);
+        a = fmod((a + 2*M_PI),2*M_PI);
+        if (a > M_PI){
+            a -= 2*M_PI;
+        }
+        return a;
+    }
+
     void publish() 
     {
-        if (mode_ == "cmd_vel") { 
+        if (mode_ == "cmd_rpy") { 
             pub_cmd_vel_->publish(twist_);
         }
-        if (mode_ == "new_mode") {
-            if (state_.x <= xy_limits_[0] || state_.x  >= xy_limits_[1]){
-                state_.x = state_.x;
-            }
-            else {
-                state_.x = state_.x + twist_.linear.x*dt_;
-            }
-            if (state_.y <= xy_limits_[0] || state_.y >= xy_limits_[1]){
-                state_.y = state_.y;
-            }
-            else{
-                state_.y = state_.y + twist_.linear.y*dt_;
-            }
-            if (state_.z <= z_limits_[0] || state_.z >= z_limits_[1]){
-                state_.z = state_.z;
-            }
-            else {
-                state_.z = state_.z + twist_.linear.z*dt_;
-            }
-            state_.yaw_rate = state_.yaw_rate + twist_.angular.z*dt_;
+        if (mode_ == "cmd_vel_world") {   
+            state_.x = std::min<float>(std::max<float>(state_.x + twist_.linear.x*dt_, x_limit_[0]), x_limit_[1]);
+            state_.y = std::min<float>(std::max<float>(state_.y + twist_.linear.y*dt_, y_limit_[0]), y_limit_[1]);
+            state_.z = std::min<float>(std::max<float>(state_.z + twist_.linear.z*dt_, z_limit_[0]), z_limit_[1]);
+            state_.yaw = angle_normalize(state_.yaw + twist_.angular.z*dt_);
+
             Quaternionf q;
             q = AngleAxisf(0, Vector3f::UnitX())
                     * AngleAxisf(0, Vector3f::UnitY())
-                    * AngleAxisf(state_.yaw_rate, Vector3f::UnitZ());
-            // std::cout << "Quaternion" << std::endl << q.coeffs() << std::endl;
+                    * AngleAxisf(state_.yaw, Vector3f::UnitZ());
 
             fullstate_.pose.position.x = state_.x; 
             fullstate_.pose.position.y = state_.y;
@@ -143,13 +142,13 @@ private:
             fullstate_.acc.x = 0;
             fullstate_.acc.y = 0;
             fullstate_.acc.z = 0;
-            fullstate_.pose.orientation.x = q.coeffs().coeffRef(0); 
-            fullstate_.pose.orientation.y = q.coeffs().coeffRef(1);
-            fullstate_.pose.orientation.z = q.coeffs().coeffRef(2);
-            fullstate_.pose.orientation.w = q.coeffs().coeffRef(3);
-            fullstate_.twist.angular.x = 0;       // roll 
-            fullstate_.twist.angular.y = 0;       // pitch 
-            fullstate_.twist.angular.z = state_.yaw_rate; // yaw rate 
+            fullstate_.pose.orientation.x = q.x(); 
+            fullstate_.pose.orientation.y = q.y();
+            fullstate_.pose.orientation.z = q.z();
+            fullstate_.pose.orientation.w = q.w();
+            fullstate_.twist.angular.x = 0;       
+            fullstate_.twist.angular.y = 0;       
+            fullstate_.twist.angular.z = twist_.angular.z; // yaw rate 
 
             pub_cmd_full_state_->publish(fullstate_);
         }
@@ -235,10 +234,12 @@ private:
     int frequency_;
     float dt_;
     std::string mode_;
-    std::vector<double> xy_limits_;
-    std::vector<double> z_limits_;
-    rclcpp::Parameter xy_params;
-    rclcpp::Parameter z_params;
+    std::vector<double> x_limit_;
+    std::vector<double> y_limit_;
+    std::vector<double> z_limit_;
+    rclcpp::Parameter x_param;
+    rclcpp::Parameter y_param;
+    rclcpp::Parameter z_param;
     
     
 };

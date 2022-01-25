@@ -95,6 +95,7 @@ public:
       std::bind(&CrazyflieROS::on_console, this, std::placeholders::_1))
     , name_(name)
   {
+    service_emergency_ = node->create_service<Empty>(name + "/emergency", std::bind(&CrazyflieROS::emergency, this, _1, _2));
     service_start_trajectory_ = node->create_service<StartTrajectory>(name + "/start_trajectory", std::bind(&CrazyflieROS::start_trajectory, this, _1, _2));
     service_takeoff_ = node->create_service<Takeoff>(name + "/takeoff", std::bind(&CrazyflieROS::takeoff, this, _1, _2));
     service_land_ = node->create_service<Land>(name + "/land", std::bind(&CrazyflieROS::land, this, _1, _2));
@@ -267,6 +268,13 @@ private:
     }
   }
 
+  void emergency(const std::shared_ptr<Empty::Request> request,
+            std::shared_ptr<Empty::Response> response)
+  {
+    RCLCPP_INFO(logger_, "emergency()");
+    cf_.emergencyStop();
+  }
+
   void start_trajectory(const std::shared_ptr<StartTrajectory::Request> request,
                         std::shared_ptr<StartTrajectory::Response> response)
   {
@@ -426,6 +434,7 @@ private:
   std::string message_buffer_;
   std::string name_;
 
+  rclcpp::Service<Empty>::SharedPtr service_emergency_;
   rclcpp::Service<StartTrajectory>::SharedPtr service_start_trajectory_;
   rclcpp::Service<Takeoff>::SharedPtr service_takeoff_;
   rclcpp::Service<Land>::SharedPtr service_land_;
@@ -489,6 +498,12 @@ private:
   void emergency(const std::shared_ptr<Empty::Request> request,
             std::shared_ptr<Empty::Response> response)
   {
+    RCLCPP_INFO(logger_, "emergency()");
+    for (auto &bc : broadcaster_)
+    {
+      auto &cfbc = bc.second;
+      cfbc->emergencyStop();
+    }
   }
 
   void start_trajectory(const std::shared_ptr<StartTrajectory::Request> request,

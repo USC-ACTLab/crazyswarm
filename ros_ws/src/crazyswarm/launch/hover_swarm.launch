@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="sim" default="false" />
   <arg name="joy_dev" default="/dev/input/js0" />
 
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflieTypes.yaml" />
   <rosparam command="load" file="$(find crazyswarm)/launch/crazyflies.yaml" />
 
-  <node pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
+  <!-- Run crazyswarm_server, if sim is set to False -->
+  <node unless="$(arg sim)" pkg="crazyswarm" type="crazyswarm_server" name="crazyswarm_server" output="screen" >
     <rosparam>
       # Logging configuration (Use enable_logging to actually enable logging)
       genericLogTopics: ["log1"]
@@ -44,6 +46,10 @@
       enable_logging: False
       enable_logging_pose: True
     </rosparam>
+  </node>
+
+  <!-- Run crazyswarm_server simulation, if sim is set to True -->
+  <node if="$(arg sim)" name="sim" pkg="crazyswarm" type="sim_ros.py" output="screen">
   </node>
 
   <node name="joy" pkg="joy" type="joy_node" output="screen">

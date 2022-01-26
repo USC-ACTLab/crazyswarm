@@ -7,15 +7,17 @@ Crazyswarm has the following software architecture.
 
     .. figure:: images/software_architecture.png
         :align: center
-        :scale: 70%
+        :scale: 50%
 
 
 - **crazyflie_tools**
   These are command line tools that can be used using `rosrun crazyflie_tools <name> <arguments>`. These tools include methods to list logging variables, parameters, and to reboot individual crazyflies.
 - **crazyswarm_server**
   This application is the core of the Crazyswarm. It provides the ROS interface, communicates with the robots and the motion capture system.
+- **Simulator**
+  The simulator uses parts of the official firmware for software-in-the-loop simulation. For performance reasons, the simulation does not include the dynamics and rather visualizes the setpoints. The simulator provides the same interface as the crazyswarm_server. Thus, users can either use the simulator or the physical hardware as backend.
 - **pycrazyswarm**
-  This is a simplified Python library to use the Crazyswarm. It has two backends: the physical backend (communicating with the crazyswarm_server) and the simulation backend. The simulator uses parts of the official firmware for software-in-the-loop simulation. For performance reasons, the simulation does not include the dynamics and rather visualizes the setpoints.
+  This is a simplified Python library to use the Crazyswarm. It has two backends: the physical backend (communicating with the crazyswarm_server) and the simulation backend.
 - **Helper libraries**
   We provide a unified interface for different motion capture systems (`libMotionCapture`), a way to track rigid bodies frame-by-frame even with unique marker configurations (`libObjectTracker`), and a library for the low-level communication with the Crazyflie robots (`crazyflie_cpp`).
 

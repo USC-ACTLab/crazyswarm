@@ -1,0 +1,51 @@
+.. _tutorial_distributed_operation:
+
+Distributed Operation
+---------------------
+
+Consider the case where you would like to test a distributed algorithm without
+modifying the on-board firmware. This might be useful for development purposes 
+or if your algorithm relies on computation- or memory-heavy operations.
+
+Here, we consider this use-case, where one process (or to be more precise: one ROS node)
+is executed for each robot on the host computer. This process can take the absolute or relative
+state of other robots into account and compute a setpoint (e.g., position) for its assigned
+Crazyflie.
+
+Step 1: Implement the Distributed Algorithm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you use Python, you may base your work of an existing example script in `ros_ws/src/crazyswarm/scripts/example_distributed.py`.
+Note that you can't use all the features of `pycrazyswarm` anymore. In particular, you have to initialize your ROS node manually 
+and add some logic to determine which Crazyflie should be serviced.
+
+If you use C++, you can directly use the ROS topics and services to interact with individual drones.
+
+To estimate the current absolute or relative state of other robots, you can rely on the ROS transform feature.
+
+Step 2: Adjust the Launch File
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+An example launch file is provided in `ros_ws/src/crazyswarm/launch/example_distributed.launch`.
+This includes `hover_swarm.launch` directly and therefore inherits any global Crazyswarm settings from there.
+Note that you have to specify one node for each Crazyflie. Each node should have some logic to simply exit if the 
+corresponding Crazyflie is currently deactivated (this logic is part of the provided `example_distributed.py`).
+
+Step 3: Run in Simulation
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since there is no single user script, one can not run the script with `--sim` anymore. However,
+there is a second simulation backend, which can be conveniently used with any launch file.::
+
+    source ros_ws/devel/setup.bash
+    roslaunch crazyswarm example_distributed.launch sim:=1
+
+The simulator uses the same software-in-the-loop code without any physics engine. The visualization is now done directly
+in `rviz`, rather than `matplotlib` or `vispy`.
+
+Step 4: Run on Robots
+^^^^^^^^^^^^^^^^^^^^^
+
+The same launch file can be used to run on the real robots by not using the `sim` arguments.::
+
+    roslaunch crazyswarm example_distributed.launch

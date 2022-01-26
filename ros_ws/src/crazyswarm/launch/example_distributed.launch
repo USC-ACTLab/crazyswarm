@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find crazyswarm)/launch/hover_swarm.launch" pass_all_args="true" />
+
+  <node name="cf1" pkg="crazyswarm" type="example_distributed.py">
+    <param name="cfid" value="1" />
+  </node>
+
+  <node name="cf2" pkg="crazyswarm" type="example_distributed.py">
+    <param name="cfid" value="2" />
+  </node>
+
+</launch>

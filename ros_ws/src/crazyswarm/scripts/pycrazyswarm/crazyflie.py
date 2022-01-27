@@ -237,11 +237,9 @@ class Crazyflie:
         acceleration. The jerk (derivative of acceleration) is fixed at zero at
         both boundary conditions.
 
-        Note: it is the user's responsibility to ensure that the goTo command
-        is feasible. If the duration is too short, the trajectory will require
-        impossible accelerations and velocities. The planner will not correct
-        this, and the failure to achieve the desired states will cause the
-        controller to become unstable.
+        .. warning::
+            Calling ``goTo`` rapidly and/or with short durations (<< 1 sec) can
+            cause instability. Consider using :meth:`cmdPosition()` instead.
 
         Args:
             goal (iterable of 3 floats): The goal position. Meters.
@@ -506,6 +504,12 @@ class Crazyflie:
 
         For more information on streaming setpoint commands, see the
         :meth:`cmdFullState()` documentation.
+
+        .. warning::
+            As a streaming setpoint, ``cmdPosition`` must be sent many times
+            per second (10Hz is a conservative minimum). For applications that
+            generate goal positions slowly, :meth:`goTo()` may be more
+            appropriate, especially if the goal positions are far apart.
 
         Args:
             pos (array-like of float[3]): Position. Meters.

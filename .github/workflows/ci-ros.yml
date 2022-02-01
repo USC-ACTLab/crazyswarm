@@ -39,7 +39,7 @@ jobs:
         sudo apt install -y ros-${{ matrix.ros }}-tf ros-${{ matrix.ros }}-tf-conversions ros-${{ matrix.ros }}-joy
         sudo apt install -y libpcl-dev libusb-1.0-0-dev
         sudo apt install -y swig lib${{ matrix.pyVer }}-dev ${{ matrix.pyVer }}-pip
-        ${{ matrix.pyVer }} -m pip install pytest numpy PyYAML matplotlib scipy
+        ${{ matrix.pyVer }} -m pip install pytest numpy PyYAML matplotlib scipy vispy
 
     - name: Build
       run: |

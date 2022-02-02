@@ -81,7 +81,6 @@ def generate_launch_description():
                 ('cmd_vel', 'cf231/cmd_vel'),
                 ('cmd_full_state', 'cf231/cmd_full_state')
             ],
-            output='screen',
             parameters=[teleop_yaml]
         ),
         Node(

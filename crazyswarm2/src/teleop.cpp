@@ -50,23 +50,37 @@ public:
         pub_cmd_vel_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
         pub_cmd_full_state_ = this->create_publisher<crazyswarm2_interfaces::msg::FullState>("cmd_full_state", 10);
 
+        this->declare_parameter("frequency", 0);
         this->get_parameter<int>("frequency", frequency_);
+        this->declare_parameter("mode", "default");
         this->get_parameter<std::string>("mode", mode_);
 
+        this->declare_parameter(mode_ + ".x_velocity_axis", 0);
         this->get_parameter<int>(mode_ + ".x_velocity_axis", axes_.x.axis);
+        this->declare_parameter(mode_ + ".y_velocity_axis", 0);
         this->get_parameter<int>(mode_ + ".y_velocity_axis", axes_.y.axis);
+        this->declare_parameter(mode_ + ".z_velocity_axis", 0);
         this->get_parameter<int>(mode_ + ".z_velocity_axis", axes_.z.axis);
+        this->declare_parameter(mode_ + ".yaw_velocity_axis", 0);
         this->get_parameter<int>(mode_ + ".yaw_velocity_axis", axes_.yaw.axis);
+        this->declare_parameter(mode_ + ".x_velocity_max", 0.0);
         this->get_parameter<double>(mode_ + ".x_velocity_max", axes_.x.max);
+        this->declare_parameter(mode_ + ".y_velocity_max", 0.0);
         this->get_parameter<double>(mode_ + ".y_velocity_max", axes_.y.max);
+        this->declare_parameter(mode_ + ".z_velocity_max", 0.0);
         this->get_parameter<double>(mode_ + ".z_velocity_max", axes_.z.max);
+        this->declare_parameter(mode_ + ".yaw_velocity_max", 0.0);
         this->get_parameter<double>(mode_ + ".yaw_velocity_max", axes_.yaw.max);
 
+
         if (mode_ == "cmd_vel_world"){
+            this->declare_parameter(mode_ + ".x_limit");
             this->get_parameter(mode_ + ".x_limit", x_param);
             x_limit_ = x_param.as_double_array();
+            this->declare_parameter(mode_ + ".y_limit");
             this->get_parameter(mode_ + ".y_limit", y_param);
             y_limit_ = y_param.as_double_array();
+            this->declare_parameter(mode_ + ".z_limit");
             this->get_parameter(mode_ + ".z_limit", z_param);
             z_limit_ = z_param.as_double_array();
         }
@@ -123,6 +137,7 @@ private:
             pub_cmd_vel_->publish(twist_);
         }
         if (mode_ == "cmd_vel_world") {   
+
             state_.x = std::min<float>(std::max<float>(state_.x + twist_.linear.x*dt_, x_limit_[0]), x_limit_[1]);
             state_.y = std::min<float>(std::max<float>(state_.y + twist_.linear.y*dt_, y_limit_[0]), y_limit_[1]);
             state_.z = std::min<float>(std::max<float>(state_.z + twist_.linear.z*dt_, z_limit_[0]), z_limit_[1]);

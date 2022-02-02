@@ -7,10 +7,10 @@
       y_velocity_axis: 4
       z_velocity_axis: 2
       yaw_velocity_axis: 1
-      x_velocity_max: 30 # deg
-      y_velocity_max: 30 # deg
-      z_velocity_max: 60000 # PWM
-      yaw_velocity_max: 200  # deg/s
+      x_velocity_max: 30.0 # deg
+      y_velocity_max: 30.0 # deg
+      z_velocity_max: 60000.0 # PWM
+      yaw_velocity_max: 200.0  # deg/s
     cmd_vel_world:
       x_velocity_axis: 5
       y_velocity_axis: 4

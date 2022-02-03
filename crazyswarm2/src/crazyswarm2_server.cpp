@@ -235,7 +235,6 @@ private:
     float rollRate = msg->twist.angular.x;
     float pitchRate = msg->twist.angular.y;
     float yawRate = msg->twist.angular.z;
-
     cf_.sendFullStateSetpoint(
     x, y, z,
     vx, vy, vz,
@@ -247,7 +246,6 @@ private:
 
   void cmd_vel_changed(const geometry_msgs::msg::Twist::SharedPtr msg)
   {
-    // RCLCPP_INFO(logger_, "Callback function is called...");
     float roll = msg->linear.y;
     float pitch = - (msg->linear.x);
     float yawrate = msg->angular.z;

@@ -1,0 +1,22 @@
+cf3:
+  # Use URI -OR- id + channel
+  # uri: "radio://0/80/2M/E7E7E7E701"
+  uri: "radio://0/80/2M/E7E7E7E703"
+  # id: 1
+  # channel: 80
+  initial_position: [0,0,0]
+  type: "cf21"
+  # firmware_params:
+  #   kalman:
+  #     pNAcc_xy: 1.0 # default 0.5
+cf231:
+  # Use URI -OR- id + channel
+  # uri: "radio://0/80/2M/E7E7E7E701"
+  uri: "radio://0/80/2M/E7E7E7E7E7"
+  # id: 1
+  # channel: 80
+  initial_position: [0,-0.5,0]
+  type: "cf21"
+  # firmware_params:
+  #   kalman:
+  #     pNAcc_xy: 1.0 # default 0.5

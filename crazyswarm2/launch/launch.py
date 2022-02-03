@@ -75,11 +75,12 @@ def generate_launch_description():
             package='crazyswarm2',
             executable='teleop',
             name='teleop',
-            # remappings=[
-            #     ('takeoff', 'cf3/takeoff'),
-            #     ('land', 'cf3/land'),
-            #     ('cmd_vel', 'cf3/cmd_vel')
-            # ],
+            remappings=[
+                ('takeoff', 'cf231/takeoff'),
+                ('land', 'cf231/land'),
+                ('cmd_vel', 'cf231/cmd_vel'),
+                ('cmd_full_state', 'cf231/cmd_full_state')
+            ],
             parameters=[teleop_yaml]
         ),
         Node(

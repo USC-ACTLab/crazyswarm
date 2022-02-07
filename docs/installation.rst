@@ -66,6 +66,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
             7. Verify the installation by running the unit tests::
 
                 $ cd ros_ws/src/crazyswarm/scripts
+                $ source ../../../devel/setup.bash
                 $ $CSW_PYTHON -m pytest
 
          .. tab:: Linux without Anaconda
@@ -96,6 +97,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
             6. Verify the installation by running the unit tests::
 
                 $ cd ros_ws/src/crazyswarm/scripts
+                $ source ../../../devel/setup.bash
                 $ $CSW_PYTHON -m pytest
 
 

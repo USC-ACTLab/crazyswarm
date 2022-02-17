@@ -160,9 +160,9 @@ private:
             fullstate_.pose.position.x = state_.x; 
             fullstate_.pose.position.y = state_.y;
             fullstate_.pose.position.z = state_.z;
-            fullstate_.twist.linear.x = (prev_x - state_.x)/dt_;
-            fullstate_.twist.linear.y = (prev_y - state_.y)/dt_;
-            fullstate_.twist.linear.z = (prev_z - state_.z)/dt_;
+            fullstate_.twist.linear.x = (state_.x-prev_x)/dt_;
+            fullstate_.twist.linear.y = (state_.y-prev_y)/dt_;
+            fullstate_.twist.linear.z = (state_.z-prev_z)/dt_;
             fullstate_.acc.x = 0;
             fullstate_.acc.y = 0;
             fullstate_.acc.z = 0;

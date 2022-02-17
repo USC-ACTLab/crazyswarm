@@ -72,6 +72,12 @@ public:
         this->declare_parameter(mode_ + ".yaw_velocity_max", 0.0);
         this->get_parameter<double>(mode_ + ".yaw_velocity_max", axes_.yaw.max);
 
+        this->declare_parameter("initial_position.x", 0.0);
+        this->get_parameter<float>("initial_position.x", state_.x);
+        this->declare_parameter("initial_position.y", 0.0);
+        this->get_parameter<float>("initial_position.y", state_.y);
+        this->declare_parameter("initial_position.z", 0.0);
+        this->get_parameter<float>("initial_position.z", state_.z);
 
         if (mode_ == "cmd_vel_world"){
             this->declare_parameter(mode_ + ".x_limit");
@@ -103,10 +109,10 @@ public:
 private:
     struct 
     {
-        float x = 0.0;
-        float y = 0.0;
-        float z = 0.10;
-        float yaw = 0.0;
+        float x;
+        float y;
+        float z;
+        float yaw;
     }state_;
 
     struct Axis
@@ -142,6 +148,7 @@ private:
             state_.y = std::min<float>(std::max<float>(state_.y + twist_.linear.y*dt_, y_limit_[0]), y_limit_[1]);
             state_.z = std::min<float>(std::max<float>(state_.z + twist_.linear.z*dt_, z_limit_[0]), z_limit_[1]);
             state_.yaw = angle_normalize(state_.yaw + twist_.angular.z*dt_);
+            // RCLCPP_INFO(this->get_logger(), "x: %f, y: %f, z: %f", state_.x, state_.y, state_.z);
 
             Quaternionf q;
             q = AngleAxisf(0, Vector3f::UnitX())

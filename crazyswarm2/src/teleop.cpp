@@ -55,28 +55,28 @@ public:
         this->declare_parameter("mode", "default");
         this->get_parameter<std::string>("mode", mode_);
 
-        this->declare_parameter(mode_ + ".x_velocity_axis", 0);
+        this->declare_parameter(mode_ + ".x_velocity_axis");
         this->get_parameter<int>(mode_ + ".x_velocity_axis", axes_.x.axis);
-        this->declare_parameter(mode_ + ".y_velocity_axis", 0);
+        this->declare_parameter(mode_ + ".y_velocity_axis");
         this->get_parameter<int>(mode_ + ".y_velocity_axis", axes_.y.axis);
-        this->declare_parameter(mode_ + ".z_velocity_axis", 0);
+        this->declare_parameter(mode_ + ".z_velocity_axis");
         this->get_parameter<int>(mode_ + ".z_velocity_axis", axes_.z.axis);
-        this->declare_parameter(mode_ + ".yaw_velocity_axis", 0);
+        this->declare_parameter(mode_ + ".yaw_velocity_axis");
         this->get_parameter<int>(mode_ + ".yaw_velocity_axis", axes_.yaw.axis);
-        this->declare_parameter(mode_ + ".x_velocity_max", 0.0);
+        this->declare_parameter(mode_ + ".x_velocity_max");
         this->get_parameter<double>(mode_ + ".x_velocity_max", axes_.x.max);
-        this->declare_parameter(mode_ + ".y_velocity_max", 0.0);
+        this->declare_parameter(mode_ + ".y_velocity_max");
         this->get_parameter<double>(mode_ + ".y_velocity_max", axes_.y.max);
-        this->declare_parameter(mode_ + ".z_velocity_max", 0.0);
+        this->declare_parameter(mode_ + ".z_velocity_max");
         this->get_parameter<double>(mode_ + ".z_velocity_max", axes_.z.max);
-        this->declare_parameter(mode_ + ".yaw_velocity_max", 0.0);
+        this->declare_parameter(mode_ + ".yaw_velocity_max");
         this->get_parameter<double>(mode_ + ".yaw_velocity_max", axes_.yaw.max);
 
-        this->declare_parameter("initial_position.x", 0.0);
+        this->declare_parameter("initial_position.x");
         this->get_parameter<float>("initial_position.x", state_.x);
-        this->declare_parameter("initial_position.y", 0.0);
+        this->declare_parameter("initial_position.y");
         this->get_parameter<float>("initial_position.y", state_.y);
-        this->declare_parameter("initial_position.z", 0.0);
+        this->declare_parameter("initial_position.z");
         this->get_parameter<float>("initial_position.z", state_.z);
 
         if (mode_ == "cmd_vel_world"){
@@ -144,11 +144,13 @@ private:
         }
         if (mode_ == "cmd_vel_world") {   
 
+            prev_x = state_.x;
+            prev_y = state_.y;
+            prev_z = state_.z;
             state_.x = std::min<float>(std::max<float>(state_.x + twist_.linear.x*dt_, x_limit_[0]), x_limit_[1]);
             state_.y = std::min<float>(std::max<float>(state_.y + twist_.linear.y*dt_, y_limit_[0]), y_limit_[1]);
             state_.z = std::min<float>(std::max<float>(state_.z + twist_.linear.z*dt_, z_limit_[0]), z_limit_[1]);
             state_.yaw = angle_normalize(state_.yaw + twist_.angular.z*dt_);
-            // RCLCPP_INFO(this->get_logger(), "x: %f, y: %f, z: %f", state_.x, state_.y, state_.z);
 
             Quaternionf q;
             q = AngleAxisf(0, Vector3f::UnitX())
@@ -158,9 +160,9 @@ private:
             fullstate_.pose.position.x = state_.x; 
             fullstate_.pose.position.y = state_.y;
             fullstate_.pose.position.z = state_.z;
-            fullstate_.twist.linear.x = twist_.linear.x;
-            fullstate_.twist.linear.y = twist_.linear.y;
-            fullstate_.twist.linear.z = twist_.linear.z;
+            fullstate_.twist.linear.x = (prev_x - state_.x)/dt_;
+            fullstate_.twist.linear.y = (prev_y - state_.y)/dt_;
+            fullstate_.twist.linear.z = (prev_z - state_.z)/dt_;
             fullstate_.acc.x = 0;
             fullstate_.acc.y = 0;
             fullstate_.acc.z = 0;
@@ -200,7 +202,6 @@ private:
         twist_.linear.y = getAxis(msg, axes_.y);
         twist_.linear.z = getAxis(msg, axes_.z);
         twist_.angular.z = getAxis(msg, axes_.yaw);
-
     }
 
     sensor_msgs::msg::Joy::_axes_type::value_type getAxis(const sensor_msgs::msg::Joy::SharedPtr &msg, Axis a)
@@ -253,15 +254,18 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     geometry_msgs::msg::Twist twist_;
     crazyswarm2_interfaces::msg::FullState fullstate_;
-    int frequency_;
-    float dt_;
-    std::string mode_;
     std::vector<double> x_limit_;
     std::vector<double> y_limit_;
     std::vector<double> z_limit_;
+    std::string mode_;
     rclcpp::Parameter x_param;
     rclcpp::Parameter y_param;
     rclcpp::Parameter z_param;
+    int frequency_;
+    float dt_;
+    float prev_x;
+    float prev_y;
+    float prev_z;
     
     
 };

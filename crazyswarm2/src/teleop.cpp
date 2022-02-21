@@ -144,9 +144,9 @@ private:
         }
         if (mode_ == "cmd_vel_world") {   
 
-            prev_x = state_.x;
-            prev_y = state_.y;
-            prev_z = state_.z;
+            float prev_x = state_.x;
+            float prev_y = state_.y;
+            float prev_z = state_.z;
             state_.x = std::min<float>(std::max<float>(state_.x + twist_.linear.x*dt_, x_limit_[0]), x_limit_[1]);
             state_.y = std::min<float>(std::max<float>(state_.y + twist_.linear.y*dt_, y_limit_[0]), y_limit_[1]);
             state_.z = std::min<float>(std::max<float>(state_.z + twist_.linear.z*dt_, z_limit_[0]), z_limit_[1]);
@@ -263,10 +263,6 @@ private:
     rclcpp::Parameter z_param;
     int frequency_;
     float dt_;
-    float prev_x;
-    float prev_y;
-    float prev_z;
-    
     
 };
 

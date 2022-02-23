@@ -569,20 +569,39 @@ private:
     // Here, we send all the poses to all CFs
     // In Crazyswarm1, we only sent the poses of the same group (i.e. channel)
 
-    std::vector<CrazyflieBroadcaster::externalPosition> data;
+
+    // split the message into parts that require position update and pose update
+    std::vector<CrazyflieBroadcaster::externalPosition> data_position;
+    std::vector<CrazyflieBroadcaster::externalPose> data_pose;
 
     for (const auto& pose : msg->poses) {
       const auto iter = name_to_id_.find(pose.name);
       if (iter != name_to_id_.end()) {
         uint8_t id = iter->second;
-        data.push_back({id, (float)pose.pose.position.x, (float)pose.pose.position.y, (float)pose.pose.position.z});
+        if (isnan(pose.pose.orientation.w)) {
+          data_position.push_back({id, 
+            (float)pose.pose.position.x, (float)pose.pose.position.y, (float)pose.pose.position.z});
+        } else {
+          data_pose.push_back({id, 
+            (float)pose.pose.position.x, (float)pose.pose.position.y, (float)pose.pose.position.z,
+            (float)pose.pose.orientation.x, (float)pose.pose.orientation.y, (float)pose.pose.orientation.z, (float)pose.pose.orientation.w});
+        }
       }
     }
 
-    if (data.size() > 0) {
+    // send position only updates to the swarm
+    if (data_position.size() > 0) {
       for (auto &bc : broadcaster_) {
         auto &cfbc = bc.second;
-        cfbc->sendExternalPositions(data);
+        cfbc->sendExternalPositions(data_position);
+      }
+    }
+
+    // send pose only updates to the swarm
+    if (data_pose.size() > 0) {
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->sendExternalPoses(data_pose);
       }
     }
   }

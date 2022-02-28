@@ -58,6 +58,10 @@ def generate_launch_description():
     server_params["crazyflie_types"] = crazyflie_types
 
     # teleop params
+    teleop_yaml = os.path.join(
+        get_package_share_directory('crazyswarm2'),
+        'config',
+        'teleop.yaml')
     teleop_5_yaml = os.path.join(
         get_package_share_directory('crazyswarm2'),
         'config',
@@ -76,6 +80,19 @@ def generate_launch_description():
             executable='teleop',
             name='teleop',
             remappings=[
+                ('takeoff', 'cf231/takeoff'),
+                ('land', 'cf231/land'),
+                ('cmd_vel', 'cf231/cmd_vel'),
+                ('cmd_full_state', 'cf231/cmd_full_state'),
+                ('joy', 'cf231/joy'),
+            ],
+            parameters=[teleop_yaml]
+        ),
+        Node(
+            package='crazyswarm2',
+            executable='teleop',
+            name='teleop',
+            remappings=[
                 ('takeoff', 'cf5/takeoff'),
                 ('land', 'cf5/land'),
                 ('cmd_vel', 'cf5/cmd_vel'),
@@ -88,9 +105,17 @@ def generate_launch_description():
             package='joy',
             executable='joy_node',
             name='joy_node',
-            remappings=[('joy', 'cf5/joy')],
-            parameters=[{'device_id':1}] # old joystick
+            remappings=[('joy', 'cf231/joy')],
+            output='screen',
+            parameters=[{'device_id':0}] # new joystick
         ),
+        Node(
+            package='joy',
+            executable='joy_node',
+            name='joy_node',
+            remappings=[('joy', 'cf5/joy')],
+            parameters=[{'device_id':1}] # old
+        ),  
         Node(
             package='crazyswarm2',
             executable='crazyswarm2_server',

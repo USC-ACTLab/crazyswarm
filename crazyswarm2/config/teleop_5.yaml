@@ -24,8 +24,11 @@
       y_limit: [-1.2, 1.2] # m
       z_limit: [0.0, 2.5] # m
     initial_position:
-      x: 0.0
-      y: 0.0
-      z: 0.10
+      x: 0.0 # m
+      y: -0.5 # m
+      z: 0.10 # m
+
+
+
 
 

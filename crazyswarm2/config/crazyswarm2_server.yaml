@@ -14,8 +14,8 @@
       #   solidGreen: 0 # if set to solid color
       #   solidRed: 0 # if set to solid color
       #   headlightEnable: 0
-      # locSrv:
-      #   extPosStdDev: 1e-3
-      #   extQuatStdDev: 0.5e-1
+      locSrv:
+        extPosStdDev: 1e-3
+        extQuatStdDev: 0.5e-1
       # kalman:
       #   resetEstimation: 1

@@ -79,14 +79,15 @@ def generate_launch_description():
                 ('takeoff', 'cf231/takeoff'),
                 ('land', 'cf231/land'),
                 ('cmd_vel', 'cf231/cmd_vel'),
-                ('cmd_full_state', 'cf231/cmd_full_state')
+                ('cmd_full_state', 'cf231/cmd_full_state'),
+                ('notify_setpoints_stop', 'cf231/notify_setpoints_stop'),
             ],
             parameters=[teleop_yaml]
         ),
         Node(
             package='joy',
             executable='joy_node',
-            name='joy_node' # by default id=0, new joystick
+            name='joy_node' # by default id=0
         ),
         Node(
             package='crazyswarm2',

@@ -84,6 +84,7 @@ def generate_launch_description():
                 ('land', 'cf231/land'),
                 ('cmd_vel', 'cf231/cmd_vel'),
                 ('cmd_full_state', 'cf231/cmd_full_state'),
+                ('notify_setpoints_stop', 'cf231/notify_setpoints_stop'),
                 ('joy', 'cf231/joy'),
             ],
             parameters=[teleop_yaml]
@@ -97,6 +98,7 @@ def generate_launch_description():
                 ('land', 'cf5/land'),
                 ('cmd_vel', 'cf5/cmd_vel'),
                 ('cmd_full_state', 'cf5/cmd_full_state'),
+                ('notify_setpoints_stop', 'cf5/notify_setpoints_stop'),
                 ('joy', 'cf5/joy'),
             ],
             parameters=[teleop_5_yaml]

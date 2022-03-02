@@ -7,12 +7,12 @@
 
     marker_configurations:
       default: # for standard Crazyflie
-        offset: [0.0, -0.01, -0.04]
+        offset: [0.0, 0.0, 0.0]
         points:
-          p0: [0.0177184,0.0139654,0.0557585]
-          p1: [-0.0262914,0.0509139,0.0402475]
-          p2: [-0.0328889,-0.02757,0.0390601]
-          p3: [0.0431307,-0.0331216,0.0388839]
+          p0: [   0.0,    0.0, 0.022]  # top
+          p1: [-0.042,  0.042, 0.0  ]  # back left   (M3)
+          p2: [-0.042, -0.042, 0.0  ]  # back right  (M2)
+          p3: [ 0.042, -0.042, 0.0  ]  # front right (M1)
       default_single_marker:
         offset: [0.0, -0.01, -0.04]
         points:

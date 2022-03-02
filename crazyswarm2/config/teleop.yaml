@@ -1,6 +1,6 @@
 /teleop:
   ros__parameters:
-    frequency: 100 
+    frequency: 100  # set to 0, to disable manual flight modes
     mode: "cmd_vel_world" # one of cmd_rpy, cmd_vel_world
     cmd_rpy:
       x_velocity_axis: 5

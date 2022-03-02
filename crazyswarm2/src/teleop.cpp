@@ -7,6 +7,7 @@
 #include "std_srvs/srv/empty.hpp"
 #include "crazyswarm2_interfaces/srv/takeoff.hpp"
 #include "crazyswarm2_interfaces/srv/land.hpp"
+#include <crazyswarm2_interfaces/srv/notify_setpoints_stop.hpp>
 #include "geometry_msgs/msg/twist.hpp"
 #include "crazyswarm2_interfaces/msg/full_state.hpp"
 
@@ -18,6 +19,7 @@ using std::placeholders::_1;
 using std_srvs::srv::Empty;
 using crazyswarm2_interfaces::srv::Takeoff;
 using crazyswarm2_interfaces::srv::Land;
+using crazyswarm2_interfaces::srv::NotifySetpointsStop;
 using crazyswarm2_interfaces::msg::FullState;
 
 using namespace std::chrono_literals;
@@ -91,6 +93,7 @@ public:
             z_limit_ = z_param.as_double_array();
         }
         dt_ = 1.0f/frequency_;
+        is_low_level_flight_active_ = false;
 
         if (frequency_ > 0) {
             timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
@@ -103,7 +106,10 @@ public:
         client_takeoff_->wait_for_service();
 
         client_land_ = this->create_client<Land>("land");
-        client_land_->wait_for_service();   
+        client_land_->wait_for_service();
+
+        client_notify_setpoints_stop_ = this->create_client<NotifySetpointsStop>("notify_setpoints_stop");
+        client_notify_setpoints_stop_->wait_for_service();
     }
 
 private:
@@ -139,6 +145,10 @@ private:
 
     void publish() 
     {
+        if (!is_low_level_flight_active_) {
+            return;
+        }
+
         if (mode_ == "cmd_rpy") { 
             pub_cmd_vel_->publish(twist_);
         }
@@ -234,24 +244,41 @@ private:
         request->height = 0.5;
         request->duration = rclcpp::Duration::from_seconds(2);
         client_takeoff_->async_send_request(request);
+
+        timer_takeoff_ = this->create_wall_timer(2s, [this]() {
+            state_.z = 0.5;
+            is_low_level_flight_active_ = true;
+            this->timer_takeoff_->cancel();
+        });
     }
 
     void land()
     {
-        auto request = std::make_shared<Land::Request>();
-        request->group_mask = 0;
-        request->height = 0.0;
-        request->duration = rclcpp::Duration::from_seconds(3.5);
-        client_land_->async_send_request(request);
+        is_low_level_flight_active_ = false;
+
+        // If we are in manual flight mode, first switch back to high-level mode
+        auto request1 = std::make_shared<NotifySetpointsStop::Request>();
+        request1->remain_valid_millisecs = 100;
+        request1->group_mask = 0;
+        client_notify_setpoints_stop_->async_send_request(request1);
+
+        // Now we should be able to land!
+        auto request2 = std::make_shared<Land::Request>();
+        request2->group_mask = 0;
+        request2->height = 0.0;
+        request2->duration = rclcpp::Duration::from_seconds(3.5);
+        client_land_->async_send_request(request2);
     }
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription_;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr client_emergency_;
     rclcpp::Client<Takeoff>::SharedPtr client_takeoff_;
     rclcpp::Client<Land>::SharedPtr client_land_;
+    rclcpp::Client<NotifySetpointsStop>::SharedPtr client_notify_setpoints_stop_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_vel_;
     rclcpp::Publisher<crazyswarm2_interfaces::msg::FullState>::SharedPtr pub_cmd_full_state_;
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr timer_takeoff_;
     geometry_msgs::msg::Twist twist_;
     crazyswarm2_interfaces::msg::FullState fullstate_;
     std::vector<double> x_limit_;
@@ -263,7 +290,7 @@ private:
     rclcpp::Parameter z_param;
     int frequency_;
     float dt_;
-    
+    bool is_low_level_flight_active_;
 };
 
 int main(int argc, char *argv[])

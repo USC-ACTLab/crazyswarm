@@ -27,5 +27,6 @@
       x: 0.0
       y: 0.0
       z: 0.10
+    auto_yaw_rate: -0.15 # rad/s
 
 

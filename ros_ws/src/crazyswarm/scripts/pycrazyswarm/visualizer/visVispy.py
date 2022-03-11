@@ -97,6 +97,7 @@ class VisVispy:
                     color=color,
                     shading="smooth",
                 )
+                mesh.unfreeze()
                 mesh.light_dir = (0.1, 0.1, 1.0)
                 mesh.shininess = 0.01
                 mesh.ambient_light_color = [0.5] * 3

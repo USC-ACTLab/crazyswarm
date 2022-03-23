@@ -20,13 +20,13 @@
       y_velocity_max: 0.5 # m/s
       z_velocity_max: 0.5 # m/s
       yaw_velocity_max: 0.5  # rad/s
-      x_limit: [-1.2, 1.2] # m
-      y_limit: [-1.2, 1.2] # m
+      x_limit: [-1.0, 1.0] # m
+      y_limit: [-1.0, 1.0] # m
       z_limit: [0.0, 2.5] # m
     initial_position:
       x: 0.0
       y: 0.0
       z: 0.10
-    auto_yaw_rate: -0.15 # rad/s
+    auto_yaw_rate: -0.05 # rad/s
 
 

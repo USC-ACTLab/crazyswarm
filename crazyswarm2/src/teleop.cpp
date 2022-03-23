@@ -213,7 +213,8 @@ private:
         twist_.linear.x = getAxis(msg, axes_.x);
         twist_.linear.y = getAxis(msg, axes_.y);
         twist_.linear.z = getAxis(msg, axes_.z);
-        twist_.angular.z = auto_yaw_rate_; //getAxis(msg, axes_.yaw);
+        // twist_.angular.z = getAxis(msg, axes_.yaw);
+        twist_.angular.z = auto_yaw_rate_; 
     }
 
     sensor_msgs::msg::Joy::_axes_type::value_type getAxis(const sensor_msgs::msg::Joy::SharedPtr &msg, Axis a)

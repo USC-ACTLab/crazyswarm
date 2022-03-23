@@ -56,6 +56,8 @@ public:
         this->get_parameter<int>("frequency", frequency_);
         this->declare_parameter("mode", "default");
         this->get_parameter<std::string>("mode", mode_);
+        this->declare_parameter("auto_yaw_rate", 0.0);
+        this->get_parameter<double>("auto_yaw_rate", auto_yaw_rate_);
 
         this->declare_parameter(mode_ + ".x_velocity_axis");
         this->get_parameter<int>(mode_ + ".x_velocity_axis", axes_.x.axis);
@@ -183,7 +185,7 @@ private:
             fullstate_.twist.angular.x = 0;       
             fullstate_.twist.angular.y = 0;       
             fullstate_.twist.angular.z = twist_.angular.z; // yaw rate 
-
+            
             pub_cmd_full_state_->publish(fullstate_);
         }
 
@@ -211,7 +213,13 @@ private:
         twist_.linear.x = getAxis(msg, axes_.x);
         twist_.linear.y = getAxis(msg, axes_.y);
         twist_.linear.z = getAxis(msg, axes_.z);
-        twist_.angular.z = getAxis(msg, axes_.yaw);
+        if(auto_yaw_rate_ == 0.0){
+            twist_.angular.z = getAxis(msg, axes_.yaw);
+        }
+        else {
+            twist_.angular.z = auto_yaw_rate_; 
+        }
+        
     }
 
     sensor_msgs::msg::Joy::_axes_type::value_type getAxis(const sensor_msgs::msg::Joy::SharedPtr &msg, Axis a)
@@ -291,6 +299,7 @@ private:
     int frequency_;
     float dt_;
     bool is_low_level_flight_active_;
+    double auto_yaw_rate_;
 };
 
 int main(int argc, char *argv[])

@@ -83,7 +83,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
             3. Install the optional dependencies::
 
                 $ sudo apt install -y ffmpeg
-                $ ${CSW_PYTHON} -m pip install ffmpeg-python
+                $ ${CSW_PYTHON} -m pip install ffmpeg-python vispy
 
             4. Clone the Crazyswarm git repository::
 

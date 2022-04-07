@@ -42,6 +42,14 @@ DT = 1.0 / FPS
 TOTAL_TIME = 4.0
 
 
+try:
+    import vispy
+    import ffmpeg
+    HAS_DEPENDENCIES = True
+except ImportError:
+    HAS_DEPENDENCIES = False
+
+
 def videoWriterProcess(path):
     args = "--sim --vis vispy --dt {} --video {}".format(DT, path)
     swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=args)
@@ -55,8 +63,7 @@ def videoWriterProcess(path):
     timeHelper.sleep(TOTAL_TIME / 2)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ or "CI" in os.environ,
-                    reason="CI usually cannot create OpenGL context.")
+@pytest.mark.skipif(not HAS_DEPENDENCIES, reason="vispy and ffmpeg required for video.")
 def test_videoOutput(tmp_path):
     # tmp_path is supplied by pytest - a directory where we can write that will
     # eventually be deleted.

@@ -11,7 +11,7 @@ we must run the video-generating script in a separate process.
 
 Using `multiprocessing` would be easier, but `multiprocessing` processes don't
 run `atexit` handlers when they exit. This design is controversial [1, 2].
-Therefore, we must do a full `system()`-style process spawn witn `subprocess`
+Therefore, we must do a full `system()`-style process spawn with `subprocess`
 instead. To avoid adding another script just to support this test, this script
 will behave as the video generator process when run as `__main__()`, and behave
 as the test process when run via pytest.
@@ -46,7 +46,9 @@ try:
     import vispy
     import ffmpeg
     HAS_DEPENDENCIES = True
-except ImportError:
+# For some reason the vispy import fails in Github CI for MacOS Py2.7 with a
+# ValueError, even though we install vispy. Strange but doesn't matter.
+except (ImportError, ValueError):
     HAS_DEPENDENCIES = False
 
 

@@ -11,7 +11,7 @@ we must run the video-generating script in a separate process.
 
 Using `multiprocessing` would be easier, but `multiprocessing` processes don't
 run `atexit` handlers when they exit. This design is controversial [1, 2].
-Therefore, we must do a full `system()`-style process spawn witn `subprocess`
+Therefore, we must do a full `system()`-style process spawn with `subprocess`
 instead. To avoid adding another script just to support this test, this script
 will behave as the video generator process when run as `__main__()`, and behave
 as the test process when run via pytest.
@@ -42,6 +42,16 @@ DT = 1.0 / FPS
 TOTAL_TIME = 4.0
 
 
+try:
+    import vispy
+    import ffmpeg
+    HAS_DEPENDENCIES = True
+# For some reason the vispy import fails in Github CI for MacOS Py2.7 with a
+# ValueError, even though we install vispy. Strange but doesn't matter.
+except (ImportError, ValueError):
+    HAS_DEPENDENCIES = False
+
+
 def videoWriterProcess(path):
     args = "--sim --vis vispy --dt {} --video {}".format(DT, path)
     swarm = Crazyswarm(crazyflies_yaml=crazyflies_yaml, args=args)
@@ -55,8 +65,7 @@ def videoWriterProcess(path):
     timeHelper.sleep(TOTAL_TIME / 2)
 
 
-@pytest.mark.skipif("TRAVIS" in os.environ or "CI" in os.environ,
-                    reason="CI usually cannot create OpenGL context.")
+@pytest.mark.skipif(not HAS_DEPENDENCIES, reason="vispy and ffmpeg required for video.")
 def test_videoOutput(tmp_path):
     # tmp_path is supplied by pytest - a directory where we can write that will
     # eventually be deleted.

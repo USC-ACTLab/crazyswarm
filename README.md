@@ -57,6 +57,7 @@ ros2 run crazyswarm2 console
 
 ```
 cd ros2_ws/src/crazyswarm2
+git pull
 git submodule sync
 git submodule update --init --recursive
 cd ../

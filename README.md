@@ -53,6 +53,16 @@ In a separate terminal:
 ros2 run crazyswarm2 console
 ```
 
+## Updating
+
+```
+cd ros2_ws/src/crazyswarm2
+git submodule sync
+git submodule update --init --recursive
+cd ../
+colcon build --symlink-install
+```
+
 ### Simulator with Software In The Loop
 
 ```

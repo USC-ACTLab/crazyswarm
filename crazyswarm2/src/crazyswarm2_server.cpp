@@ -15,6 +15,7 @@
 #include "crazyswarm2_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
 #include "crazyswarm2_interfaces/msg/full_state.hpp"
+#include "crazyswarm2_interfaces/msg/position.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -103,8 +104,9 @@ public:
     service_upload_trajectory_ = node->create_service<UploadTrajectory>(name + "/upload_trajectory", std::bind(&CrazyflieROS::upload_trajectory, this, _1, _2));
     service_notify_setpoints_stop_ = node->create_service<NotifySetpointsStop>(name + "/notify_setpoints_stop", std::bind(&CrazyflieROS::notify_setpoints_stop, this, _1, _2));
 
-    subscription_cmd_vel_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_changed, this, _1)); 
-    subscription_cmd_full_state_ = node->create_subscription<crazyswarm2_interfaces::msg::FullState>(name + "/cmd_full_state", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_full_state_changed, this, _1)); 
+    subscription_cmd_vel_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_changed, this, _1));
+    subscription_cmd_full_state_ = node->create_subscription<crazyswarm2_interfaces::msg::FullState>(name + "/cmd_full_state", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_full_state_changed, this, _1));
+    subscription_cmd_position_ = node->create_subscription<crazyswarm2_interfaces::msg::Position>(name + "/cmd_position", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_position_changed, this, _1));
 
     auto start = std::chrono::system_clock::now();
 
@@ -242,6 +244,14 @@ private:
     qx, qy, qz, qw,
     rollRate, pitchRate, yawRate);
 
+  }
+
+  void cmd_position_changed(const crazyswarm2_interfaces::msg::Position::SharedPtr msg) {
+    float x = msg->x;
+    float y = msg->y;
+    float z = msg->z;
+    float yaw = msg->yaw;
+    cf_.sendPositionSetpoint(x, y, z, yaw);
   }
 
   void cmd_vel_changed(const geometry_msgs::msg::Twist::SharedPtr msg)
@@ -446,6 +456,7 @@ private:
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_;
   rclcpp::Subscription<crazyswarm2_interfaces::msg::FullState>::SharedPtr subscription_cmd_full_state_;
+  rclcpp::Subscription<crazyswarm2_interfaces::msg::Position>::SharedPtr subscription_cmd_position_;
 };
 
 class CrazyflieServer : public rclcpp::Node

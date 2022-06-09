@@ -22,7 +22,7 @@ from geometry_msgs.msg import Point
 from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
-from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece, FullState
+from crazyswarm2_interfaces.msg import TrajectoryPolynomialPiece, FullState, Position
 
 def arrayToGeometryPoint(a):
     result = Point()
@@ -174,10 +174,9 @@ class Crazyflie:
 
         # self.cmdVelPublisher = rospy.Publisher(prefix + "/cmd_vel", geometry_msgs.msg.Twist, queue_size=1)
 
-        # self.cmdPositionPublisher = rospy.Publisher(prefix + "/cmd_position", Position, queue_size=1)
-        # self.cmdPositionMsg = Position()
-        # self.cmdPositionMsg.header.seq = 0
-        # self.cmdPositionMsg.header.frame_id = "/world"
+        self.cmdPositionPublisher = node.create_publisher(Position, prefix + "/cmd_position", 1)
+        self.cmdPositionMsg = Position()
+        self.cmdPositionMsg.header.frame_id = "/world"
 
         # self.cmdVelocityWorldPublisher = rospy.Publisher(prefix + "/cmd_velocity_world", VelocityWorld, queue_size=1)
         # self.cmdVelocityWorldMsg = VelocityWorld()
@@ -600,26 +599,24 @@ class Crazyflie:
     #     msg.linear.z = thrust
     #     self.cmdVelPublisher.publish(msg)
 
-    # def cmdPosition(self, pos, yaw = 0):
-    #     """Sends a streaming command of absolute position and yaw setpoint.
+    def cmdPosition(self, pos, yaw = 0.):
+        """Sends a streaming command of absolute position and yaw setpoint.
 
-    #     Useful for slow maneuvers where a high-level planner determines the
-    #     desired position, and the rest is left to the onboard controller.
+        Useful for slow maneuvers where a high-level planner determines the
+        desired position, and the rest is left to the onboard controller.
 
-    #     For more information on streaming setpoint commands, see the
-    #     :meth:`cmdFullState()` documentation.
-
-    #     Args:
-    #         pos (array-like of float[3]): Position. Meters.
-    #         yaw (float): Yaw angle. Radians.
-    #     """
-    #     self.cmdPositionMsg.header.stamp = rospy.Time.now()
-    #     self.cmdPositionMsg.header.seq += 1
-    #     self.cmdPositionMsg.x   = pos[0]
-    #     self.cmdPositionMsg.y   = pos[1]
-    #     self.cmdPositionMsg.z   = pos[2]
-    #     self.cmdPositionMsg.yaw = yaw
-    #     self.cmdPositionPublisher.publish(self.cmdPositionMsg)
+        For more information on streaming setpoint commands, see the
+        :meth:`cmdFullState()` documentation.
+        Args:
+            pos (array-like of float[3]): Position. Meters.
+            yaw (float): Yaw angle. Radians.
+        """
+        self.cmdPositionMsg.header.stamp = self.node.get_clock().now().to_msg()
+        self.cmdPositionMsg.x   = pos[0]
+        self.cmdPositionMsg.y   = pos[1]
+        self.cmdPositionMsg.z   = pos[2]
+        self.cmdPositionMsg.yaw = yaw
+        self.cmdPositionPublisher.publish(self.cmdPositionMsg)
 
     # def setLEDColor(self, r, g, b):
     #     """Sets the color of the LED ring deck.

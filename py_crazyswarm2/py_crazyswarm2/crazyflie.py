@@ -695,7 +695,7 @@ class CrazyflieServer(rclpy.node.Node):
             # cf = Crazyflie(id, initialPosition, self.tf)
             cf = Crazyflie(self, cfid, initialPosition)
             self.crazyflies.append(cf)
-            self.crazyfliesById[id] = cf
+            self.crazyfliesById[cfid] = cf
 
     def emergency(self):
         """Emergency stop. Cuts power; causes future commands to be ignored.

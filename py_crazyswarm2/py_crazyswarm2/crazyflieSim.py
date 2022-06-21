@@ -467,7 +467,7 @@ class CrazyflieServer:
                 cfid = int(cfsettings["uri"][-2:], 16)
             cf = Crazyflie(cfid, initialPosition, timeHelper)
             self.crazyflies.append(cf)
-            self.crazyfliesById[id] = cf
+            self.crazyfliesById[cfid] = cf
 
         self.timeHelper = timeHelper
         self.timeHelper.crazyflies = self.crazyflies

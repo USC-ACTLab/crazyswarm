@@ -1,0 +1,7 @@
+numpy
+pyyaml
+sphinx
+sphinx-argparse
+sphinx-rtd-theme
+sphinx-tabs
+sphinxcontrib-programoutput

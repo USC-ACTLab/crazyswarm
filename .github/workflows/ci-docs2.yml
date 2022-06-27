@@ -1,0 +1,35 @@
+name: Docs deploy
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Handle dependencies here instead of conda_env.yaml
+    # because some packages are conda-forge only,
+    # which makes the env build much more slowly.
+
+    - name: Install dependencies
+      run: |
+        sudo apt install texlive-latex-extra dvipng
+        sudo pip3 install -U setuptools
+        sudo pip3 install -U -r docs2/requirements.txt
+
+    - name: Build Docs
+      run: |
+        cd docs2
+        make html
+
+    - name: Disable github Jekyll
+      run: |
+        touch docs2/_build/html/.nojekyll
+
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: docs2/_build/html # The folder the action should deploy.

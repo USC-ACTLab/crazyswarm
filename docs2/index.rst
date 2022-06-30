@@ -1,17 +1,23 @@
 .. _introduction:
 
-Welcome to Crazyswarm2's documentation!
-=======================================
+Crazyswarm2: A ROS2 testbed for Aerial Robot Teams
+==================================================
 
-Crazyswarm2 is a work-in-progress port of the original `Crazyswarm <https://crazyswarm.readthedocs.io>`_ to ROS2.
+Crazyswarm2 is a **work-in-progress** port of the original `Crazyswarm <https://crazyswarm.readthedocs.io>`_ to ROS2.
+It is fully open-source and available on `github <https://github.com/IMRCLab/crazyswarm2>`_.
 
 Crazyswarm2 is primarily made for researchers that want to operate or simulate a team of unmanned aerial vehicles (UAVs) that uses the
-`Bitcraze Crazyflie 2.x <https://www.bitcraze.io/products/crazyflie-2-1/>`_ and `Bitcraze Crazyflie Bolt-based <https://store.bitcraze.io/products/crazyflie-bolt>`_.
+`Bitcraze Crazyflie 2.x <https://www.bitcraze.io/products/crazyflie-2-1/>`_ or `Bitcraze Crazyflie Bolt-based <https://store.bitcraze.io/products/crazyflie-bolt>`_ UAVs.
 
-How do Crazyswarm2 and Crazyswarm differ?
------------------------------------------
+.. warning::
+  Crazyswarm2 is already usable for basic tasks (teleoperation, flying in a motion capture space, data collection), however the API and configuration file formats might still change. While many features of Crazyswarm1 are ported, there are currently still some important limitations:
+  
+  - No support for real-time logging (logging on uSD-card is supported)
+  - Tested only for small team sizes (less than 10 robots)
+  - Limited Python API and only a few example scripts
 
-Crazyswarm2 was forked from Crazyswarm. However, there is also heavy re-design of some of the core design choices.
+
+
 
 .. Both can be used to control several Crazyflies from a Python script.
 .. Here are some differences:
@@ -76,22 +82,14 @@ Crazyswarm2 was forked from Crazyswarm. However, there is also heavy re-design o
 .. Our contributed code is licensed under the permissive MIT license, however some of the parts (such as the firmware) are licensed under their respective license.
 
 
-.. Contents
-.. --------
+Contents
+--------
 
-.. .. toctree::
-..    changelog
-..    gettingstarted
-..    installation
-..    configuration
-..    tutorials/tutorials
-..    howto/howto
-..    api
-..    internals
-..    hardware
-..    glossary
-..    :maxdepth: 2
-
+.. toctree::
+   installation
+   usage
+   faq
+   :maxdepth: 1
 
 
 .. Indices and tables

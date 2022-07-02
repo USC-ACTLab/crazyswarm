@@ -52,7 +52,7 @@ Click the appropriate tab(s) below to see the installation instructions for your
             4. Create the Anaconda environment with your desired Python version::
 
                 $ cd crazyswarm
-                $ conda create --name crazyswarm python=$CSW_PYTHON
+                $ conda create --name crazyswarm python=[2.7 or 3.7]
                 $ conda env update -f conda_env.yaml
 
             5. Activate the Anaconda environment::

@@ -3,9 +3,11 @@
 <package format="3">
   <name>crazyflie_server_py</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="kimberly@bitcraze.io">knmcguire</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Crazyflie ROS2 communication server based on the crazyflie python library (CFlib)</description>
+  <maintainer email="kimberly@bitcraze.io">Kimberly McGuire</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

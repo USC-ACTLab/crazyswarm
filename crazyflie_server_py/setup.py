@@ -13,13 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='knmcguire',
+    maintainer='Kimberly McGuire',
     maintainer_email='kimberly@bitcraze.io',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Crazyflie ROS2 communication server based on the crazyflie python library (CFlib)',
+    license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+                'crazyflie_server_py = crazyflie_server_py:main',
         ],
     },
 )

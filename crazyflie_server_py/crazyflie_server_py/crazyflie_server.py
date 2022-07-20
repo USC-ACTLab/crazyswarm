@@ -27,10 +27,11 @@ class CrazyflieServer(Node):
 
     def _disconnected(self, link_uri):
         self.get_logger().info('Disconnected')
+        self.destroy_node()
 
     def _connection_failed(self, link_uri, msg):
         self.get_logger().info('Connection Failed')
-
+        self.destroy_node()
 
 def main(args=None):
 

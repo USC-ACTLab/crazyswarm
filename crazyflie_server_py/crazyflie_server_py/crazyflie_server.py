@@ -1,3 +1,4 @@
+from argparse import Namespace
 import rclpy
 from rclpy.node import Node
 
@@ -8,14 +9,23 @@ import math
 
 from math import pi
 
-URI = 'radio://0/40/2M/E7E7E7E703'
 
 class CrazyflieServer(Node):
 
-    def __init__(self, link_uri):
+    def __init__(self):
         super().__init__('crazyflie_server')
-
         self._cf = Crazyflie(rw_cache='./cache')
+
+        #cflist = self.get_parameters('crazyflies')
+        #print(cflist)
+
+        self.declare_parameters(namespace='',
+            parameters=[
+                ('uri', 'radio://0/80/2M/E7E7E7E7E7')
+            ])
+
+        link_uri = self.get_parameter('uri').get_parameter_value().string_value
+        print('Trying to connect to ' + link_uri)
 
         self._cf.connected.add_callback(self._connected)
         self._cf.disconnected.add_callback(self._disconnected)
@@ -37,7 +47,7 @@ def main(args=None):
 
     cflib.crtp.init_drivers()
     rclpy.init(args=args)
-    crazyflie_server = CrazyflieServer(URI)
+    crazyflie_server = CrazyflieServer()
 
     rclpy.spin(crazyflie_server)
 

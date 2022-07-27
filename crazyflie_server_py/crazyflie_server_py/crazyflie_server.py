@@ -1,6 +1,8 @@
 from argparse import Namespace
 import rclpy
 from rclpy.node import Node
+from ament_index_python.packages import get_package_share_directory
+
 from geometry_msgs.msg import Twist
 
 import cflib.crtp  # noqa
@@ -9,7 +11,8 @@ from cflib.crazyflie import Crazyflie
 from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo
 
 import math
-
+import os
+import yaml
 from math import pi
 
 
@@ -19,12 +22,28 @@ class CrazyflieServer(Node):
         super().__init__("crazyflie_server")
         self._cf = Crazyflie(rw_cache="./cache")
 
-        # Get Parameter values
+        crazyflies_yaml = os.path.join(
+        get_package_share_directory('crazyswarm2'),
+        'config',
+        'crazyflies.yaml')
+
+        with open(crazyflies_yaml) as f:
+            data = yaml.safe_load(f)
+        uris = []
+        for crazyflie in data:
+            uris.append(data[crazyflie]['uri'])
+
+        link_uri = uris[0]
+
+
+        '''# Get Parameter values
         self.declare_parameters(namespace="",
             parameters=[
                 ("uri", "radio://0/80/2M/E7E7E7E7E7")
             ])
-        link_uri = self.get_parameter("uri").get_parameter_value().string_value
+            
+        link_uri = self.get_parameter("uri").get_parameter_value().string_value'''
+
         print("Trying to connect to " + link_uri)
 
         self._cf.connected.add_callback(self._connected)
@@ -37,7 +56,7 @@ class CrazyflieServer(Node):
         self.create_service(Takeoff, "/takeoff", self._takeoff_callback )
         self.create_service(Land, "/land", self._land_callback )
         self.create_service(GoTo, "/go_to", self._go_to_callback )
-        self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_changed, 10)
+        self.create_subscription(Twist, '/cmd_vel', self._cmd_vel_changed, 10)
 
     def _disconnected(self, link_uri):
         self.get_logger().info("Disconnected")
@@ -74,7 +93,7 @@ class CrazyflieServer(Node):
             duration, relative=request.relative, group_mask=request.group_mask)
         return response
 
-    def _cmd_velocity_changed(self, msg):
+    def _cmd_vel_changed(self, msg):
         roll = msg.linear.y
         pitch = - msg.linear.x
         yawrate = msg.angular.z

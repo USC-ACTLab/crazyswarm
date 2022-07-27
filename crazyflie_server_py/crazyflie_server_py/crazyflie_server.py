@@ -1,6 +1,7 @@
 from argparse import Namespace
 import rclpy
 from rclpy.node import Node
+from geometry_msgs.msg import Twist
 
 import cflib.crtp  # noqa
 from cflib.crazyflie import Crazyflie
@@ -36,6 +37,7 @@ class CrazyflieServer(Node):
         self.create_service(Takeoff, "/takeoff", self._takeoff_callback )
         self.create_service(Land, "/land", self._land_callback )
         self.create_service(GoTo, "/go_to", self._go_to_callback )
+        self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_changed, 10)
 
     def _disconnected(self, link_uri):
         self.get_logger().info("Disconnected")
@@ -71,6 +73,14 @@ class CrazyflieServer(Node):
             request.goal.x, request.goal.y, request.goal.z, request.yaw,
             duration, relative=request.relative, group_mask=request.group_mask)
         return response
+
+    def _cmd_velocity_changed(self, msg):
+        roll = msg.linear.y
+        pitch = - msg.linear.x
+        yawrate = msg.angular.z
+        thrust = int(min(max(msg.linear.z, 0,0), 60000))
+        self._cf.sendSetpoint(roll, pitch, yawrate, thrust)
+
 
 def main(args=None):
 

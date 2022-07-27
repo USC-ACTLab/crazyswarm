@@ -7,6 +7,8 @@ from geometry_msgs.msg import Twist
 
 import cflib.crtp  # noqa
 from cflib.crazyflie import Crazyflie
+from cflib.crazyflie.swarm import CachedCfFactory
+from cflib.crazyflie.swarm import Swarm
 
 from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo
 
@@ -20,7 +22,7 @@ class CrazyflieServer(Node):
 
     def __init__(self):
         super().__init__("crazyflie_server")
-        self._cf = Crazyflie(rw_cache="./cache")
+        #self._cf = Crazyflie(rw_cache="./cache")
 
         crazyflies_yaml = os.path.join(
         get_package_share_directory('crazyswarm2'),
@@ -29,49 +31,41 @@ class CrazyflieServer(Node):
 
         with open(crazyflies_yaml) as f:
             data = yaml.safe_load(f)
-        uris = []
+        self.uris = []
         for crazyflie in data:
-            uris.append(data[crazyflie]['uri'])
+            uri = data[crazyflie]['uri']
+            self.uris.append(uri)
 
-        link_uri = uris[0]
+        factory = CachedCfFactory(rw_cache='./cache')
 
-
-        '''# Get Parameter values
-        self.declare_parameters(namespace="",
-            parameters=[
-                ("uri", "radio://0/80/2M/E7E7E7E7E7")
-            ])
-            
-        link_uri = self.get_parameter("uri").get_parameter_value().string_value'''
-
-        print("Trying to connect to " + link_uri)
-
-        self._cf.connected.add_callback(self._connected)
-        self._cf.disconnected.add_callback(self._disconnected)
-        self._cf.connection_failed.add_callback(self._connection_failed)
-        self._cf.open_link(link_uri)
+        self.swarm = Swarm(self.uris, factory=factory)
+        for link_uri in self.uris:
+            self.swarm._cfs[link_uri].cf.connected.add_callback(self._connected)
+            self.swarm._cfs[link_uri].cf.disconnected.add_callback(self._disconnected)
+            self.swarm._cfs[link_uri].cf.connection_failed.add_callback(self._connection_failed)
+        self.swarm.open_links()
 
     def _connected(self, link_uri):
-        self.get_logger().info("Connected!")
+        self.get_logger().info(f" {link_uri} is connected!")
         self.create_service(Takeoff, "/takeoff", self._takeoff_callback )
         self.create_service(Land, "/land", self._land_callback )
         self.create_service(GoTo, "/go_to", self._go_to_callback )
         self.create_subscription(Twist, '/cmd_vel', self._cmd_vel_changed, 10)
 
     def _disconnected(self, link_uri):
-        self.get_logger().info("Disconnected")
-        self.destroy_node()
+        self.get_logger().info(f" {link_uri} is disconnected!")
 
     def _connection_failed(self, link_uri, msg):
-        self.get_logger().info("Connection Failed")
-        self.destroy_node()
+        self.get_logger().info(f"{link_uri} connection Failed")
+        self.swarm.close_links()
 
     def _takeoff_callback(self, request, response):
         duration = float(request.duration.sec) + float(request.duration.nanosec / 1e9)
         self.get_logger().info(f"takeoff(height={request.height} m," +
             f"duration={duration} s," +
             f"group_mask={request.group_mask})")
-        self._cf.high_level_commander.takeoff(1.0, 2.0)
+        for link_uri in self.uris:
+            self.swarm._cfs[link_uri].cf.high_level_commander.takeoff(request.heigt, duration)
         return response
     
     def _land_callback(self, request, response):
@@ -79,8 +73,9 @@ class CrazyflieServer(Node):
         self.get_logger().info(f"land(height={request.height} m," +
             f"duration={duration} s," +
             f"group_mask={request.group_mask})")
-        self._cf.high_level_commander.land(request.height,
-            duration, group_mask=request.group_mask)
+        for link_uri in self.uris:
+            self.swarm._cfs[link_uri].cf.high_level_commander.land(request.height,
+                duration, group_mask=request.group_mask)
         return response
 
     def _go_to_callback(self, request, response):
@@ -88,9 +83,10 @@ class CrazyflieServer(Node):
         self.get_logger().info("go_to(position=%f,%f,%f m, yaw=%f rad, duration=%f s, relative=%d, group_mask=%d)" %
             (request.goal.x, request.goal.y, request.goal.z, request.yaw,
             duration, request.relative, request.group_mask))
-        self._cf.high_level_commander.go_to(
-            request.goal.x, request.goal.y, request.goal.z, request.yaw,
-            duration, relative=request.relative, group_mask=request.group_mask)
+        for link_uri in self.uris:
+            self.swarm._cfs[link_uri].cf.high_level_commander.go_to(
+                request.goal.x, request.goal.y, request.goal.z, request.yaw,
+                duration, relative=request.relative, group_mask=request.group_mask)
         return response
 
     def _cmd_vel_changed(self, msg):

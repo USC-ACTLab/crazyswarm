@@ -3,8 +3,6 @@ import rclpy
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
 
-from geometry_msgs.msg import Twist
-
 import cflib.crtp  # noqa
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.swarm import CachedCfFactory
@@ -12,7 +10,8 @@ from cflib.crazyflie.swarm import Swarm
 
 from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo
 
-import math
+from geometry_msgs.msg import Twist
+
 import os
 import yaml
 from math import pi
@@ -22,12 +21,11 @@ from functools import partial
 class CrazyflieServer(Node):
     def __init__(self):
         super().__init__("crazyflie_server")
-        # self._cf = Crazyflie(rw_cache="./cache")
 
+        # Read out crazyflie URIs 
         crazyflies_yaml = os.path.join(
             get_package_share_directory("crazyswarm2"), "config", "crazyflies.yaml"
         )
-
         with open(crazyflies_yaml) as f:
             data = yaml.safe_load(f)
         self.uris = []
@@ -37,8 +35,8 @@ class CrazyflieServer(Node):
             self.uris.append(uri)
             cf_dict[uri] = crazyflie
 
+        # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
-
         self.swarm = Swarm(self.uris, factory=factory)
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.connected.add_callback(self._connected)
@@ -47,6 +45,8 @@ class CrazyflieServer(Node):
                 self._connection_failed
             )
         self.swarm.open_links()
+
+        # Create services for the entire swarm and each individual crazyflie
         self.create_service(Takeoff, "/takeoff", self._takeoff_callback)
         self.create_service(Land, "/land", self._land_callback)
         self.create_service(GoTo, "/go_to", self._go_to_callback)

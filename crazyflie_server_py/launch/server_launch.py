@@ -1,4 +1,3 @@
-from turtle import screensize
 import launch
 import launch_ros
 import os
@@ -15,15 +14,15 @@ import xacro
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('crazyflie_server_py')
+    pkg_share = get_package_share_directory("crazyflie_server_py")
 
     crazyflie_node = launch_ros.actions.Node(
-        package='crazyflie_server_py',
-        executable='crazyflie_server',
-          output="screen",
-          emulate_tty=True, 
-          )
-        
+        package="crazyflie_server_py",
+        executable="crazyflie_server",
+        output="screen",
+        emulate_tty=True,
+    )
+
     ld = LaunchDescription()
     ld.add_action(crazyflie_node)
 

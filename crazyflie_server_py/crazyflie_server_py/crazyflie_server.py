@@ -9,6 +9,7 @@ from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo
+from rcl_interfaces.msg import ParameterDescriptor
 
 from geometry_msgs.msg import Twist
 
@@ -33,7 +34,7 @@ class CrazyflieServer(Node):
         for crazyflie in data["robots"]:
             uri = data["robots"][crazyflie]["uri"]
             self.uris.append(uri)
-            cf_dict[uri] = crazyflie
+            self.cf_dict[uri] = crazyflie
 
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
@@ -51,8 +52,8 @@ class CrazyflieServer(Node):
         self.create_service(Land, "/land", self._land_callback)
         self.create_service(GoTo, "/go_to", self._go_to_callback)
 
-        for uri in cf_dict:
-            name = cf_dict[uri]
+        for uri in self.cf_dict:
+            name = self.cf_dict[uri]
             self.create_service(
                 Takeoff, name + "/takeoff", partial(self._takeoff_callback, uri=uri)
             )
@@ -70,12 +71,15 @@ class CrazyflieServer(Node):
         self.get_logger().info(f" {link_uri} is connected!")
 
         # Get the TOC of parameters
+        # TODO: do this when new version cflib is out with fully_connected
         p_toc = self.swarm._cfs[link_uri].cf.param.toc.toc
         for group in sorted(p_toc.keys()):
-            print('{}'.format(group))
             for param in sorted(p_toc[group].keys()):
-                print('\t{}'.format(param))
+                my_parameter_descriptor = ParameterDescriptor(dynamic_typing=True)
+                self.declare_parameter(self.cf_dict[link_uri]+'/'+group+'/'+ param, 0.0, my_parameter_descriptor)
+        self.get_logger().info(f" {link_uri} got param toc!")
 
+    
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")
 

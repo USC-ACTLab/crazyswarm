@@ -14,14 +14,22 @@ import xacro
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory("crazyflie_server_py")
+
+    # construct crazyswarm2_server configuration
+    server_yaml = os.path.join(
+        get_package_share_directory('crazyswarm2'),
+        'config',
+        'crazyswarm2_server.yaml')
+
 
     crazyflie_node = launch_ros.actions.Node(
         package="crazyflie_server_py",
         executable="crazyflie_server",
         output="screen",
         emulate_tty=True,
+        parameters=[server_yaml]
     )
+
 
     ld = LaunchDescription()
     ld.add_action(crazyflie_node)

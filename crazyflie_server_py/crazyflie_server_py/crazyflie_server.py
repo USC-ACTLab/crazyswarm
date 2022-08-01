@@ -85,13 +85,17 @@ class CrazyflieServer(Node):
         self.swarm._cfs[link_uri].total_param_cnt = param_cnt
 
     def _param_callback(self, name, value, link_uri='all'):
-        self.declare_parameter(self.cf_dict[link_uri]+'/'+name.replace(".","/"), value)
+        self.declare_parameter(self.cf_dict[link_uri]+'/params/'+name.replace(".","/"), value)
+        try:
+            self.declare_parameter('firmware_params/'+name.replace(".","/"), value)
+        except:
+            self.get_logger().info(f" {name} is already declared!")
+
         self.swarm._cfs[link_uri].init_param_cnt += 1
         group = name.split()[0]
         self.swarm._cfs[link_uri].cf.param.remove_update_callback(group=group, name=name, cb=self._param_callback)
         if self.swarm._cfs[link_uri].init_param_cnt == self.swarm._cfs[link_uri].total_param_cnt:
             self.get_logger().info(f" {link_uri} is fully connected!")
-
 
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")

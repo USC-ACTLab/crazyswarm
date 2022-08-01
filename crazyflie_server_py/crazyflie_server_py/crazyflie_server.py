@@ -45,6 +45,9 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].cf.connection_failed.add_callback(
                 self._connection_failed
             )
+            self.swarm._cfs[link_uri].init_param_cnt = 0
+            self.swarm._cfs[link_uri].total_param_cnt = 0
+
         self.swarm.open_links()
 
         # Create services for the entire swarm and each individual crazyflie
@@ -72,14 +75,24 @@ class CrazyflieServer(Node):
 
         # Get the TOC of parameters
         # TODO: do this when new version cflib is out with fully_connected
+        param_cnt = 0
         p_toc = self.swarm._cfs[link_uri].cf.param.toc.toc
         for group in sorted(p_toc.keys()):
             for param in sorted(p_toc[group].keys()):
-                my_parameter_descriptor = ParameterDescriptor(dynamic_typing=True)
-                self.declare_parameter(self.cf_dict[link_uri]+'/'+group+'/'+ param, 0.0, my_parameter_descriptor)
+                param_cnt += 1
+                self.swarm._cfs[link_uri].cf.param.add_update_callback(group=group, name=param, cb=partial(self._param_callback, link_uri=link_uri ))
         self.get_logger().info(f" {link_uri} got param toc!")
+        self.swarm._cfs[link_uri].total_param_cnt = param_cnt
 
-    
+    def _param_callback(self, name, value, link_uri='all'):
+        self.declare_parameter(self.cf_dict[link_uri]+'/'+name.replace(".","/"), value)
+        self.swarm._cfs[link_uri].init_param_cnt += 1
+        group = name.split()[0]
+        self.swarm._cfs[link_uri].cf.param.remove_update_callback(group=group, name=name, cb=self._param_callback)
+        if self.swarm._cfs[link_uri].init_param_cnt == self.swarm._cfs[link_uri].total_param_cnt:
+            self.get_logger().info(f" {link_uri} is fully connected!")
+
+
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")
 

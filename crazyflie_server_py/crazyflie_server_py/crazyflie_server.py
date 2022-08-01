@@ -69,6 +69,13 @@ class CrazyflieServer(Node):
     def _connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is connected!")
 
+        # Get the TOC of parameters
+        p_toc = self.swarm._cfs[link_uri].cf.param.toc.toc
+        for group in sorted(p_toc.keys()):
+            print('{}'.format(group))
+            for param in sorted(p_toc[group].keys()):
+                print('\t{}'.format(param))
+
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")
 

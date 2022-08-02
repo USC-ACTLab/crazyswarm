@@ -30,15 +30,24 @@ class CrazyflieServer(Node):
         with open(crazyflies_yaml) as f:
             data = yaml.safe_load(f)
         self.uris = []
+<<<<<<< HEAD
         cf_dict = {}
         for crazyflie in data["robots"]:
             uri = data["robots"][crazyflie]["uri"]
+=======
+        self.cf_dict = {}
+        self.uri_dict = {}
+        for crazyflie in data:
+            uri = data[crazyflie]["uri"]
+>>>>>>> reset parameters after fully connected
             self.uris.append(uri)
             self.cf_dict[uri] = crazyflie
+            self.uri_dict[crazyflie] = uri
 
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
         self.swarm = Swarm(self.uris, factory=factory)
+        self.swarm.all_fully_connected = False
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.connected.add_callback(self._connected)
             self.swarm._cfs[link_uri].cf.disconnected.add_callback(self._disconnected)
@@ -47,6 +56,7 @@ class CrazyflieServer(Node):
             )
             self.swarm._cfs[link_uri].init_param_cnt = 0
             self.swarm._cfs[link_uri].total_param_cnt = 0
+            self.swarm._cfs[link_uri].fully_connected = False
 
         self.swarm.open_links()
 
@@ -70,6 +80,8 @@ class CrazyflieServer(Node):
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
+
+
     def _connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is connected!")
 
@@ -84,18 +96,62 @@ class CrazyflieServer(Node):
         self.get_logger().info(f" {link_uri} got param toc!")
         self.swarm._cfs[link_uri].total_param_cnt = param_cnt
 
+    def _ros_parameters_callback(self, params):
+        print(len(params))
+        for param in params:
+            #print(vars(param))
+            split_string = param._name.split('/')
+            cf_name = split_string[0]
+            uri_link = self.uri_dict[cf_name]
+
+            if (split_string[1]=='params'):
+                param_name = split_string[2]+split_string[3]
+                self.swarm._cfs[uri_link].cf.param.set_value(param_name, param.value)
+        return SetParametersResult(successful=True)
+
+
+    def _ros_parameter_to_cf_init(self):
+        for link_uri in self.cf_dict:
+            p_toc = self.swarm._cfs[link_uri].cf.param.toc.toc
+            cf_name = self.cf_dict[link_uri]
+            for group in sorted(p_toc.keys()):
+                for param in sorted(p_toc[group].keys()):
+                    ros_value = self.get_parameter(cf_name + '/params/' + group + '/' + param).value
+                    try:
+                        self.swarm._cfs[link_uri].cf.param.set_value(group + '.' + param, ros_value)
+                    except Exception:
+                        pass
+
     def _param_callback(self, name, value, link_uri='all'):
-        self.declare_parameter(self.cf_dict[link_uri]+'/params/'+name.replace(".","/"), value)
-        try:
-            self.declare_parameter('firmware_params/'+name.replace(".","/"), value)
-        except:
-            self.get_logger().info(f" {name} is already declared!")
+        if self.swarm.all_fully_connected is False:
+            self.declare_parameter(self.cf_dict[link_uri]+'/params/'+name.replace(".","/"), value)
+            try:
+                self.declare_parameter('firmware_params/'+name.replace(".","/"), value)
+            except Exception:
+                pass
 
         self.swarm._cfs[link_uri].init_param_cnt += 1
         group = name.split()[0]
         self.swarm._cfs[link_uri].cf.param.remove_update_callback(group=group, name=name, cb=self._param_callback)
         if self.swarm._cfs[link_uri].init_param_cnt == self.swarm._cfs[link_uri].total_param_cnt:
             self.get_logger().info(f" {link_uri} is fully connected!")
+            self.swarm._cfs[link_uri].fully_connected = True
+
+        all_connected = False
+        for uri in self.swarm._cfs:
+            if self.swarm._cfs[uri].fully_connected is True:
+                all_connected = True
+            else:
+                all_connected = False
+                break
+
+            
+        if all_connected:
+            self.get_logger().info("all crazyflies are fully connected!")
+            self.add_on_set_parameters_callback(self._ros_parameters_callback)
+            self._ros_parameter_to_cf_init()
+            self.swarm.all_fully_connected = True
+
 
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")

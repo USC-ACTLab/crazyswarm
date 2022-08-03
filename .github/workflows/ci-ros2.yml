@@ -66,6 +66,6 @@ jobs:
       - name: build and test ROS 2
         uses: ros-tooling/action-ros-ci@v0.2
         with:
-          package-name: crazyswarm2 crazyswarm2_interfaces
+          package-name: crazyflie crazyflie_interfaces
           target-ros2-distro: ${{ matrix.ros_distribution }}
           vcs-repo-file-url: rosinstall

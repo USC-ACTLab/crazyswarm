@@ -8,7 +8,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 
-from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo
+from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 
 from geometry_msgs.msg import Twist
 
@@ -24,7 +24,7 @@ class CrazyflieServer(Node):
 
         # Read out crazyflie URIs 
         crazyflies_yaml = os.path.join(
-            get_package_share_directory("crazyswarm2"), "config", "crazyflies.yaml"
+            get_package_share_directory("crazyflie"), "config", "crazyflies.yaml"
         )
         with open(crazyflies_yaml) as f:
             data = yaml.safe_load(f)

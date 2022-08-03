@@ -2,6 +2,7 @@ ros_ws/build/
 ros_ws/devel/
 ros_ws/src/CMakeLists.txt
 .DS_Store
+crazyswarm2_sim_webots/
 *.pyc
 *~
 *.mexa64

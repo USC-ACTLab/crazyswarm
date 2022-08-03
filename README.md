@@ -1,7 +1,7 @@
 [![ROS2](https://github.com/IMRCLab/crazyswarm2/actions/workflows/ci-ros2.yml/badge.svg)](https://github.com/IMRCLab/crazyswarm2/actions/workflows/ci-ros2.yml)
 
 # Crazyswarm2
-A ROS2-based stack for swarms of Bitcraze Crazyflie multirotor robots.
+A ROS2-based stack for Bitcraze Crazyflie multirotor robots.
 
 The documentation is available here: https://imrclab.github.io/crazyswarm2/.
 

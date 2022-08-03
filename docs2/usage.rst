@@ -26,7 +26,7 @@ Example:
 
 .. code-block:: bash
 
-    ros2 run crazyswarm2_examples hello_world --sim
+    ros2 run crazyflie_examples hello_world --sim
 
 
 Physical Experiments
@@ -37,10 +37,12 @@ ROS2 terminal
 
 .. code-block:: bash
 
-    ros2 param set crazyswarm2_server cf1/params/commander/enHighLevel 1
-    ros2 param set crazyswarm2_server cf3/params/stabilizer/estimator 2
-    ros2 service call cf1/takeoff crazyswarm2_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
-    ros2 service call cf1/land crazyswarm2_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
+    ros2 run crazyflie reboot --uri radio://0/80/2M/E7E7E7E706 --mode sysoff
+
+    ros2 param set crazyflie cf1/params/commander/enHighLevel 1
+    ros2 param set crazyflie cf1/params/stabilizer/estimator 2
+    ros2 service call cf1/takeoff crazyflie_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
+    ros2 service call cf1/land crazyflie_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
 
 Teleoperation
 ~~~~~~~~~~~~~
@@ -49,7 +51,7 @@ We currently assume an XBox controller (the button mapping can be changed in tel
 
 .. code-block:: bash
 
-    ros2 launch crazyswarm2 launch.py
+    ros2 launch crazyflie launch.py
 
 
 Python scripts
@@ -59,10 +61,10 @@ In the first terminal, launch
 
 .. code-block:: bash
 
-    ros2 launch crazyswarm2 launch.py
+    ros2 launch crazyflie launch.py
 
 In the second terminal
 
 .. code-block:: bash
 
-    ros2 run crazyswarm2_examples hello_world
+    ros2 run crazyflie_examples hello_world

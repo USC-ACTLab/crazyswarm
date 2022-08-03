@@ -2,6 +2,6 @@
 	path = crazyflie-firmware
 	url = https://github.com/bitcraze/crazyflie-firmware.git
 	branch = master
-[submodule "crazyswarm2/deps/crazyflie_tools"]
-	path = crazyswarm2/deps/crazyflie_tools
+[submodule "crazyflie/deps/crazyflie_tools"]
+	path = crazyflie/deps/crazyflie_tools
 	url = https://github.com/whoenig/crazyflie_tools.git

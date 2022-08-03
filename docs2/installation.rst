@@ -46,7 +46,7 @@ First Installation
 
     .. code-block:: bash
 
-        cd py_crazyswarm2/py_crazyswarm2/cfsim
+        cd crazyflie_py/crazyflie_py/cfsim
         make
 
 

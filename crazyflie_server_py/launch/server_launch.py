@@ -21,13 +21,16 @@ def generate_launch_description():
         'config',
         'crazyflie_server.yaml')
 
+    with open(server_yaml, 'r') as ymlfile:
+        server_params = yaml.safe_load(ymlfile)
+    server_params = server_params["/crazyflie_server"]["ros__parameters"]
 
     crazyflie_node = launch_ros.actions.Node(
         package="crazyflie_server_py",
         executable="crazyflie_server",
         output="screen",
         emulate_tty=True,
-        parameters=[server_yaml]
+        parameters=[server_params]
     )
 
 

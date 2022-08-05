@@ -17,9 +17,9 @@ def generate_launch_description():
 
     # construct crazyswarm2_server configuration
     server_yaml = os.path.join(
-        get_package_share_directory('crazyswarm2'),
+        get_package_share_directory('crazyflie'),
         'config',
-        'crazyswarm2_server.yaml')
+        'crazyflie_server.yaml')
 
 
     crazyflie_node = launch_ros.actions.Node(

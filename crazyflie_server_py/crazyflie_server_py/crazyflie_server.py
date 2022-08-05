@@ -49,6 +49,7 @@ class CrazyflieServer(Node):
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.all_fully_connected = False
         for link_uri in self.uris:
+            self.swarm._cfs[link_uri].cf.fully_connected.add_callback(self._fully_connected)
             self.swarm._cfs[link_uri].cf.connected.add_callback(self._connected)
             self.swarm._cfs[link_uri].cf.disconnected.add_callback(self._disconnected)
             self.swarm._cfs[link_uri].cf.connection_failed.add_callback(
@@ -80,6 +81,8 @@ class CrazyflieServer(Node):
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
+    def _fully_connected(self, link_uri):
+        self.get_logger().info(f" {link_uri} is fully connected!")
 
 
     def _connected(self, link_uri):

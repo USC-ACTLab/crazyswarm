@@ -23,7 +23,13 @@ First Installation
 
 1. If needed, install ROS2 using the instructions at https://docs.ros.org/en/galactic/Installation.html.
 
-2. Set up your ROS2 workspace
+2. Install dependencies
+
+    .. code-block:: bash
+
+        sudo apt install libboost-program-options-dev libusb-1.0-0-dev
+
+3. Set up your ROS2 workspace
 
     .. code-block:: bash
 
@@ -32,7 +38,7 @@ First Installation
         git clone https://github.com/IMRCLab/crazyswarm2 --recursive
         git clone --branch ros2 --recursive https://github.com/IMRCLab/motion_capture_tracking.git
 
-3. Build your ROS2 workspace
+4. Build your ROS2 workspace
 
     .. code-block:: bash
 
@@ -42,7 +48,7 @@ First Installation
     .. note::
        symlink-install allows you to edit Python and config files without running `colcon build` every time.
 
-4. Set up software-in-the-loop simulation
+5. Set up software-in-the-loop simulation
 
     .. code-block:: bash
 

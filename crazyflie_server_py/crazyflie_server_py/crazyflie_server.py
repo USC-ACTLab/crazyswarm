@@ -83,7 +83,6 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
-        self.add_on_set_parameters_callback(self.parameter_callback)
 
     def _fully_connected(self, link_uri):
 
@@ -106,12 +105,20 @@ class CrazyflieServer(Node):
                     value = int(cf.param.get_value(name))
                     parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER)
 
+
+                parameter = self.get_parameter_or('params.'+name)
+                if parameter.value is None:
+                    self.declare_parameter(self.cf_dict[link_uri] + '.params.' + name, value=value,descriptor=parameter_descriptor)
+                else:
+                    cf.param.set_value(name, parameter.value)
+
                 if self.swarm.all_fully_connected:
                     parameter = self.get_parameter_or('firmware_params.'+name)
                     if parameter.value is None:
                         self.declare_parameter('firmware_params.' + name, value=value,descriptor=parameter_descriptor)
                     else:
-                        cf.param.set_value(name, parameter.value)
+                        for link_uri_temp in self.uris:
+                            self.swarm._cfs[link_uri_temp].cf.param.set_value(name, parameter.value)
 
     def _connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is connected!")

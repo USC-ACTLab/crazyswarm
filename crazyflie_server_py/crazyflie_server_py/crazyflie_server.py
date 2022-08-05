@@ -8,8 +8,7 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 
-from crazyflie_interfaces.srv import Takeoff, Land, GoTo
-from rcl_interfaces.msg import ParameterDescriptor
+from crazyswarm2_interfaces.srv import Takeoff, Land, GoTo
 
 from geometry_msgs.msg import Twist
 

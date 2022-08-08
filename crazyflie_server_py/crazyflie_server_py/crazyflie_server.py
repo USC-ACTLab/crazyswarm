@@ -16,8 +16,10 @@ from geometry_msgs.msg import Twist
 
 import os
 import yaml
-from math import pi
+from math import pi, isclose
 from functools import partial
+from threading import Event
+import time
 
 
 class CrazyflieServer(Node):
@@ -39,12 +41,16 @@ class CrazyflieServer(Node):
 =======
         self.cf_dict = {}
         self.uri_dict = {}
+        self.type_dict = {}
+
         for crazyflie in data:
             uri = data[crazyflie]["uri"]
 >>>>>>> reset parameters after fully connected
             self.uris.append(uri)
             self.cf_dict[uri] = crazyflie
             self.uri_dict[crazyflie] = uri
+            type_cf = data[crazyflie]["type"]
+            self.type_dict[uri] = type_cf
 
 
         # Setup Swarm class cflib with connection callbacks and open the links
@@ -82,43 +88,116 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
+        
+        self.param_set_event = Event()
+        self.param_value_check = None
 
     def _fully_connected(self, link_uri):
+        self.get_logger().info(f" {link_uri} is fully connected!")
 
         self.swarm.fully_connected_crazyflie_cnt += 1
         if self.swarm.fully_connected_crazyflie_cnt == len(self.cf_dict):
+            self.get_logger().info("All Crazyflies are is fully connected!")
             self.swarm.all_fully_connected = True
-        self.get_logger().info(f" {link_uri} is fully connected!")
-        cf = self.swarm._cfs[link_uri].cf
-        p_toc = cf.param.toc.toc
+            self._sync_parameters()
+        else:
+            return
 
-        for group in sorted(p_toc.keys()):
-            for param in sorted(p_toc[group].keys()):
-                name = group + '.' + param
-                elem = p_toc[group][param]
-                type_cf_param = elem.ctype
-                if type_cf_param == 'float':
-                    value = float(cf.param.get_value(name))
-                    parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE)
-                else:
-                    value = int(cf.param.get_value(name))
-                    parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER)
+    def _set_and_check_parameter(self, cf, name, value, max_tries):
+
+        try_cnt = 0
+        while True:
+            try:
+                self._compare_paramater_value(cf, name, value)
+                break
+            except Exception as e:
+                print(str(e))
+                time.sleep(1)
+                try_cnt += 1
+                if try_cnt>max_tries:
+                    raise Exception('Too many tries for parameters')
+                continue
 
 
-                parameter = self.get_parameter_or('params.'+name)
-                if parameter.value is None:
-                    self.declare_parameter(self.cf_dict[link_uri] + '.params.' + name, value=value,descriptor=parameter_descriptor)
-                else:
-                    cf.param.set_value(name, parameter.value)
+    def _compare_paramater_value(self, cf, name, value):
+        group = name.split('.')[0]
+        param = name.split('.')[1]
 
-                if self.swarm.all_fully_connected:
-                    parameter = self.get_parameter_or('firmware_params.'+name)
-                    if parameter.value is None:
-                        self.declare_parameter('firmware_params.' + name, value=value,descriptor=parameter_descriptor)
+        cf.param.set_value(name, value)
+
+        time.sleep(1)
+
+        get_value = cf.param.get_value(name,timeout=3)
+
+        if get_value is None:
+            raise Exception('value is none')
+
+        if not isclose(float(get_value), float(value), abs_tol=1e-5):
+            raise Exception(f'value {name} not the same {get_value}, {value}')
+
+
+    def _get_parameter_value(self, cf, name ):
+        cf_param_value = None
+        while True:
+            try: 
+                cf_param_value = cf.param.get_value(name,timeout=1)
+                break
+            except Exception as e:
+                print(str(e))
+                time.sleep(1)
+                continue 
+        return cf_param_value
+
+    def _sync_parameters(self):
+        
+        for link_uri in self.uris:
+            cf = self.swarm._cfs[link_uri].cf
+            p_toc = cf.param.toc.toc
+
+            for group in sorted(p_toc.keys()):
+                for param in sorted(p_toc[group].keys()): 
+                    name = group + '.' + param
+
+                    final_value = None
+ 
+                    # First check and set global parameters
+                    global_parameter = self.get_parameter_or('firmware_params.'+name)
+                    if global_parameter.value is not None:
+                        final_value = global_parameter.value 
+                    
+                    #Then check and set Type parameters
+                    type_parameter = self.get_parameter_or('crazyflie_types.' + self.type_dict[link_uri] + '.firmware_params.'+name)
+                    if type_parameter.value is not None:
+                        final_value = type_parameter.value
+
+                    #Then check and set individual paramters
+                    parameter = self.get_parameter_or('crazyflies.' + self.cf_dict[link_uri] + '.firmware_params.'+name)
+                    if parameter.value is not None:
+                        final_value = parameter.value
+
+                    if final_value is not None:
+                        self._set_and_check_parameter(cf, name, final_value, 3)
+
+                    elem = p_toc[group][param]
+                    type_cf_param = elem.ctype
+                    
+                
+                    cf_param_value = self._get_parameter_value(cf, name)
+
+
+                    if cf_param_value is not None:
+                        if type_cf_param == 'float':
+                            value = float(cf_param_value)
+                            parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE)
+                        else:
+                            value = int(cf_param_value)
+                            parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER)
                     else:
-                        for link_uri_temp in self.uris:
-                            self.swarm._cfs[link_uri_temp].cf.param.set_value(name, parameter.value)
+                        raise Exception
 
+                    self.declare_parameter(self.cf_dict[link_uri] + '.params.' + name, value=value,descriptor=parameter_descriptor)
+
+        self.get_logger().info("All Crazyflies parameters are synced")
 
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")

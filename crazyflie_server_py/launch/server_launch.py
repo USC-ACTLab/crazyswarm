@@ -16,6 +16,22 @@ import xacro
 def generate_launch_description():
 
     # construct crazyswarm2_server configuration
+    crazyflies_yaml = os.path.join(
+        get_package_share_directory('crazyflie'),
+        'config',
+        'crazyflies.yaml')
+
+    with open(crazyflies_yaml, 'r') as ymlfile:
+        crazyflies = yaml.safe_load(ymlfile)
+
+    crazyflies_types_yaml = os.path.join(
+        get_package_share_directory('crazyflie'),
+        'config',
+        'crazyflie_types.yaml')
+
+    with open(crazyflies_types_yaml, 'r') as ymlfile:
+        crazyflie_types = yaml.safe_load(ymlfile)
+
     server_yaml = os.path.join(
         get_package_share_directory('crazyflie'),
         'config',
@@ -23,7 +39,11 @@ def generate_launch_description():
 
     with open(server_yaml, 'r') as ymlfile:
         server_params = yaml.safe_load(ymlfile)
+    
     server_params = server_params["/crazyflie_server"]["ros__parameters"]
+    server_params["crazyflies"] = crazyflies
+    server_params["crazyflie_types"] = crazyflie_types
+
 
     crazyflie_node = launch_ros.actions.Node(
         package="crazyflie_server_py",

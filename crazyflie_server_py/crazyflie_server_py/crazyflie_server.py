@@ -11,6 +11,7 @@ from cflib.crazyflie.swarm import Swarm
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 from rclpy.parameter import Parameter
+from rclpy.executors import MultiThreadedExecutor
 
 from geometry_msgs.msg import Twist
 
@@ -42,6 +43,7 @@ class CrazyflieServer(Node):
         self.cf_dict = {}
         self.uri_dict = {}
         self.type_dict = {}
+        self.param_dict = {}
 
         for crazyflie in data:
             uri = data[crazyflie]["uri"]
@@ -92,16 +94,71 @@ class CrazyflieServer(Node):
         self.param_set_event = Event()
         self.param_value_check = None
 
+        self.param_list = {}
+        for name, param in self._parameters.items():
+            name_split = name.split('.')
+            d_name, keys = name_split[0], name_split[1:]
+            d = vars()[d_name]
+            for key in keys:
+                d = d.get(key, None)
+                if d is None:
+                    break
+            print(d)
+
+            print(len(name_split), name)
+            if len(name_split) ==3:
+                self.param_list.update({name_split[0]: {name_split[1]: {name_split[2]: param.value}}})
+            elif len(name_split) ==4:
+                self.param_list.update({name_split[0]: {name_split[1]: {name_split[2]: {name_split[3]: param.value}}}})
+            elif len(name_split) ==5:
+                self.param_list.update({name_split[0]: {name_split[1]: {name_split[2]: {name_split[3]: {name_split[4]: param.value}}}}})
+
     def _fully_connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is fully connected!")
 
         self.swarm.fully_connected_crazyflie_cnt += 1
+        self._set_cf_parameters_from_ROS(self.swarm._cfs[link_uri].cf,self.type_dict[link_uri], self.cf_dict[link_uri])
+
         if self.swarm.fully_connected_crazyflie_cnt == len(self.cf_dict):
             self.get_logger().info("All Crazyflies are is fully connected!")
             self.swarm.all_fully_connected = True
-            self._sync_parameters()
+            #self._sync_parameters()
         else:
             return
+
+    def _set_cf_parameters_from_ROS(self, cf, cf_type, cf_name):
+        cf.param.add_update_callback(group=None, name=None, cb=self._param_callback)
+
+        # First check global parameter list
+        final_value = None
+        print(self.param_list)
+        for group in self.param_list['firmware_params'].items():
+            print(group)
+            for param, val in self.param_list['firmware_params'][group].items():
+                print(param)
+                name = group + '.' + param
+                cf.param.set_value(name, val)
+                print(name,val,'global')
+        
+        # Second check type parameter list
+        if cf_type in self.param_list['crazyflie_types']:
+            if 'firmware_params' in self.param_list['crazyflies'][cf_type]:
+                dict_temp = self.param_list['crazyflie_types'][cf_type]['firmware_params']
+                for group in dict_temp.keys():
+                    for param, val in dict_temp[group].items():
+                        name = group + '.' + param
+                        cf.param.set_value(name, val)
+                        print(name,val,'type')
+
+        # Second check type parameter list
+        if cf_name in  self.param_list['crazyflies']:
+            if 'firmware_params' in self.param_list['crazyflies'][cf_name]:
+                dict_temp = self.param_list['crazyflies'][cf_name]['firmware_params']
+                for group in dict_temp.keys():
+                    for param, val in dict_temp[group].items():
+                        name = group + '.' + param
+                        cf.param.set_value(name, val)
+                        print(name,val,'individual')
 
     def _set_and_check_parameter(self, cf, name, value, max_tries):
 
@@ -124,10 +181,12 @@ class CrazyflieServer(Node):
         param = name.split('.')[1]
 
         cf.param.set_value(name, value)
+        cf.param.set_value(name, value)
+        cf.param.set_value(name, value)
 
         time.sleep(1)
 
-        get_value = cf.param.get_value(name,timeout=3)
+        get_value = cf.param.get_value(name)
 
         if get_value is None:
             raise Exception('value is none')
@@ -148,10 +207,21 @@ class CrazyflieServer(Node):
                 continue 
         return cf_param_value
 
+    def _param_callback(self, name, value):
+        """Generic callback registered for all the groups"""
+        print('{0}: {1}'.format(name, value))
+
+    def _ros_param_callback(self, params):
+        for param in params:
+            print(vars(param))
+        return SetParametersResult(successful=True)
+
     def _sync_parameters(self):
         
         for link_uri in self.uris:
             cf = self.swarm._cfs[link_uri].cf
+            cf.param.add_update_callback(group=None, name=None, cb=self._param_callback)
+
             p_toc = cf.param.toc.toc
 
             for group in sorted(p_toc.keys()):
@@ -176,7 +246,12 @@ class CrazyflieServer(Node):
                         final_value = parameter.value
 
                     if final_value is not None:
-                        self._set_and_check_parameter(cf, name, final_value, 3)
+                        cf.param.set_value(name, final_value)
+                        time.sleep(3)
+                        cf_param_value = cf.param.get_value(name,timeout=1)
+                        print(name, cf_param_value, final_value)
+
+                        #self._set_and_check_parameter(cf, name, final_value, 3)
 
                     elem = p_toc[group][param]
                     type_cf_param = elem.ctype
@@ -296,8 +371,12 @@ def main(args=None):
     rclpy.init(args=args)
     crazyflie_server = CrazyflieServer()
 
-    rclpy.spin(crazyflie_server)
+    executor = MultiThreadedExecutor(num_threads=4)
+    executor.add_node(crazyflie_server)
 
+    executor.spin()
+
+    executor.shutdown()
     crazyflie_server.destroy_node()
     rclpy.shutdown()
 

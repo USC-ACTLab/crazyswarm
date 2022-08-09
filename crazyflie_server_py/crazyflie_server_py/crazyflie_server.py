@@ -24,10 +24,13 @@ import time
 
 class CrazyflieServer(Node):
     def __init__(self):
-        super().__init__("crazyflie_server", allow_undeclared_parameters=True,
-                     automatically_declare_parameters_from_overrides=True)
+        super().__init__(
+            "crazyflie_server",
+            allow_undeclared_parameters=True,
+            automatically_declare_parameters_from_overrides=True,
+        )
 
-        # Read out crazyflie URIs 
+        # Read out crazyflie URIs
         crazyflies_yaml = os.path.join(
             get_package_share_directory("crazyflie"), "config", "crazyflies.yaml"
         )
@@ -52,14 +55,15 @@ class CrazyflieServer(Node):
             type_cf = data[crazyflie]["type"]
             self.type_dict[uri] = type_cf
 
-
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
         self.swarm.all_fully_connected = False
         for link_uri in self.uris:
-            self.swarm._cfs[link_uri].cf.fully_connected.add_callback(self._fully_connected)
+            self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
+                self._fully_connected
+            )
             self.swarm._cfs[link_uri].cf.disconnected.add_callback(self._disconnected)
             self.swarm._cfs[link_uri].cf.connection_failed.add_callback(
                 self._connection_failed
@@ -88,7 +92,7 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
-        
+
         self.param_set_event = Event()
         self.param_value_check = None
 
@@ -104,32 +108,41 @@ class CrazyflieServer(Node):
         else:
             return
 
-
     def _sync_parameters(self):
-        
+
         for link_uri in self.uris:
             cf = self.swarm._cfs[link_uri].cf
 
             p_toc = cf.param.toc.toc
 
             for group in sorted(p_toc.keys()):
-                for param in sorted(p_toc[group].keys()): 
-                    name = group + '.' + param
+                for param in sorted(p_toc[group].keys()):
+                    name = group + "." + param
 
                     final_value = None
- 
+
                     # First check and set global parameters
-                    global_parameter = self.get_parameter_or('firmware_params.'+name)
+                    global_parameter = self.get_parameter_or("firmware_params." + name)
                     if global_parameter.value is not None:
-                        final_value = global_parameter.value 
-                    
-                    #Then check and set Type parameters
-                    type_parameter = self.get_parameter_or('crazyflie_types.' + self.type_dict[link_uri] + '.firmware_params.'+name)
+                        final_value = global_parameter.value
+
+                    # Then check and set Type parameters
+                    type_parameter = self.get_parameter_or(
+                        "crazyflie_types."
+                        + self.type_dict[link_uri]
+                        + ".firmware_params."
+                        + name
+                    )
                     if type_parameter.value is not None:
                         final_value = type_parameter.value
 
-                    #Then check and set individual paramters
-                    parameter = self.get_parameter_or('crazyflies.' + self.cf_dict[link_uri] + '.firmware_params.'+name)
+                    # Then check and set individual paramters
+                    parameter = self.get_parameter_or(
+                        "crazyflies."
+                        + self.cf_dict[link_uri]
+                        + ".firmware_params."
+                        + name
+                    )
                     if parameter.value is not None:
                         final_value = parameter.value
 
@@ -141,18 +154,25 @@ class CrazyflieServer(Node):
 
                     cf_param_value = cf.param.get_value(name)
 
-
                     if cf_param_value is not None:
-                        if type_cf_param == 'float':
+                        if type_cf_param == "float":
                             value = float(cf_param_value)
-                            parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE)
+                            parameter_descriptor = ParameterDescriptor(
+                                type=ParameterType.PARAMETER_DOUBLE
+                            )
                         else:
                             value = int(cf_param_value)
-                            parameter_descriptor=ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER)
+                            parameter_descriptor = ParameterDescriptor(
+                                type=ParameterType.PARAMETER_INTEGER
+                            )
                     else:
                         raise Exception
 
-                    self.declare_parameter(self.cf_dict[link_uri] + '.params.' + name, value=value,descriptor=parameter_descriptor)
+                    self.declare_parameter(
+                        self.cf_dict[link_uri] + ".params." + name,
+                        value=value,
+                        descriptor=parameter_descriptor,
+                    )
 
         self.get_logger().info("All Crazyflies parameters are synced")
 

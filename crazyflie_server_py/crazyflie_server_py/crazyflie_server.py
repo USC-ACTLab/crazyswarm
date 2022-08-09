@@ -30,23 +30,18 @@ class CrazyflieServer(Node):
         )
         with open(crazyflies_yaml) as f:
             data = yaml.safe_load(f)
+
         self.uris = []
-<<<<<<< HEAD
-        cf_dict = {}
-        for crazyflie in data["robots"]:
-            uri = data["robots"][crazyflie]["uri"]
-=======
         self.cf_dict = {}
         self.uri_dict = {}
         self.type_dict = {}
 
-        for crazyflie in data:
-            uri = data[crazyflie]["uri"]
->>>>>>> reset parameters after fully connected
+        for crazyflie in data["robots"]:
+            uri = data["robots"][crazyflie]["uri"]
             self.uris.append(uri)
             self.cf_dict[uri] = crazyflie
             self.uri_dict[crazyflie] = uri
-            type_cf = data[crazyflie]["type"]
+            type_cf = data["robots"][crazyflie]["type"]
             self.type_dict[uri] = type_cf
 
         # Setup Swarm class cflib with connection callbacks and open the links

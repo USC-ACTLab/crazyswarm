@@ -109,14 +109,14 @@ class CrazyflieServer(Node):
                     final_value = None
 
                     # First check and set global parameters
-                    global_init_param_name = "firmware_params." + name
+                    global_init_param_name = "all_robots.firmware_params." + name
                     global_parameter = self.get_parameter_or(global_init_param_name)
                     if global_parameter.value is not None:
                         final_value = global_parameter.value
 
                     # Then check and set Type parameters
                     type_init_param_name = (
-                        "crazyflie_types."
+                        "robot_types."
                         + self.type_dict[link_uri]
                         + ".firmware_params."
                         + name
@@ -127,7 +127,7 @@ class CrazyflieServer(Node):
 
                     # Then check and set individual paramters
                     cf_init_param_name = (
-                        "crazyflies."
+                        "robots."
                         + self.cf_dict[link_uri]
                         + ".firmware_params."
                         + name

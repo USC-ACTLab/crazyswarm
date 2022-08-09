@@ -23,26 +23,8 @@ def generate_launch_description():
 
     with open(crazyflies_yaml, 'r') as ymlfile:
         crazyflies = yaml.safe_load(ymlfile)
-
-    crazyflies_types_yaml = os.path.join(
-        get_package_share_directory('crazyflie'),
-        'config',
-        'crazyflie_types.yaml')
-
-    with open(crazyflies_types_yaml, 'r') as ymlfile:
-        crazyflie_types = yaml.safe_load(ymlfile)
-
-    server_yaml = os.path.join(
-        get_package_share_directory('crazyflie'),
-        'config',
-        'crazyflie_server.yaml')
-
-    with open(server_yaml, 'r') as ymlfile:
-        server_params = yaml.safe_load(ymlfile)
-    
-    server_params = server_params["/crazyflie_server"]["ros__parameters"]
-    server_params["crazyflies"] = crazyflies
-    server_params["crazyflie_types"] = crazyflie_types
+        
+    server_params = crazyflies
 
 
     crazyflie_node = launch_ros.actions.Node(

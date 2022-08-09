@@ -53,7 +53,7 @@ First Installation
     .. code-block:: bash
 
         cd crazyflie_py/crazyflie_py/cfsim
-        make
+        CSW_PYTHON=python3 make
 
 
 Updating

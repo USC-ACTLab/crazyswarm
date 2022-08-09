@@ -114,54 +114,67 @@ class CrazyflieServer(Node):
                     final_value = None
 
                     # First check and set global parameters
-                    global_parameter = self.get_parameter_or("firmware_params." + name)
+                    global_init_param_name = "firmware_params." + name
+                    global_parameter = self.get_parameter_or(global_init_param_name)
                     if global_parameter.value is not None:
                         final_value = global_parameter.value
 
                     # Then check and set Type parameters
-                    type_parameter = self.get_parameter_or(
+                    type_init_param_name = (
                         "crazyflie_types."
                         + self.type_dict[link_uri]
                         + ".firmware_params."
                         + name
                     )
+                    type_parameter = self.get_parameter_or(type_init_param_name)
                     if type_parameter.value is not None:
                         final_value = type_parameter.value
 
                     # Then check and set individual paramters
-                    parameter = self.get_parameter_or(
+                    cf_init_param_name = (
                         "crazyflies."
                         + self.cf_dict[link_uri]
                         + ".firmware_params."
                         + name
                     )
-                    if parameter.value is not None:
-                        final_value = parameter.value
+                    cf_parameter = self.get_parameter_or(cf_init_param_name)
+                    if cf_parameter.value is not None:
+                        final_value = cf_parameter.value
+
+                    elem = p_toc[group][param]
+                    type_cf_param = elem.ctype
+                    if type_cf_param == "float":
+                        parameter_descriptor = ParameterDescriptor(
+                            type=ParameterType.PARAMETER_DOUBLE
+                        )
+                    else:
+                        parameter_descriptor = ParameterDescriptor(
+                            type=ParameterType.PARAMETER_INTEGER
+                        )
 
                     if final_value is not None:
+                        # If value is found in initial parameters,
+                        # set crazyflie firmware value and declare value in ROS2 parameter
+                        # Note: currently this is not possible to get the most recent from the
+                        #       crazyflie with get_value due to threading.
                         cf.param.set_value(name, final_value)
                         self.get_logger().info(
                             f" {link_uri}: {name} is set to {final_value}"
                         )
+                        self.declare_parameter(
+                            self.cf_dict[link_uri] + "/params/" + group + "/" + param,
+                            value=final_value,
+                            descriptor=parameter_descriptor,
+                        )
                     else:
-                        elem = p_toc[group][param]
-                        type_cf_param = elem.ctype
+                        # If value is net found in initial parameter set
+                        # get crazyflie paramter value and declare that value in ROS2 parameter
 
                         cf_param_value = cf.param.get_value(name)
-                        if type_cf_param == "float":
-                            value = float(cf_param_value)
-                            parameter_descriptor = ParameterDescriptor(
-                                type=ParameterType.PARAMETER_DOUBLE
-                            )
-                        else:
-                            value = int(cf_param_value)
-                            parameter_descriptor = ParameterDescriptor(
-                                type=ParameterType.PARAMETER_INTEGER
-                            )
 
                         self.declare_parameter(
                             self.cf_dict[link_uri] + "/params/" + group + "/" + param,
-                            value=value,
+                            value=cf_param_value,
                             descriptor=parameter_descriptor,
                         )
 

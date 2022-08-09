@@ -171,28 +171,28 @@ if __name__ == '__main__':
 		nodes = selected_cfs()
 		for name, crazyflie in nodes.items():
 			uri = crazyflie["uri"]
-			subprocess.call(["ros2 run crazyswarm2 reboot --uri " + uri + " --mode sysoff"], shell=True)
+			subprocess.call(["ros2 run crazyflie reboot --uri " + uri + " --mode sysoff"], shell=True)
 
 	def reboot():
 		nodes = selected_cfs()
 		for name, crazyflie in nodes.items():
 			uri = crazyflie["uri"]
 			print(name)
-			subprocess.call(["ros2 run crazyswarm2 reboot --uri " + uri], shell=True)
+			subprocess.call(["ros2 run crazyflie reboot --uri " + uri], shell=True)
 
 	def flashSTM():
 		nodes = selected_cfs()
 		for name, crazyflie in nodes.items():
 			uri = crazyflie["uri"]
 			print("Flash STM32 FW to {}".format(uri))
-			subprocess.call(["ros2 run crazyswarm2 flash --uri " + uri + " --target stm32 --filename " + args.stm32Fw], shell=True)
+			subprocess.call(["ros2 run crazyflie flash --uri " + uri + " --target stm32 --filename " + args.stm32Fw], shell=True)
 
 	def flashNRF():
 		nodes = selected_cfs()
 		for name, crazyflie in nodes.items():
 			uri = crazyflie["uri"]
 			print("Flash NRF51 FW to {}".format(uri))
-			subprocess.call(["ros2 run crazyswarm2 flash --uri " + uri + " --target nrf51 --filename " + args.nrf51Fw], shell=True)
+			subprocess.call(["ros2 run crazyflie flash --uri " + uri + " --target nrf51 --filename " + args.nrf51Fw], shell=True)
 
 	def checkBattery():
 		# reset color
@@ -208,9 +208,9 @@ if __name__ == '__main__':
 			
 			try:
 				if not bigQuad:
-					voltage = subprocess.check_output(["ros2 run crazyswarm2 battery --uri " + uri], shell=True)
+					voltage = subprocess.check_output(["ros2 run crazyflie battery --uri " + uri], shell=True)
 				else:
-					voltage = subprocess.check_output(["ros2 run crazyswarm2 battery --uri " + uri + " --external 1"], shell=True)
+					voltage = subprocess.check_output(["ros2 run crazyflie battery --uri " + uri + " --external 1"], shell=True)
 			except subprocess.CalledProcessError:
 				voltage = None  # CF not available
 

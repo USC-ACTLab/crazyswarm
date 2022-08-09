@@ -14,7 +14,6 @@ from geometry_msgs.msg import Twist
 import os
 import yaml
 from functools import partial
-from threading import Event
 
 
 class CrazyflieServer(Node):
@@ -161,10 +160,7 @@ class CrazyflieServer(Node):
                             )
 
                         self.declare_parameter(
-                            "crazyflies."
-                            + self.cf_dict[link_uri]
-                            + ".firmware_params."
-                            + name,
+                            self.cf_dict[link_uri] + "/params/" + group + "/" + param,
                             value=value,
                             descriptor=parameter_descriptor,
                         )
@@ -173,20 +169,25 @@ class CrazyflieServer(Node):
 
     def parameters_callback(self, params):
         for param in params:
-            param_split = param.name.split(".")
-            if param_split[0] == "crazyflies":
-                cf_name = param_split[1]
-                if param_split[2] == "firmware_params":
-                    name_param = param_split[3] + "." + param_split[4]
+            param_split = param.name.split("/")
+
+            if param_split[0] in self.cf_dict.values():
+                cf_name = param_split[0]
+                if param_split[1] == "params":
+                    name_param = param_split[2] + "." + param_split[3]
                     try:
                         self.swarm._cfs[self.uri_dict[cf_name]].cf.param.set_value(
                             name_param, param.value
                         )
+                        self.get_logger().info(
+                            f" {self.uri_dict[cf_name]}: {name_param} is set to {param.value}"
+                        )
+
                     except Exception as e:
                         self.get_logger().info(str(e))
 
                         return SetParametersResult(successful=False)
-        return SetParametersResult(successful=True)
+        return SetParametersResult(successful=False)
 
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")

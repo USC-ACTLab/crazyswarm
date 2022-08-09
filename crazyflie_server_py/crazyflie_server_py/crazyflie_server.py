@@ -1,25 +1,20 @@
-from argparse import Namespace
 import rclpy
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
 
 import cflib.crtp  # noqa
-from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
-from rclpy.parameter import Parameter
 
 from geometry_msgs.msg import Twist
 
 import os
 import yaml
-from math import pi, isclose
 from functools import partial
 from threading import Event
-import time
 
 
 class CrazyflieServer(Node):
@@ -93,9 +88,6 @@ class CrazyflieServer(Node):
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
-        self.param_set_event = Event()
-        self.param_value_check = None
-
     def _fully_connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is fully connected!")
 
@@ -105,6 +97,7 @@ class CrazyflieServer(Node):
             self.get_logger().info("All Crazyflies are is fully connected!")
             self.swarm.all_fully_connected = True
             self._sync_parameters()
+            self.add_on_set_parameters_callback(self.parameters_callback)
         else:
             return
 
@@ -148,13 +141,14 @@ class CrazyflieServer(Node):
 
                     if final_value is not None:
                         cf.param.set_value(name, final_value)
+                        self.get_logger().info(
+                            f" {link_uri}: {name} is set to {final_value}"
+                        )
+                    else:
+                        elem = p_toc[group][param]
+                        type_cf_param = elem.ctype
 
-                    elem = p_toc[group][param]
-                    type_cf_param = elem.ctype
-
-                    cf_param_value = cf.param.get_value(name)
-
-                    if cf_param_value is not None:
+                        cf_param_value = cf.param.get_value(name)
                         if type_cf_param == "float":
                             value = float(cf_param_value)
                             parameter_descriptor = ParameterDescriptor(
@@ -165,16 +159,34 @@ class CrazyflieServer(Node):
                             parameter_descriptor = ParameterDescriptor(
                                 type=ParameterType.PARAMETER_INTEGER
                             )
-                    else:
-                        raise Exception
 
-                    self.declare_parameter(
-                        self.cf_dict[link_uri] + ".params." + name,
-                        value=value,
-                        descriptor=parameter_descriptor,
-                    )
+                        self.declare_parameter(
+                            "crazyflies."
+                            + self.cf_dict[link_uri]
+                            + ".firmware_params."
+                            + name,
+                            value=value,
+                            descriptor=parameter_descriptor,
+                        )
 
         self.get_logger().info("All Crazyflies parameters are synced")
+
+    def parameters_callback(self, params):
+        for param in params:
+            param_split = param.name.split(".")
+            if param_split[0] == "crazyflies":
+                cf_name = param_split[1]
+                if param_split[2] == "firmware_params":
+                    name_param = param_split[3] + "." + param_split[4]
+                    try:
+                        self.swarm._cfs[self.uri_dict[cf_name]].cf.param.set_value(
+                            name_param, param.value
+                        )
+                    except Exception as e:
+                        self.get_logger().info(str(e))
+
+                        return SetParametersResult(successful=False)
+        return SetParametersResult(successful=True)
 
     def _disconnected(self, link_uri):
         self.get_logger().info(f" {link_uri} is disconnected!")
@@ -275,7 +287,6 @@ def main(args=None):
 
     rclpy.spin(crazyflie_server)
 
-    executor.shutdown()
     crazyflie_server.destroy_node()
     rclpy.shutdown()
 

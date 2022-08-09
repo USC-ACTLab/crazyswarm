@@ -15,14 +15,7 @@ def generate_launch_description():
     with open(crazyflies_yaml, 'r') as ymlfile:
         crazyflies = yaml.safe_load(ymlfile)
 
-    # load crazyflie_types
-    crazyflies_types_yaml = os.path.join(
-        get_package_share_directory('crazyflie'),
-        'config',
-        'crazyflie_types.yaml')
-
-    with open(crazyflies_types_yaml, 'r') as ymlfile:
-        crazyflie_types = yaml.safe_load(ymlfile)
+    server_params = crazyflies
 
     # construct motion_capture_configuration
     motion_capture_yaml = os.path.join(
@@ -35,8 +28,8 @@ def generate_launch_description():
 
     motion_capture_params = motion_capture["/motion_capture_tracking"]["ros__parameters"]
     motion_capture_params["rigid_bodies"] = dict()
-    for key, value in crazyflies.items():
-        type = crazyflie_types[value["type"]]
+    for key, value in crazyflies["robots"].items():
+        type = crazyflies["robot_types"][value["type"]]
         
         motion_capture_params["rigid_bodies"][key] =  {
                 "initial_position": value["initial_position"],
@@ -44,25 +37,12 @@ def generate_launch_description():
                 "dynamics": type["dynamics"],
             }
 
-    # construct crazyflie_server configuration
-    server_yaml = os.path.join(
-        get_package_share_directory('crazyflie'),
-        'config',
-        'crazyflie_server.yaml')
-    
-    with open(server_yaml, 'r') as ymlfile:
-        server_params = yaml.safe_load(ymlfile)
-
-    server_params = server_params["/crazyflie_server"]["ros__parameters"]
-    server_params["crazyflies"] = crazyflies
-    server_params["crazyflie_types"] = crazyflie_types
-
     # teleop params
-    teleop_yaml = os.path.join(
+    teleop_params = os.path.join(
         get_package_share_directory('crazyflie'),
         'config',
         'teleop.yaml')
-    teleop_5_yaml = os.path.join(
+    teleop_5_params = os.path.join(
         get_package_share_directory('crazyflie'),
         'config',
         'teleop_5.yaml')
@@ -87,7 +67,7 @@ def generate_launch_description():
                 ('notify_setpoints_stop', 'cf231/notify_setpoints_stop'),
                 ('joy', 'cf231/joy'),
             ],
-            parameters=[teleop_yaml]
+            parameters=[teleop_params]
         ),
         Node(
             package='crazyflie',
@@ -101,7 +81,7 @@ def generate_launch_description():
                 ('notify_setpoints_stop', 'cf5/notify_setpoints_stop'),
                 ('joy', 'cf5/joy'),
             ],
-            parameters=[teleop_5_yaml]
+            parameters=[teleop_5_params]
         ),
         Node(
             package='joy',

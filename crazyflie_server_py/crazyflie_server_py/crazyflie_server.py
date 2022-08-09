@@ -30,8 +30,8 @@ class CrazyflieServer(Node):
             data = yaml.safe_load(f)
         self.uris = []
         cf_dict = {}
-        for crazyflie in data:
-            uri = data[crazyflie]["uri"]
+        for crazyflie in data["robots"]:
+            uri = data["robots"][crazyflie]["uri"]
             self.uris.append(uri)
             cf_dict[uri] = crazyflie
 

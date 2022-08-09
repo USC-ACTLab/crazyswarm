@@ -5,7 +5,8 @@ try:
 	import Tkinter
 except ImportError:
 	import tkinter as Tkinter
-import yaml
+from ruamel.yaml import YAML
+import pathlib
 import os
 import subprocess
 import re
@@ -31,10 +32,8 @@ if __name__ == '__main__':
 		help="Path to cf2_nrf.bin")
 	args = parser.parse_args()
 
-	if not os.path.exists(os.path.join(args.configpath, "all_crazyflies.yaml")) or \
-		not os.path.exists(os.path.join(args.configpath, "crazyflie_types.yaml")) or \
-		not os.path.exists(os.path.join(args.configpath, "crazyflies.yaml")):
-		print("ERROR: Could not find all yaml configuration files in configpath ({}).".format(args.configpath))
+	if not os.path.exists(os.path.join(args.configpath, "crazyflies.yaml")):
+		print("ERROR: Could not find yaml configuration file in configpath ({}).".format(args.configpath))
 		exit()
 
 	if not os.path.exists(args.stm32Fw):
@@ -43,29 +42,28 @@ if __name__ == '__main__':
 	if not os.path.exists(args.nrf51Fw):
 		print("WARNING: Could not find NRF51 firmware ({}).".format(args.nrf51Fw))
 
-	# read a yaml file
-	def read_by_name(path):
-		with open(path, 'r') as ymlfile:
-			root = yaml.safe_load(ymlfile)
-		return root
-
 	def selected_cfs():
-		nodes = {name: node for name, node in allCrazyflies.items() if widgets[name].checked.get()}
+		nodes = {name: node for name, node in cfg["robots"].items() if widgets[name].checked.get()}
 		return nodes
 
 	def save():
-		nodes = selected_cfs()
+		for name, node in cfg["robots"].items():
+			if widgets[name].checked.get():
+				node["enabled"] = True
+			else:
+				node["enabled"] = False
 		with open(os.path.join(args.configpath, "crazyflies.yaml"), 'w') as outfile:
-			yaml.dump(nodes, outfile)
+			yaml.dump(cfg, outfile)
 
-	allCrazyflies = read_by_name(os.path.join(args.configpath, "all_crazyflies.yaml"))
-	enabled = read_by_name(os.path.join(args.configpath, "crazyflies.yaml")).keys()
-	with open(os.path.join(args.configpath, "crazyflie_types.yaml"), 'r') as ymlfile:
-		data = yaml.safe_load(ymlfile)
-		cfTypes = data
+	yaml = YAML()
+	cfg = yaml.load(pathlib.Path(args.configpath) / "crazyflies.yaml")
+
+	cfTypes = cfg["robot_types"]
+	enabled = [name for name in cfg["robots"].keys() if cfg["robots"][name]["enabled"] == True]
+
 
 	# compute absolute pixel coordinates from the initial positions
-	positions = [node["initial_position"] for node in allCrazyflies.values()]
+	positions = [node["initial_position"] for node in cfg["robots"].values()]
 	DOWN_DIR = [-1, 0]
 	RIGHT_DIR = [0, -1]
 	def dot(a, b):
@@ -100,7 +98,7 @@ if __name__ == '__main__':
 
 	# construct all the checkboxes
 	widgets = {}
-	for (id, node), x, y in zip(allCrazyflies.items(), pixel_x, pixel_y):
+	for (id, node), x, y in zip(cfg["robots"].items(), pixel_x, pixel_y):
 		w = CFWidget(frame, str(id))
 		w.place(x = x - xmin, y = y - ymin)
 		w.checked.set(id in enabled)

@@ -158,9 +158,9 @@ public:
       cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieROS::on_parameter_event, this, _1));
 
       // Set parameters as specified in the configuration files, as in the following order
-      // 1.) check crazyflie_server.yaml
-      // 2.) check crazyflie_types.yaml
-      // 3.) check crazyflies.yaml
+      // 1.) check all_robots/firmware_params
+      // 2.) check robot_types/<type_name>/firmware_params
+      // 3.) check robots/<robot_name>/firmware_params
       // where the higher order is used if defined on multiple levels.
       auto node_parameters_iface = node->get_node_parameters_interface();
       const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
@@ -181,12 +181,12 @@ public:
         }
       };
 
-      // check crazyflie_server.yaml
-      update_map("firmware_params");
-      // check crazyflie_types.yaml
-      update_map("crazyflie_types." + cf_type + ".firmware_params");
-      // check crazyflies.yaml
-      update_map("crazyflies." + name_ + ".firmware_params");
+      // check global settings/firmware_params
+      update_map("all_robots.firmware_params");
+      // check robot_types/<type_name>/firmware_params
+      update_map("robot_types." + cf_type + ".firmware_params");
+      // check robots/<robot_name>/firmware_params
+      update_map("robots." + name_ + ".firmware_params");
 
       // Update parameters
       for (const auto&i : set_param_map) {
@@ -480,19 +480,22 @@ public:
     const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
         node_parameters_iface->get_parameter_overrides();
 
-    auto cf_names = extract_names(parameter_overrides, "crazyflies");
+    auto cf_names = extract_names(parameter_overrides, "robots");
     for (const auto &name : cf_names) {
-      std::string uri = parameter_overrides.at("crazyflies." + name + ".uri").get<std::string>();
-      std::string cftype = parameter_overrides.at("crazyflies." + name + ".type").get<std::string>();
-      crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, cftype, name, this));
+      bool enabled = parameter_overrides.at("robots." + name + ".enabled").get<bool>();
+      if (enabled) {
+        std::string uri = parameter_overrides.at("robots." + name + ".uri").get<std::string>();
+        std::string cftype = parameter_overrides.at("robots." + name + ".type").get<std::string>();
+        crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, cftype, name, this));
 
-      auto broadcastUri = crazyflies_.back()->broadcastUri();
-      RCLCPP_INFO(logger_, "%s", broadcastUri.c_str());
-      if (broadcaster_.count(broadcastUri) == 0) {
-        broadcaster_.emplace(broadcastUri, std::make_unique<CrazyflieBroadcaster>(broadcastUri));
+        auto broadcastUri = crazyflies_.back()->broadcastUri();
+        RCLCPP_INFO(logger_, "%s", broadcastUri.c_str());
+        if (broadcaster_.count(broadcastUri) == 0) {
+          broadcaster_.emplace(broadcastUri, std::make_unique<CrazyflieBroadcaster>(broadcastUri));
+        }
+
+        name_to_id_.insert(std::make_pair(name, crazyflies_.back()->id()));
       }
-
-      name_to_id_.insert(std::make_pair(name, crazyflies_.back()->id()));
     }
 
     sub_poses_ = this->create_subscription<NamedPoseArray>(

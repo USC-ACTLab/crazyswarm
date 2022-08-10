@@ -88,7 +88,7 @@ class CrazyflieServer(Node):
         self.swarm.fully_connected_crazyflie_cnt += 1
 
         if self.swarm.fully_connected_crazyflie_cnt == len(self.cf_dict):
-            self.get_logger().info("All Crazyflies are is fully connected!")
+            self.get_logger().info("All Crazyflies are fully connected!")
             self.swarm.all_fully_connected = True
             self._sync_parameters()
             self.add_on_set_parameters_callback(self.parameters_callback)

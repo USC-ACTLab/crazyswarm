@@ -5,6 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 import cflib.crtp  # noqa
 from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
+from cflib.crazyflie.log import LogConfig
 
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
@@ -59,6 +60,11 @@ class CrazyflieServer(Node):
             )
             self.swarm._cfs[link_uri].init_param_cnt = 0
             self.swarm._cfs[link_uri].total_param_cnt = 0
+            self.swarm._cfs[link_uri].lg_pose = LogConfig(name='Pose', period_in_ms=100)
+            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimate.x')
+            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimate.y')
+            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimate.z')
+            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimateZ.quat')
 
         self.swarm.open_links()
 
@@ -91,9 +97,35 @@ class CrazyflieServer(Node):
             self.get_logger().info("All Crazyflies are fully connected!")
             self.swarm.all_fully_connected = True
             self._sync_parameters()
+            self._sync_logging()
             self.add_on_set_parameters_callback(self.parameters_callback)
         else:
             return
+
+    def _sync_logging(self):
+        for link_uri in self.uris:
+            cf = self.swarm._cfs[link_uri].cf
+            lg_pose = self.swarm._cfs[link_uri].lg_pose
+            try:
+                cf.log.add_config(lg_pose)
+                lg_pose.data_received_cb.add_callback(self._log_data_callback)
+                lg_pose.error_cb.add_callback(self._log_error_callback)
+                lg_pose.start()
+                self.get_logger().info(f"{link_uri} setup Logging for Pose")
+            except KeyError as e:
+                self.get_logger().info(f'{link_uri}: Could not start log configuration,'
+                        '{} not found in TOC'.format(str(e)))
+            except AttributeError:
+                self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
+
+    def _log_data_callback(self, timestamp, data, logconf):
+        print(f'[{timestamp}][{logconf.name}]: ', end='')
+        for name, value in data.items():
+            print(f'{name}: {value:3.3f} ', end='')
+        print()
+
+    def _log_error_callback(self, logconf, msg):
+        print('Error when logging %s: %s' % (logconf.name, msg))
 
     def _sync_parameters(self):
 

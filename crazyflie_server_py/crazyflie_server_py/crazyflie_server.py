@@ -11,10 +11,14 @@ from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped
+
+import tf_transformations
 
 import os
 import yaml
 from functools import partial
+from math import radians
 
 
 class CrazyflieServer(Node):
@@ -60,11 +64,15 @@ class CrazyflieServer(Node):
             )
             self.swarm._cfs[link_uri].init_param_cnt = 0
             self.swarm._cfs[link_uri].total_param_cnt = 0
-            self.swarm._cfs[link_uri].lg_pose = LogConfig(name='Pose', period_in_ms=100)
-            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimate.x')
-            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimate.y')
-            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimate.z')
-            self.swarm._cfs[link_uri].lg_pose.add_variable('stateEstimateZ.quat')
+            lg_pose = LogConfig(name='Pose', period_in_ms=100)            
+            lg_pose.add_variable('stateEstimate.x')
+            lg_pose.add_variable('stateEstimate.y')
+            lg_pose.add_variable('stateEstimate.z')
+            lg_pose.add_variable('stabilizer.roll', 'float')
+            lg_pose.add_variable('stabilizer.pitch', 'float')
+            lg_pose.add_variable('stabilizer.yaw', 'float')
+            self.swarm._cfs[link_uri].lg_pose = lg_pose
+            self.swarm._cfs[link_uri].publisher = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
 
         self.swarm.open_links()
 
@@ -88,6 +96,7 @@ class CrazyflieServer(Node):
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
+
     def _fully_connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is fully connected!")
 
@@ -108,7 +117,7 @@ class CrazyflieServer(Node):
             lg_pose = self.swarm._cfs[link_uri].lg_pose
             try:
                 cf.log.add_config(lg_pose)
-                lg_pose.data_received_cb.add_callback(self._log_data_callback)
+                lg_pose.data_received_cb.add_callback(partial(self._log_data_callback, uri=link_uri)) 
                 lg_pose.error_cb.add_callback(self._log_error_callback)
                 lg_pose.start()
                 self.get_logger().info(f"{link_uri} setup Logging for Pose")
@@ -118,11 +127,28 @@ class CrazyflieServer(Node):
             except AttributeError:
                 self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
 
-    def _log_data_callback(self, timestamp, data, logconf):
-        print(f'[{timestamp}][{logconf.name}]: ', end='')
-        for name, value in data.items():
-            print(f'{name}: {value:3.3f} ', end='')
-        print()
+    def _log_data_callback(self, timestamp, data, logconf, uri):
+
+        x = data.get('stateEstimate.x')
+        y = data.get('stateEstimate.y')
+        z = data.get('stateEstimate.z')
+        roll = radians(data.get('stabilizer.roll'))
+        pitch = radians(-1.0 * data.get('stabilizer.pitch'))
+        yaw = radians(data.get('stabilizer.yaw'))
+
+        msg = PoseStamped()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "world"
+        msg.pose.position.x = x
+        msg.pose.position.y = y
+        msg.pose.position.z = z
+        q = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
+        msg.pose.orientation.x = q[0]
+        msg.pose.orientation.y = q[1]
+        msg.pose.orientation.z = q[2]
+        msg.pose.orientation.w = q[3]
+        self.swarm._cfs[uri].publisher.publish(msg)
+
 
     def _log_error_callback(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))

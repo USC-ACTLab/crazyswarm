@@ -7,6 +7,7 @@
   <maintainer email="kimberly@bitcraze.io">Kimberly McGuire</maintainer>
   <license>MIT</license>
 
+  <exec_depend>tf-transformations</exec_depend>
   <exec_depend>rclpy</exec_depend>
 
   <test_depend>ament_copyright</test_depend>

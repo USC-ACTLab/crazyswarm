@@ -51,6 +51,16 @@ robot_types:
 all:
   # firmware parameters for all drones (use robot_types/type_name to set per type, or
   # robots/drone_name to set per drone)
+  firmware_logging:
+    enabled: true
+    default_topics:
+     # remove to disable default topic
+     pose:
+        frequency: 10 # Hz
+    custom_topics:
+      topic_name1:
+        frequency: 10 # Hz
+        vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
   firmware_params:
     commander:
       enHighLevel: 1

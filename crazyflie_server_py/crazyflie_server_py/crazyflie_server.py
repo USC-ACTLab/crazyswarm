@@ -56,12 +56,17 @@ class CrazyflieServer(Node):
         self.swarm.all_fully_connected = False
         self.swarm.log_topics = []
 
+        self._pose_logging_enabled = False
+        self._pose_logging_freq = 10
+
         for param_name, param in self._parameters.items():
             param_name_split = param_name.split('.')
-            if param_name_split[0] == "all_robots":
-                if param_name_split[1] == "log_topics":
-                    print(param.value)
-                    self.swarm.log_topics.append(param.value)
+            if param_name_split[0] == "all" and param_name_split[1] == "firmware_logging":
+                if param_name_split[2] == "default_topics":
+                    if param_name_split[3] == "pose":
+                        self.pose_logging_enabled = True
+                        self.pose_logging_freq = param.value
+
             
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
@@ -73,15 +78,17 @@ class CrazyflieServer(Node):
             )
             self.swarm._cfs[link_uri].init_param_cnt = 0
             self.swarm._cfs[link_uri].total_param_cnt = 0
-            lg_pose = LogConfig(name='Pose', period_in_ms=100)            
-            lg_pose.add_variable('stateEstimate.x')
-            lg_pose.add_variable('stateEstimate.y')
-            lg_pose.add_variable('stateEstimate.z')
-            lg_pose.add_variable('stabilizer.roll', 'float')
-            lg_pose.add_variable('stabilizer.pitch', 'float')
-            lg_pose.add_variable('stabilizer.yaw', 'float')
-            self.swarm._cfs[link_uri].lg_pose = lg_pose
-            self.swarm._cfs[link_uri].publisher = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
+
+            if self._pose_logging_enabled:
+                lg_pose = LogConfig(name='Pose', period_in_ms=1000 / self._pose_logging_freq)            
+                lg_pose.add_variable('stateEstimate.x')
+                lg_pose.add_variable('stateEstimate.y')
+                lg_pose.add_variable('stateEstimate.z')
+                lg_pose.add_variable('stabilizer.roll', 'float')
+                lg_pose.add_variable('stabilizer.pitch', 'float')
+                lg_pose.add_variable('stabilizer.yaw', 'float')
+                self.swarm._cfs[link_uri].lg_pose = lg_pose
+                self.swarm._cfs[link_uri].publisher = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
 
         self.swarm.open_links()
 
@@ -123,18 +130,19 @@ class CrazyflieServer(Node):
     def _sync_logging(self):
         for link_uri in self.uris:
             cf = self.swarm._cfs[link_uri].cf
-            lg_pose = self.swarm._cfs[link_uri].lg_pose
-            try:
-                cf.log.add_config(lg_pose)
-                lg_pose.data_received_cb.add_callback(partial(self._log_data_callback, uri=link_uri)) 
-                lg_pose.error_cb.add_callback(self._log_error_callback)
-                lg_pose.start()
-                self.get_logger().info(f"{link_uri} setup Logging for Pose")
-            except KeyError as e:
-                self.get_logger().info(f'{link_uri}: Could not start log configuration,'
-                        '{} not found in TOC'.format(str(e)))
-            except AttributeError:
-                self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
+            if self._pose_logging_enabled:
+                lg_pose = self.swarm._cfs[link_uri].lg_pose
+                try:
+                    cf.log.add_config(lg_pose)
+                    lg_pose.data_received_cb.add_callback(partial(self._log_data_callback, uri=link_uri)) 
+                    lg_pose.error_cb.add_callback(self._log_error_callback)
+                    lg_pose.start()
+                    self.get_logger().info(f"{link_uri} setup Logging for Pose")
+                except KeyError as e:
+                    self.get_logger().info(f'{link_uri}: Could not start log configuration,'
+                            '{} not found in TOC'.format(str(e)))
+                except AttributeError:
+                    self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
 
     def _log_data_callback(self, timestamp, data, logconf, uri):
 

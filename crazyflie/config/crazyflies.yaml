@@ -48,7 +48,7 @@ robot_types:
     #     pNAcc_xy: 1.0 # default 0.5
 
 # global settings for all robots
-all_robots:
+all:
   # firmware parameters for all drones (use robot_types/type_name to set per type, or
   # robots/drone_name to set per drone)
   firmware_params:

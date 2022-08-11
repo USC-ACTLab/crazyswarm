@@ -158,7 +158,7 @@ public:
       cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieROS::on_parameter_event, this, _1));
 
       // Set parameters as specified in the configuration files, as in the following order
-      // 1.) check all_robots/firmware_params
+      // 1.) check all/firmware_params
       // 2.) check robot_types/<type_name>/firmware_params
       // 3.) check robots/<robot_name>/firmware_params
       // where the higher order is used if defined on multiple levels.
@@ -469,11 +469,11 @@ public:
       : Node("crazyflie_server")
       , logger_(rclcpp::get_logger("all"))
   {
-    service_emergency_ = this->create_service<Empty>("emergency", std::bind(&CrazyflieServer::emergency, this, _1, _2));
-    service_start_trajectory_ = this->create_service<StartTrajectory>("start_trajectory", std::bind(&CrazyflieServer::start_trajectory, this, _1, _2));
-    service_takeoff_ = this->create_service<Takeoff>("takeoff", std::bind(&CrazyflieServer::takeoff, this, _1, _2));
-    service_land_ = this->create_service<Land>("land", std::bind(&CrazyflieServer::land, this, _1, _2));
-    service_go_to_ = this->create_service<GoTo>("go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
+    service_emergency_ = this->create_service<Empty>("all/emergency", std::bind(&CrazyflieServer::emergency, this, _1, _2));
+    service_start_trajectory_ = this->create_service<StartTrajectory>("all/start_trajectory", std::bind(&CrazyflieServer::start_trajectory, this, _1, _2));
+    service_takeoff_ = this->create_service<Takeoff>("all/takeoff", std::bind(&CrazyflieServer::takeoff, this, _1, _2));
+    service_land_ = this->create_service<Land>("all/land", std::bind(&CrazyflieServer::land, this, _1, _2));
+    service_go_to_ = this->create_service<GoTo>("all/go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
 
     // load crazyflies from params
     auto node_parameters_iface = this->get_node_parameters_interface();

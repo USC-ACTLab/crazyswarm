@@ -63,9 +63,9 @@ class CrazyflieServer(Node):
         self.swarm.open_links()
 
         # Create services for the entire swarm and each individual crazyflie
-        self.create_service(Takeoff, "/takeoff", self._takeoff_callback)
-        self.create_service(Land, "/land", self._land_callback)
-        self.create_service(GoTo, "/go_to", self._go_to_callback)
+        self.create_service(Takeoff, "all/takeoff", self._takeoff_callback)
+        self.create_service(Land, "all/land", self._land_callback)
+        self.create_service(GoTo, "all/go_to", self._go_to_callback)
 
         for uri in self.cf_dict:
             name = self.cf_dict[uri]
@@ -109,7 +109,7 @@ class CrazyflieServer(Node):
                     final_value = None
 
                     # First check and set global parameters
-                    global_init_param_name = "all_robots.firmware_params." + name
+                    global_init_param_name = "all.firmware_params." + name
                     global_parameter = self.get_parameter_or(global_init_param_name)
                     if global_parameter.value is not None:
                         final_value = global_parameter.value

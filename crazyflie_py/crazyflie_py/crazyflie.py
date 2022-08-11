@@ -663,16 +663,16 @@ class CrazyflieServer(rclpy.node.Node):
                 directly from string.
         """
         super().__init__("CrazyflieAPI")
-        self.emergencyService = self.create_client(Empty, "emergency")
+        self.emergencyService = self.create_client(Empty, "all/emergency")
         self.emergencyService.wait_for_service()
 
-        self.takeoffService = self.create_client(Takeoff, "takeoff")
+        self.takeoffService = self.create_client(Takeoff, "all/takeoff")
         self.takeoffService.wait_for_service()
-        self.landService = self.create_client(Land, "land")
+        self.landService = self.create_client(Land, "all/land")
         self.landService.wait_for_service()
-        self.goToService = self.create_client(GoTo, "go_to")
+        self.goToService = self.create_client(GoTo, "all/go_to")
         self.goToService.wait_for_service()
-        self.startTrajectoryService = self.create_client(StartTrajectory, "start_trajectory")
+        self.startTrajectoryService = self.create_client(StartTrajectory, "all/start_trajectory")
         self.startTrajectoryService.wait_for_service()
 
         if crazyflies_yaml.endswith(".yaml"):

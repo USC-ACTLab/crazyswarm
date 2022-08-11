@@ -54,10 +54,12 @@ class CrazyflieServer(Node):
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
         self.swarm.all_fully_connected = False
-        self.swarm.log_topics = []
 
+        self.swarm.custom_log_topics = {}
         self._pose_logging_enabled = False
         self._pose_logging_freq = 10
+        
+        temp_log_dict = {"frequency":0,"vars": "" }
 
         for param_name, param in self._parameters.items():
             param_name_split = param_name.split('.')
@@ -66,6 +68,14 @@ class CrazyflieServer(Node):
                     if param_name_split[3] == "pose":
                         self.pose_logging_enabled = True
                         self.pose_logging_freq = param.value
+                if param_name_split[2] == "custom_topics":
+                    if param_name_split[4]== "frequency":
+                        temp_log_dict.update({"frequency":param.value})
+                    if param_name_split[4]== "vars":
+                        temp_log_dict.update({"vars":param.value})
+                    if temp_log_dict["frequency"] != 0 and temp_log_dict["vars"] != "":
+                       self.swarm.custom_log_topics[param_name_split[3]] = temp_log_dict
+                       temp_log_dict = {"frequency":0,"vars": "" }
 
             
         for link_uri in self.uris:

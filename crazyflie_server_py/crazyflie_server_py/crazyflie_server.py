@@ -54,6 +54,15 @@ class CrazyflieServer(Node):
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
         self.swarm.all_fully_connected = False
+        self.swarm.log_topics = []
+
+        for param_name, param in self._parameters.items():
+            param_name_split = param_name.split('.')
+            if param_name_split[0] == "all_robots":
+                if param_name_split[1] == "log_topics":
+                    print(param.value)
+                    self.swarm.log_topics.append(param.value)
+            
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
                 self._fully_connected

@@ -182,7 +182,7 @@ public:
       };
 
       // check global settings/firmware_params
-      update_map("all_robots.firmware_params");
+      update_map("all.firmware_params");
       // check robot_types/<type_name>/firmware_params
       update_map("robot_types." + cf_type + ".firmware_params");
       // check robots/<robot_name>/firmware_params

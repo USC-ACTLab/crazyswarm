@@ -56,6 +56,7 @@ def generate_launch_description():
             executable='teleop',
             name='teleop',
             remappings=[
+                ('emergency', 'all/emergency'),
                 ('takeoff', 'cf6/takeoff'),
                 ('land', 'cf6/land'),
                 ('cmd_vel', 'cf6/cmd_vel'),

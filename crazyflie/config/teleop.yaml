@@ -27,6 +27,6 @@
       x: 0.0
       y: 0.0
       z: 0.10
-    auto_yaw_rate: -0.05 # rad/s, use 0.0 for manual yaw control
+    auto_yaw_rate: 0.0 # rad/s, use 0.0 for manual yaw control
 
 

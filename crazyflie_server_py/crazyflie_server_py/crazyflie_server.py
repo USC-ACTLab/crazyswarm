@@ -158,20 +158,33 @@ class CrazyflieServer(Node):
                 lg_pose = self.swarm._cfs[link_uri].lg_pose
                 try:
                     cf.log.add_config(lg_pose)
-                    lg_pose.data_received_cb.add_callback(partial(self._log_data_callback, uri=link_uri)) 
+                    lg_pose.data_received_cb.add_callback(partial(self._log_pose_data_callback, uri=link_uri)) 
                     lg_pose.error_cb.add_callback(self._log_error_callback)
                     lg_pose.start()
-                    self.get_logger().info(f"{link_uri} setup Logging for Pose")
+                    self.get_logger().info(f"{link_uri} setup logging for Pose")
                 except KeyError as e:
                     self.get_logger().info(f'{link_uri}: Could not start log configuration,'
                             '{} not found in TOC'.format(str(e)))
                 except AttributeError:
                     self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
 
+            if len(self.swarm._cfs[link_uri].custom_log) != 0:
+                for lg_custom in self.swarm._cfs[link_uri].custom_log:
+                    try:
+                        cf.log.add_config(lg_custom)
+                        lg_custom.data_received_cb.add_callback(partial(self._log_custom_data_callback, uri=link_uri)) 
+                        lg_custom.error_cb.add_callback(self._log_error_callback)
+                        lg_custom.start()
+                    except KeyError as e:
+                        self.get_logger().info(f'{link_uri}: Could not start log configuration,'
+                                '{} not found in TOC'.format(str(e)))
+                    except AttributeError:
+                        self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
+                self.get_logger().info(f"{link_uri} setup custom logging")
 
 
 
-    def _log_data_callback(self, timestamp, data, logconf, uri):
+    def _log_pose_data_callback(self, timestamp, data, logconf, uri):
 
         x = data.get('stateEstimate.x')
         y = data.get('stateEstimate.y')
@@ -193,6 +206,12 @@ class CrazyflieServer(Node):
         msg.pose.orientation.w = q[3]
         self.swarm._cfs[uri].publisher.publish(msg)
 
+    def _log_custom_data_callback(self, timestamp, data, logconf, uri):
+
+        for log_name in data:
+            msg = String()
+            msg.data = str(data.get(log_name))
+            self.swarm._cfs[uri].custom_publisher[log_name].publish(msg)
 
     def _log_error_callback(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))

@@ -12,6 +12,7 @@ from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, Paramet
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import String
 
 import tf_transformations
 
@@ -59,24 +60,24 @@ class CrazyflieServer(Node):
         self._pose_logging_enabled = False
         self._pose_logging_freq = 10
         
-        temp_log_dict = {"frequency":0,"vars": "" }
+        temp_log_dict = {"frequency":0,"vars": [] }
 
         for param_name, param in self._parameters.items():
             param_name_split = param_name.split('.')
             if param_name_split[0] == "all" and param_name_split[1] == "firmware_logging":
                 if param_name_split[2] == "default_topics":
                     if param_name_split[3] == "pose":
-                        self.pose_logging_enabled = True
-                        self.pose_logging_freq = param.value
+                        self._pose_logging_enabled = True
+                        self._pose_logging_freq = param.value
                 if param_name_split[2] == "custom_topics":
                     if param_name_split[4]== "frequency":
                         temp_log_dict.update({"frequency":param.value})
                     if param_name_split[4]== "vars":
                         temp_log_dict.update({"vars":param.value})
-                    if temp_log_dict["frequency"] != 0 and temp_log_dict["vars"] != "":
-                       self.swarm.custom_log_topics[param_name_split[3]] = temp_log_dict
-                       temp_log_dict = {"frequency":0,"vars": "" }
-
+                    if temp_log_dict["frequency"] != 0 and len(temp_log_dict["vars"]) != 0:
+                        self.swarm.custom_log_topics[param_name_split[3]] = temp_log_dict
+                        print(temp_log_dict)
+                        temp_log_dict = {"frequency":0,"vars": [] }
             
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
@@ -99,7 +100,20 @@ class CrazyflieServer(Node):
                 lg_pose.add_variable('stabilizer.yaw', 'float')
                 self.swarm._cfs[link_uri].lg_pose = lg_pose
                 self.swarm._cfs[link_uri].publisher = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
+        
 
+            self.swarm._cfs[link_uri].custom_log = []
+            self.swarm._cfs[link_uri].custom_publisher = {}
+
+            if len(self.swarm.custom_log_topics) != 0:
+                for log_group_name in self.swarm.custom_log_topics:
+                    frequency = self.swarm.custom_log_topics[log_group_name]["frequency"]
+                    lg_custom = LogConfig(name=log_group_name, period_in_ms=1000 / frequency)
+                    for log_name in self.swarm.custom_log_topics[log_group_name]["vars"]:
+                        lg_custom.add_variable(log_name)
+                        self.swarm._cfs[link_uri].custom_publisher[log_name] =  self.create_publisher(String, self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
+                    self.swarm._cfs[link_uri].custom_log.append(lg_custom)
+        
         self.swarm.open_links()
 
         # Create services for the entire swarm and each individual crazyflie
@@ -153,6 +167,9 @@ class CrazyflieServer(Node):
                             '{} not found in TOC'.format(str(e)))
                 except AttributeError:
                     self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
+
+
+
 
     def _log_data_callback(self, timestamp, data, logconf, uri):
 

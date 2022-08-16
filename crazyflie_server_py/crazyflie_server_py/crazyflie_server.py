@@ -12,14 +12,23 @@ from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, Paramet
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import String
-
+from std_msgs.msg import String, UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 import tf_transformations
 
 import os
 import yaml
 from functools import partial
 from math import radians
+
+cf_log_to_ros_topic = {
+    "uint8_t": UInt8,
+    "uint16_t": UInt16,
+    "uint32_t": UInt32,
+    "int8_t ": Int8,
+    "int16_t": Int16,
+    "int32_t": Int32,
+    "float": Float32,
+}
 
 
 class CrazyflieServer(Node):
@@ -101,7 +110,7 @@ class CrazyflieServer(Node):
                 self.swarm._cfs[link_uri].lg_pose = lg_pose
                 self.swarm._cfs[link_uri].publisher = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
         
-
+            self.swarm._cfs[link_uri].custom_log_topics = {}
             self.swarm._cfs[link_uri].custom_log = []
             self.swarm._cfs[link_uri].custom_publisher = {}
 
@@ -111,7 +120,7 @@ class CrazyflieServer(Node):
                     lg_custom = LogConfig(name=log_group_name, period_in_ms=1000 / frequency)
                     for log_name in self.swarm.custom_log_topics[log_group_name]["vars"]:
                         lg_custom.add_variable(log_name)
-                        self.swarm._cfs[link_uri].custom_publisher[log_name] =  self.create_publisher(String, self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
+                        self.swarm._cfs[link_uri].custom_log_topics[log_name] = "empty"
                     self.swarm._cfs[link_uri].custom_log.append(lg_custom)
         
         self.swarm.open_links()
@@ -153,7 +162,8 @@ class CrazyflieServer(Node):
 
     def _sync_logging(self):
         for link_uri in self.uris:
-            cf = self.swarm._cfs[link_uri].cf
+            cf_handle = cf = self.swarm._cfs[link_uri]
+            cf = cf_handle.cf
             if self._pose_logging_enabled:
                 lg_pose = self.swarm._cfs[link_uri].lg_pose
                 try:
@@ -168,8 +178,16 @@ class CrazyflieServer(Node):
                 except AttributeError:
                     self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
 
-            if len(self.swarm._cfs[link_uri].custom_log) != 0:
-                for lg_custom in self.swarm._cfs[link_uri].custom_log:
+            cf_handle.l_toc = cf.log.toc.toc
+            if len(cf_handle.custom_log) != 0:
+
+                for log_name in cf_handle.custom_log_topics:
+
+                    ros_topic_type = String
+                    log_type = cf.log.toc.toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
+                    self.swarm._cfs[link_uri].custom_publisher[log_name] =  self.create_publisher(cf_log_to_ros_topic[log_type], self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
+
+                for lg_custom in cf_handle.custom_log:
                     try:
                         cf.log.add_config(lg_custom)
                         lg_custom.data_received_cb.add_callback(partial(self._log_custom_data_callback, uri=link_uri)) 
@@ -209,8 +227,9 @@ class CrazyflieServer(Node):
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
 
         for log_name in data:
-            msg = String()
-            msg.data = str(data.get(log_name))
+            log_type = self.swarm._cfs[uri].l_toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
+            msg = cf_log_to_ros_topic[log_type]()
+            msg.data = data.get(log_name)
             self.swarm._cfs[uri].custom_publisher[log_name].publish(msg)
 
     def _log_error_callback(self, logconf, msg):

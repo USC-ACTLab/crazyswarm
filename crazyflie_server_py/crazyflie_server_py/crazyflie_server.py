@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
 
-import cflib.crtp  # noqa
+import cflib.crtp  
 from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 from cflib.crazyflie.log import LogConfig
@@ -12,7 +12,7 @@ from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, Paramet
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import String, UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
+from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 import tf_transformations
 
 import os
@@ -29,7 +29,6 @@ cf_log_to_ros_topic = {
     "int32_t": Int32,
     "float": Float32,
 }
-
 
 class CrazyflieServer(Node):
     def __init__(self):
@@ -70,8 +69,7 @@ class CrazyflieServer(Node):
         self._pose_logging_enabled = False
         self._pose_logging_freq = 10
 
-
-        self.ros_parameters = self.param_to_dict(self._parameters)
+        self._ros_parameters = self._param_to_dict(self._parameters)
         
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
@@ -87,39 +85,39 @@ class CrazyflieServer(Node):
 
             cf_name = self.cf_dict[link_uri]
             cf_type = self.type_dict[link_uri]
+            
             #check if logging is enabled
             logging_enabled = False
             try: 
-                logging_enabled = self.ros_parameters['all']["firmware_logging"]["enabled"]
+                logging_enabled = self._ros_parameters['all']["firmware_logging"]["enabled"]
             except KeyError:
                 pass
             try: 
-                logging_enabled = self.ros_parameters['robot_types'][cf_type]["firmware_logging"]["enabled"]
+                logging_enabled = self._ros_parameters['robot_types'][cf_type]["firmware_logging"]["enabled"]
             except KeyError:
                 pass
             try: 
-                logging_enabled = self.ros_parameters['robots'][cf_name]["firmware_logging"]["enabled"]
+                logging_enabled = self._ros_parameters['robots'][cf_name]["firmware_logging"]["enabled"]
             except KeyError:
                 pass
 
             self.swarm._cfs[link_uri].logging["enabled"] = logging_enabled
 
-
             #check if pose can be logged
             pose_logging_enabled = False
             pose_logging_freq = 10
             try: 
-                pose_logging_freq = self.ros_parameters['all']["firmware_logging"]["default_topics"]["pose"]["frequency"]
+                pose_logging_freq = self._ros_parameters['all']["firmware_logging"]["default_topics"]["pose"]["frequency"]
                 pose_logging_enabled = True
             except KeyError:
                 pass
             try: 
-                pose_logging_freq = self.ros_parameters['robot_types'][cf_type]["firmware_logging"]["default_topics"]["pose"]["frequency"]
+                pose_logging_freq = self._ros_parameters['robot_types'][cf_type]["firmware_logging"]["default_topics"]["pose"]["frequency"]
                 pose_logging_enabled = True
             except KeyError:
                 pass
             try: 
-                pose_logging_freq = self.ros_parameters['robots'][cf_name]["firmware_logging"]["default_topics"]["pose"]["frequency"]
+                pose_logging_freq = self._ros_parameters['robots'][cf_name]["firmware_logging"]["default_topics"]["pose"]["frequency"]
                 pose_logging_enabled = True
             except KeyError:
                 pass
@@ -136,24 +134,23 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["lg_pose"] = lg_pose
             self.swarm._cfs[link_uri].logging["publisher"] = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
 
-
             # Check for any custom_log_topics names
             #check if pose can be logged
             custom_logging_enabled = False
             custom_log_topics = {}
             
             try: 
-                custom_log_topics = self.ros_parameters['all']["firmware_logging"]["custom_topics"]
+                custom_log_topics = self._ros_parameters['all']["firmware_logging"]["custom_topics"]
                 custom_logging_enabled = True
             except KeyError:
                 pass
             try: 
-                custom_log_topics.update(self.ros_parameters['robot_types'][cf_type]["firmware_logging"]["custom_topics"])
+                custom_log_topics.update(self._ros_parameters['robot_types'][cf_type]["firmware_logging"]["custom_topics"])
                 custom_logging_enabled = True
             except KeyError:
                 pass
             try: 
-                custom_log_topics.update(self.ros_parameters['robots'][cf_name]["firmware_logging"]["custom_topics"])
+                custom_log_topics.update(self._ros_parameters['robots'][cf_name]["firmware_logging"]["custom_topics"])
                 custom_logging_enabled = True
             except KeyError:
                 pass
@@ -194,9 +191,8 @@ class CrazyflieServer(Node):
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
-    def param_to_dict(self, param_ros):
+    def _param_to_dict(self, param_ros):
         tree = {}
-
         for item in param_ros:
             t = tree
             for part in item.split('.'):
@@ -204,11 +200,8 @@ class CrazyflieServer(Node):
                     t = t.setdefault(part, param_ros[item].value)
                 else:
                     t = t.setdefault(part, {})
-
         return tree
  
-
-
     def _fully_connected(self, link_uri):
         self.get_logger().info(f" {link_uri} is fully connected!")
 

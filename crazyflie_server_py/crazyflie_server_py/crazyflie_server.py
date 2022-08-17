@@ -73,34 +73,6 @@ class CrazyflieServer(Node):
 
         self.ros_parameters = self.param_to_dict(self._parameters)
         
-        temp_log_dict = {"frequency":0,"vars": [] }
-
-        for param_name, param in self._parameters.items():
-            param_name_split = param_name.split('.')
-            if param_name_split[0] == "all" and param_name_split[1] == "firmware_logging":
-                if param_name_split[2] == "custom_topics":
-                    if param_name_split[4]== "frequency":
-                        temp_log_dict.update({"frequency":param.value})
-                    if param_name_split[4]== "vars":
-                        temp_log_dict.update({"vars":param.value})
-                    if temp_log_dict["frequency"] != 0 and len(temp_log_dict["vars"]) != 0:
-                        self.swarm.custom_log_topics[param_name_split[3]] = temp_log_dict
-                        temp_log_dict = {"frequency":0,"vars": [] }
-            if param_name_split[0] == "robot_types" and param_name_split[1] in self.type_dict.values() and param_name_split[2] == "firmware_logging":
-                if param_name_split[1] not in self.swarm.robot_types:
-                    self.swarm.robot_types[param_name_split[1]] = {}
-                if param_name_split[3] == "custom_topics":
-                    print(param.value)
-                    if param_name_split[5]== "frequency":
-                        temp_log_dict.update({"frequency":param.value})
-                    if param_name_split[5]== "vars":
-                        temp_log_dict.update({"vars":param.value})
-                    if temp_log_dict["frequency"] != 0 and len(temp_log_dict["vars"]) != 0:
-
-                        self.swarm.robot_types[param_name_split[1]]['custom_log_topics'] = {}
-                        self.swarm.robot_types[param_name_split[1]]['custom_log_topics'][param_name_split[4]] = temp_log_dict
-                        temp_log_dict = {"frequency":0,"vars": [] }
-        
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
                 self._fully_connected
@@ -164,20 +136,42 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["lg_pose"] = lg_pose
             self.swarm._cfs[link_uri].logging["publisher"] = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
 
-        
-            self.swarm._cfs[link_uri].custom_log_topics = {}
-            self.swarm._cfs[link_uri].custom_log = []
-            self.swarm._cfs[link_uri].custom_publisher = {}
 
-            if len(self.swarm.custom_log_topics) != 0:
-                for log_group_name in self.swarm.custom_log_topics:
-                    frequency = self.swarm.custom_log_topics[log_group_name]["frequency"]
+            # Check for any custom_log_topics names
+            #check if pose can be logged
+            custom_logging_enabled = False
+            custom_log_topics = {}
+            
+            try: 
+                custom_log_topics = self.ros_parameters['all']["firmware_logging"]["custom_topics"]
+                custom_logging_enabled = True
+            except KeyError:
+                pass
+            try: 
+                custom_log_topics.update(self.ros_parameters['robot_types'][cf_type]["firmware_logging"]["custom_topics"])
+                custom_logging_enabled = True
+            except KeyError:
+                pass
+            try: 
+                custom_log_topics.update(self.ros_parameters['robots'][cf_name]["firmware_logging"]["custom_topics"])
+                custom_logging_enabled = True
+            except KeyError:
+                pass
+
+            self.swarm._cfs[link_uri].logging["custom_log_topics"] = {}
+            self.swarm._cfs[link_uri].logging["lg_custom"] = []
+            self.swarm._cfs[link_uri].logging["custom_log_publisher"] = {}
+
+            if custom_logging_enabled:
+                for log_group_name in custom_log_topics:
+                    frequency = custom_log_topics[log_group_name]["frequency"]
                     lg_custom = LogConfig(name=log_group_name, period_in_ms=1000 / frequency)
-                    for log_name in self.swarm.custom_log_topics[log_group_name]["vars"]:
+                    for log_name in custom_log_topics[log_group_name]["vars"]:
                         lg_custom.add_variable(log_name)
-                        self.swarm._cfs[link_uri].custom_log_topics[log_name] = "empty"
-                    self.swarm._cfs[link_uri].custom_log.append(lg_custom)
-        
+                        # Don't know which type this needs to be in until we get the full toc
+                        self.swarm._cfs[link_uri].logging["custom_log_topics"][log_name] = "empty publisher"
+                    self.swarm._cfs[link_uri].logging["lg_custom"].append(lg_custom)
+            print(self.swarm._cfs[link_uri].logging["custom_log_topics"])
         self.swarm.open_links()
 
         # Create services for the entire swarm and each individual crazyflie
@@ -250,15 +244,14 @@ class CrazyflieServer(Node):
                     self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
 
             cf_handle.l_toc = cf.log.toc.toc
-            if len(cf_handle.custom_log) != 0:
+            if len(cf_handle.logging["lg_custom"]) != 0 and cf_handle.logging["enabled"]:
 
-                for log_name in cf_handle.custom_log_topics:
+                for log_name in cf_handle.logging["custom_log_topics"]:
 
-                    ros_topic_type = String
                     log_type = cf.log.toc.toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
-                    self.swarm._cfs[link_uri].custom_publisher[log_name] =  self.create_publisher(cf_log_to_ros_topic[log_type], self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
+                    self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_name] =  self.create_publisher(cf_log_to_ros_topic[log_type], self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
 
-                for lg_custom in cf_handle.custom_log:
+                for lg_custom in cf_handle.logging["lg_custom"]:
                     try:
                         cf.log.add_config(lg_custom)
                         lg_custom.data_received_cb.add_callback(partial(self._log_custom_data_callback, uri=link_uri)) 
@@ -301,7 +294,7 @@ class CrazyflieServer(Node):
             log_type = self.swarm._cfs[uri].l_toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
             msg = cf_log_to_ros_topic[log_type]()
             msg.data = data.get(log_name)
-            self.swarm._cfs[uri].custom_publisher[log_name].publish(msg)
+            self.swarm._cfs[uri].logging["custom_log_publisher"][log_name].publish(msg)
 
     def _log_error_callback(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))

@@ -69,6 +69,9 @@ class CrazyflieServer(Node):
         self.swarm.custom_log_topics = {}
         self._pose_logging_enabled = False
         self._pose_logging_freq = 10
+
+
+        self.ros_parameters = self.param_to_dict(self._parameters)
         
         temp_log_dict = {"frequency":0,"vars": [] }
 
@@ -176,6 +179,20 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Twist, name + "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
+
+    def param_to_dict(self, param_ros):
+        tree = {}
+
+        for item in param_ros:
+            t = tree
+            for part in item.split('.'):
+                if part == item.split('.')[-1]:
+                    t = t.setdefault(part, param_ros[item].value)
+                else:
+                    t = t.setdefault(part, {})
+
+        return tree
+ 
 
 
     def _fully_connected(self, link_uri):

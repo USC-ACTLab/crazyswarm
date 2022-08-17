@@ -64,6 +64,7 @@ class CrazyflieServer(Node):
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
         self.swarm.all_fully_connected = False
+        self.swarm.robot_types = {}
 
         self.swarm.custom_log_topics = {}
         self._pose_logging_enabled = False
@@ -85,9 +86,27 @@ class CrazyflieServer(Node):
                         temp_log_dict.update({"vars":param.value})
                     if temp_log_dict["frequency"] != 0 and len(temp_log_dict["vars"]) != 0:
                         self.swarm.custom_log_topics[param_name_split[3]] = temp_log_dict
-                        print(temp_log_dict)
                         temp_log_dict = {"frequency":0,"vars": [] }
-            
+            if param_name_split[0] == "robot_types" and param_name_split[1] in self.type_dict.values() and param_name_split[2] == "firmware_logging":
+                if param_name_split[1] not in self.swarm.robot_types:
+                    self.swarm.robot_types[param_name_split[1]] = {}
+
+                if param_name_split[3] == "default_topics":
+                    if param_name_split[4] == "pose":
+                        self.swarm.robot_types[param_name_split[1]]["pose_logging_enabled"] = True
+                        self.swarm.robot_types[param_name_split[1]]["pose_logging_freq"] = param.value
+                if param_name_split[3] == "custom_topics":
+                    print(param.value)
+                    if param_name_split[5]== "frequency":
+                        temp_log_dict.update({"frequency":param.value})
+                    if param_name_split[5]== "vars":
+                        temp_log_dict.update({"vars":param.value})
+                    if temp_log_dict["frequency"] != 0 and len(temp_log_dict["vars"]) != 0:
+
+                        self.swarm.robot_types[param_name_split[1]]['custom_log_topics'] = {}
+                        self.swarm.robot_types[param_name_split[1]]['custom_log_topics'][param_name_split[4]] = temp_log_dict
+                        temp_log_dict = {"frequency":0,"vars": [] }
+        
         for link_uri in self.uris:
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
                 self._fully_connected
@@ -99,16 +118,29 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].init_param_cnt = 0
             self.swarm._cfs[link_uri].total_param_cnt = 0
 
-            if self._pose_logging_enabled:
-                lg_pose = LogConfig(name='Pose', period_in_ms=1000 / self._pose_logging_freq)            
+            #check if pose can be logged
+            pose_logging_enabled = False
+            pose_logging_freq = 0
+            pose_logging_enabled = self._pose_logging_enabled
+            pose_logging_freq = self._pose_logging_freq
+            if "pose_logging_enabled" in self.swarm.robot_types[self.type_dict[link_uri]]:
+                pose_logging_enabled  = self.swarm.robot_types[self.type_dict[link_uri]]["pose_logging_enabled"]
+                pose_logging_freq = self.swarm.robot_types[self.type_dict[link_uri]]["pose_logging_freq"]
+
+            if pose_logging_enabled is True:
+                lg_pose = LogConfig(name='Pose', period_in_ms=1000 / pose_logging_freq)            
                 lg_pose.add_variable('stateEstimate.x')
                 lg_pose.add_variable('stateEstimate.y')
                 lg_pose.add_variable('stateEstimate.z')
                 lg_pose.add_variable('stabilizer.roll', 'float')
                 lg_pose.add_variable('stabilizer.pitch', 'float')
                 lg_pose.add_variable('stabilizer.yaw', 'float')
+                self.swarm._cfs[link_uri].pose_logging_enabled = True
                 self.swarm._cfs[link_uri].lg_pose = lg_pose
                 self.swarm._cfs[link_uri].publisher = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
+            else:
+                self.swarm._cfs[link_uri].pose_logging_enabled = False
+
         
             self.swarm._cfs[link_uri].custom_log_topics = {}
             self.swarm._cfs[link_uri].custom_log = []
@@ -162,10 +194,11 @@ class CrazyflieServer(Node):
 
     def _sync_logging(self):
         for link_uri in self.uris:
-            cf_handle = cf = self.swarm._cfs[link_uri]
+            cf_handle = self.swarm._cfs[link_uri]
             cf = cf_handle.cf
-            if self._pose_logging_enabled:
-                lg_pose = self.swarm._cfs[link_uri].lg_pose
+
+            if cf_handle.pose_logging_enabled:
+                lg_pose = cf_handle.lg_pose
                 try:
                     cf.log.add_config(lg_pose)
                     lg_pose.data_received_cb.add_callback(partial(self._log_pose_data_callback, uri=link_uri)) 

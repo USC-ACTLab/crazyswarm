@@ -35,6 +35,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/UpdateParams.srv"
   "srv/UploadTrajectory.srv"
   "srv/RemoveLogging.srv"
+  "srv/AddLogging.srv"
   DEPENDENCIES builtin_interfaces geometry_msgs std_msgs 
   ADD_LINTER_TESTS
 )

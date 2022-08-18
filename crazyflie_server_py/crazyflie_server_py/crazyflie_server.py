@@ -7,7 +7,7 @@ from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 from cflib.crazyflie.log import LogConfig
 
-from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging
+from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 
 from geometry_msgs.msg import Twist
@@ -133,7 +133,10 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["pose_logging_enabled"] = pose_logging_enabled
             self.swarm._cfs[link_uri].logging["pose_logging_freq"] = pose_logging_freq
             self.swarm._cfs[link_uri].logging["pose_log_config"] = lg_pose
-            self.swarm._cfs[link_uri].logging["pose_publisher"] = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
+            if pose_logging_enabled:
+                self.swarm._cfs[link_uri].logging["pose_publisher"] = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
+            else:
+                self.swarm._cfs[link_uri].logging["pose_publisher"] = "empty"
 
             # Check for any custom_log_topics names
             #check if pose can be logged
@@ -263,6 +266,7 @@ class CrazyflieServer(Node):
                 self.get_logger().info(f"{link_uri} setup custom logging")
 
                 self.create_service(RemoveLogging, self.cf_dict[link_uri] + "/remove_logging", partial(self._remove_logging, uri=link_uri))
+                self.create_service(AddLogging, self.cf_dict[link_uri] + "/add_logging", partial(self._add_logging, uri=link_uri))
 
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
@@ -500,6 +504,17 @@ class CrazyflieServer(Node):
             for log_name in self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["vars"]:
                 self.destroy_publisher(self.swarm._cfs[uri].logging["custom_log_publisher"][log_name])
             self.get_logger().info(f"Remove {topic_name} logging")
+
+        return response
+
+
+    def _add_logging(self, request, response, uri="all"):
+        topic_name = request.topic_name
+        if topic_name == "pose":
+                self.swarm._cfs[uri].logging["pose_publisher"] = self.create_publisher(PoseStamped, self.cf_dict[uri] + "/pose", 10)
+                self.swarm._cfs[uri].logging["pose_log_config"].period_in_ms=1000 / request.frequency
+                self.swarm._cfs[uri].logging["pose_log_config"].start()
+                self.get_logger().info(f"Add {topic_name} logging")
 
         return response
 

@@ -7,12 +7,13 @@ from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 from cflib.crazyflie.log import LogConfig
 
-from crazyflie_interfaces.srv import Takeoff, Land, GoTo
+from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
+from std_msgs.msg import String, UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
+
 import tf_transformations
 
 import os
@@ -85,7 +86,7 @@ class CrazyflieServer(Node):
 
             cf_name = self.cf_dict[link_uri]
             cf_type = self.type_dict[link_uri]
-            
+
             #check if logging is enabled
             logging_enabled = False
             try: 
@@ -131,8 +132,8 @@ class CrazyflieServer(Node):
             lg_pose.add_variable('stabilizer.yaw', 'float')
             self.swarm._cfs[link_uri].logging["pose_logging_enabled"] = pose_logging_enabled
             self.swarm._cfs[link_uri].logging["pose_logging_freq"] = pose_logging_freq
-            self.swarm._cfs[link_uri].logging["lg_pose"] = lg_pose
-            self.swarm._cfs[link_uri].logging["publisher"] = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
+            self.swarm._cfs[link_uri].logging["pose_log_config"] = lg_pose
+            self.swarm._cfs[link_uri].logging["pose_publisher"] = self.create_publisher(PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
 
             # Check for any custom_log_topics names
             #check if pose can be logged
@@ -156,6 +157,7 @@ class CrazyflieServer(Node):
                 pass
 
             self.swarm._cfs[link_uri].logging["custom_log_topics"] = {}
+            self.swarm._cfs[link_uri].logging["custom_log_groups"] = {}
             self.swarm._cfs[link_uri].logging["lg_custom"] = []
             self.swarm._cfs[link_uri].logging["custom_log_publisher"] = {}
 
@@ -166,9 +168,11 @@ class CrazyflieServer(Node):
                     for log_name in custom_log_topics[log_group_name]["vars"]:
                         lg_custom.add_variable(log_name)
                         # Don't know which type this needs to be in until we get the full toc
-                        self.swarm._cfs[link_uri].logging["custom_log_topics"][log_name] = "empty publisher"
-                    self.swarm._cfs[link_uri].logging["lg_custom"].append(lg_custom)
-            print(self.swarm._cfs[link_uri].logging["custom_log_topics"])
+                        self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_name] = "empty publisher"
+                    self.swarm._cfs[link_uri].logging["custom_log_groups"][log_group_name] = {}
+                    self.swarm._cfs[link_uri].logging["custom_log_groups"][log_group_name]["log_config"] = lg_custom
+                    self.swarm._cfs[link_uri].logging["custom_log_groups"][log_group_name]["vars"] = custom_log_topics[log_group_name]["vars"]
+
         self.swarm.open_links()
 
         # Create services for the entire swarm and each individual crazyflie
@@ -222,7 +226,7 @@ class CrazyflieServer(Node):
             cf = cf_handle.cf
 
             if cf_handle.logging["pose_logging_enabled"] and cf_handle.logging["enabled"]:
-                lg_pose = cf_handle.logging["lg_pose"]
+                lg_pose = cf_handle.logging["pose_log_config"]
                 try:
                     cf.log.add_config(lg_pose)
                     lg_pose.data_received_cb.add_callback(partial(self._log_pose_data_callback, uri=link_uri)) 
@@ -237,14 +241,15 @@ class CrazyflieServer(Node):
                     self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
 
             cf_handle.l_toc = cf.log.toc.toc
-            if len(cf_handle.logging["lg_custom"]) != 0 and cf_handle.logging["enabled"]:
+            if len(cf_handle.logging["custom_log_groups"]) != 0 and cf_handle.logging["enabled"]:
 
-                for log_name in cf_handle.logging["custom_log_topics"]:
+                for log_name in cf_handle.logging["custom_log_publisher"]:
 
                     log_type = cf.log.toc.toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
                     self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_name] =  self.create_publisher(cf_log_to_ros_topic[log_type], self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
 
-                for lg_custom in cf_handle.logging["lg_custom"]:
+                for log_group_dict in cf_handle.logging["custom_log_groups"].values():
+                    lg_custom = log_group_dict['log_config']
                     try:
                         cf.log.add_config(lg_custom)
                         lg_custom.data_received_cb.add_callback(partial(self._log_custom_data_callback, uri=link_uri)) 
@@ -257,6 +262,7 @@ class CrazyflieServer(Node):
                         self.get_logger().info(f'{link_uri}: Could not add log config, bad configuration.')
                 self.get_logger().info(f"{link_uri} setup custom logging")
 
+                self.create_service(RemoveLogging, self.cf_dict[link_uri] + "/remove_logging", partial(self._remove_logging, uri=link_uri))
 
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
@@ -279,7 +285,7 @@ class CrazyflieServer(Node):
         msg.pose.orientation.y = q[1]
         msg.pose.orientation.z = q[2]
         msg.pose.orientation.w = q[3]
-        self.swarm._cfs[uri].logging["publisher"].publish(msg)
+        self.swarm._cfs[uri].logging["pose_publisher"].publish(msg)
 
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
 
@@ -287,7 +293,7 @@ class CrazyflieServer(Node):
             log_type = self.swarm._cfs[uri].l_toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
             msg = cf_log_to_ros_topic[log_type]()
             msg.data = data.get(log_name)
-            self.swarm._cfs[uri].logging["custom_log_publisher"][log_name].publish(msg)
+            self.swarm._cfs[uri].logging["custom_log_publisher"][log_name].publish(msg)            
 
     def _log_error_callback(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
@@ -389,7 +395,7 @@ class CrazyflieServer(Node):
                         )
 
                     except Exception as e:
-                        self.get_logger().info(str(e))
+                        self.get_logger().info(str(e))   
 
                         return SetParametersResult(successful=False)
         return SetParametersResult(successful=False)
@@ -477,12 +483,25 @@ class CrazyflieServer(Node):
         return response
 
     def _cmd_vel_changed(self, msg, uri=""):
-        print(uri)
         roll = msg.linear.y
         pitch = -msg.linear.x
         yawrate = msg.angular.z
         thrust = int(min(max(msg.linear.z, 0, 0), 60000))
         self.swarm._cfs[uri].cf.commander.send_setpoint(roll, pitch, yawrate, thrust)
+
+    def _remove_logging(self, request, response, uri="all"):
+        topic_name = request.topic_name
+        if topic_name == "pose":
+            self.swarm._cfs[uri].logging["pose_log_config"].stop()
+            self.destroy_publisher(self.swarm._cfs[uri].logging["pose_publisher"])
+            self.get_logger().info("Remove pose logging")
+        else:
+            self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["log_config"].stop()
+            for log_name in self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["vars"]:
+                self.destroy_publisher(self.swarm._cfs[uri].logging["custom_log_publisher"][log_name])
+            self.get_logger().info(f"Remove {topic_name} logging")
+
+        return response
 
 
 def main(args=None):

@@ -510,12 +510,28 @@ class CrazyflieServer(Node):
 
     def _add_logging(self, request, response, uri="all"):
         topic_name = request.topic_name
+        frequency = request.frequency
+        variables = request.vars
         if topic_name == "pose":
-                self.swarm._cfs[uri].logging["pose_publisher"] = self.create_publisher(PoseStamped, self.cf_dict[uri] + "/pose", 10)
-                self.swarm._cfs[uri].logging["pose_log_config"].period_in_ms=1000 / request.frequency
-                self.swarm._cfs[uri].logging["pose_log_config"].start()
-                self.get_logger().info(f"Add {topic_name} logging")
-
+            self.swarm._cfs[uri].logging["pose_publisher"] = self.create_publisher(PoseStamped, self.cf_dict[uri] + "/pose", 10)
+            self.swarm._cfs[uri].logging["pose_log_config"].period_in_ms=1000 / frequency
+            self.swarm._cfs[uri].logging["pose_log_config"].start()
+            self.get_logger().info(f"Add {topic_name} logging")
+        else:
+            lg_custom = LogConfig(name=topic_name, period_in_ms=1000 / frequency)
+            for log_name in variables:
+                lg_custom.add_variable(log_name)
+                log_type = self.swarm._cfs[uri].cf.log.toc.toc[log_name.split('.')[0]][log_name.split('.')[1]].ctype
+                self.swarm._cfs[uri].logging["custom_log_publisher"][log_name] = self.create_publisher(cf_log_to_ros_topic[log_type], self.cf_dict[uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
+            self.swarm._cfs[uri].cf.log.add_config(lg_custom)
+            lg_custom.data_received_cb.add_callback(partial(self._log_custom_data_callback, uri=uri)) 
+            lg_custom.error_cb.add_callback(self._log_error_callback)
+            lg_custom.start()
+            
+            self.swarm._cfs[uri].logging["custom_log_groups"][topic_name] = {}
+            self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["log_config"] = lg_custom
+            self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["vars"] = variables 
+            self.get_logger().info(f"Add {topic_name} logging")          
         return response
 
 

@@ -1,3 +1,9 @@
+"""
+A crazyflie server for communicating with several crazyflies
+    based on the official crazyflie python library from 
+    Bitcraze
+"""
+
 import rclpy
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
@@ -53,6 +59,7 @@ class CrazyflieServer(Node):
         self.uri_dict = {}
         self.type_dict = {}
 
+        # Create easy lookup tables for uri, name and types
         for crazyflie in data["robots"]:
             uri = data["robots"][crazyflie]["uri"]
             self.uris.append(uri)
@@ -65,16 +72,14 @@ class CrazyflieServer(Node):
         factory = CachedCfFactory(rw_cache="./cache")
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
-        self.swarm.all_fully_connected = False
-        self.swarm.robot_types = {}
 
-        self.swarm.custom_log_topics = {}
-        self._pose_logging_enabled = False
-        self._pose_logging_freq = 10
-
+        # Turn ROS parameters into a dictionary
         self._ros_parameters = self._param_to_dict(self._parameters)
 
+        # Initialize logging, services and parameters for each crazyflie
         for link_uri in self.uris:
+
+            # Connect callbacks for different connection states of the crazyflie
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
                 self._fully_connected
             )
@@ -83,14 +88,13 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].cf.connection_failed.add_callback(
                 self._connection_failed
             )
-            self.swarm._cfs[link_uri].init_param_cnt = 0
-            self.swarm._cfs[link_uri].total_param_cnt = 0
+
             self.swarm._cfs[link_uri].logging = {}
 
             cf_name = self.cf_dict[link_uri]
             cf_type = self.type_dict[link_uri]
 
-            # check if logging is enabled
+            # check if logging is enabled at startup
             logging_enabled = False
             try:
                 logging_enabled = self._ros_parameters['all']["firmware_logging"]["enabled"]
@@ -129,6 +133,7 @@ class CrazyflieServer(Node):
             except KeyError:
                 pass
 
+            # Setup crazyflie logblocks and ROS2 publishers
             lg_pose = LogConfig(
                 name='Pose', period_in_ms=1000 / pose_logging_freq)
             lg_pose.add_variable('stateEstimate.x')
@@ -146,8 +151,7 @@ class CrazyflieServer(Node):
             else:
                 self.swarm._cfs[link_uri].logging["pose_publisher"] = "empty"
 
-            # Check for any custom_log_topics names
-            # check if pose can be logged
+            # Check for any custom_log topics
             custom_logging_enabled = False
             custom_log_topics = {}
 
@@ -171,9 +175,9 @@ class CrazyflieServer(Node):
 
             self.swarm._cfs[link_uri].logging["custom_log_topics"] = {}
             self.swarm._cfs[link_uri].logging["custom_log_groups"] = {}
-            self.swarm._cfs[link_uri].logging["lg_custom"] = []
             self.swarm._cfs[link_uri].logging["custom_log_publisher"] = {}
 
+            # Setup log blocks for each custom log and ROS2 publisher topics
             if custom_logging_enabled:
                 for log_group_name in custom_log_topics:
                     frequency = custom_log_topics[log_group_name]["frequency"]
@@ -190,6 +194,7 @@ class CrazyflieServer(Node):
                     self.swarm._cfs[link_uri].logging["custom_log_groups"][log_group_name][
                         "frequency"] = custom_log_topics[log_group_name]["frequency"]
 
+        # Now all crazyflies are initialized, open links!
         self.swarm.open_links()
 
         # Create services for the entire swarm and each individual crazyflie
@@ -215,6 +220,9 @@ class CrazyflieServer(Node):
             )
 
     def _param_to_dict(self, param_ros):
+        """
+        Turn ROS2 parameters from the node into a dict
+        """
         tree = {}
         for item in param_ros:
             t = tree
@@ -226,20 +234,35 @@ class CrazyflieServer(Node):
         return tree
 
     def _fully_connected(self, link_uri):
+        """
+        Called when all parameters have been updated
+          and the full log toc has been received of the Crazyflie
+        """
         self.get_logger().info(f" {link_uri} is fully connected!")
 
         self.swarm.fully_connected_crazyflie_cnt += 1
 
         if self.swarm.fully_connected_crazyflie_cnt == len(self.cf_dict):
             self.get_logger().info("All Crazyflies are fully connected!")
-            self.swarm.all_fully_connected = True
-            self._sync_parameters()
-            self._sync_logging()
+            self._init_parameters()
+            self._init_logging()
             self.add_on_set_parameters_callback(self._parameters_callback)
         else:
             return
 
-    def _sync_logging(self):
+    def _disconnected(self, link_uri):
+        self.get_logger().info(f" {link_uri} is disconnected!")
+
+    def _connection_failed(self, link_uri, msg):
+        self.get_logger().info(f"{link_uri} connection Failed")
+        self.swarm.close_links()
+
+    def _init_logging(self):
+        """
+        Sets up all the log blocks for the crazyflie and
+           all the ROS2 publisher and parameters for logging
+           at startup
+        """
         for link_uri in self.uris:
             cf_handle = self.swarm._cfs[link_uri]
             cf = cf_handle.cf
@@ -301,8 +324,14 @@ class CrazyflieServer(Node):
                 self.create_service(
                     AddLogging, self.cf_dict[link_uri] + "/add_logging", partial(self._add_logging, uri=link_uri))
 
-    def _log_pose_data_callback(self, timestamp, data, logconf, uri):
+        self.get_logger().info("All Crazyflies loggging are initialized")
 
+
+    def _log_pose_data_callback(self, timestamp, data, logconf, uri):
+        """
+        Once pose data is retrieved from the Crazyflie, 
+            send out the ROS2 topic for Pose
+        """
         x = data.get('stateEstimate.x')
         y = data.get('stateEstimate.y')
         z = data.get('stateEstimate.z')
@@ -324,7 +353,10 @@ class CrazyflieServer(Node):
         self.swarm._cfs[uri].logging["pose_publisher"].publish(msg)
 
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
-
+        """
+        Once custom log block is retrieved from the Crazyflie, 
+            send out the ROS2 topic for that same type of log
+        """
         for log_name in data:
             log_type = self.swarm._cfs[uri].l_toc[log_name.split(
                 '.')[0]][log_name.split('.')[1]].ctype
@@ -336,8 +368,11 @@ class CrazyflieServer(Node):
     def _log_error_callback(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
 
-    def _sync_parameters(self):
-
+    def _init_parameters(self):
+        """
+        Once custom log block is retrieved from the Crazyflie, 
+            send out the ROS2 topic for that same type of log
+        """
         for link_uri in self.uris:
             cf = self.swarm._cfs[link_uri].cf
 
@@ -418,9 +453,13 @@ class CrazyflieServer(Node):
                             descriptor=parameter_descriptor,
                         )
 
-        self.get_logger().info("All Crazyflies parameters are synced")
+        self.get_logger().info("All Crazyflies parameters are initialized")
 
     def _parameters_callback(self, params):
+        """
+        Sets up all the parameters for the crazyflie and
+           translates it to ROS2 paraemeters at startup
+        """
         for param in params:
             param_split = param.name.split("/")
 
@@ -443,14 +482,11 @@ class CrazyflieServer(Node):
                     return SetParametersResult(successful=True)
         return SetParametersResult(successful=False)
 
-    def _disconnected(self, link_uri):
-        self.get_logger().info(f" {link_uri} is disconnected!")
-
-    def _connection_failed(self, link_uri, msg):
-        self.get_logger().info(f"{link_uri} connection Failed")
-        self.swarm.close_links()
-
     def _takeoff_callback(self, request, response, uri="all"):
+        """
+        Service callback to take the crazyflie land to 
+            a certain height in high level commander
+        """
         duration = float(request.duration.sec) + \
             float(request.duration.nanosec / 1e9)
         self.get_logger().info(
@@ -471,6 +507,10 @@ class CrazyflieServer(Node):
         return response
 
     def _land_callback(self, request, response, uri="all"):
+        """
+        Service callback to make the crazyflie land to 
+            a certain height in high level commander
+        """
         duration = float(request.duration.sec) + \
             float(request.duration.nanosec / 1e9)
         self.get_logger().info(
@@ -493,6 +533,10 @@ class CrazyflieServer(Node):
     def _go_to_callback(self, request, response, uri="all"):
         duration = float(request.duration.sec) + \
             float(request.duration.nanosec / 1e9)
+        """
+        Service callback to have the crazyflie go to 
+            a certain position in high level commander
+        """
         self.get_logger().info(
             "go_to(position=%f,%f,%f m, yaw=%f rad, duration=%f s, relative=%d, group_mask=%d)"
             % (
@@ -529,6 +573,10 @@ class CrazyflieServer(Node):
         return response
 
     def _cmd_vel_changed(self, msg, uri=""):
+        """
+        Topic update callback to control the attitude and thrust
+            of the crazyflie with teleop
+        """
         roll = msg.linear.y
         pitch = -msg.linear.x
         yawrate = msg.angular.z
@@ -537,6 +585,9 @@ class CrazyflieServer(Node):
             roll, pitch, yawrate, thrust)
 
     def _remove_logging(self, request, response, uri="all"):
+        """
+        Service callback to remove logging blocks of the crazyflie
+        """
         topic_name = request.topic_name
         if topic_name == "pose":
             try:
@@ -571,6 +622,9 @@ class CrazyflieServer(Node):
         return response
 
     def _add_logging(self, request, response, uri="all"):
+        """
+        Service callback to add logging blocks of the crazyflie
+        """
         topic_name = request.topic_name
         frequency = request.frequency
         variables = request.vars

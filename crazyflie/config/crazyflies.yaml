@@ -2,38 +2,31 @@
 robots:
   cf231:
     enabled: true
-    uri: radio://0/40/2M/E7E7E7E701
+    uri: radio://0/80/2M/E7E7E7E7E7
     initial_position: [0, 0, 0]
     type: cf21  # see robot_types
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
-    firmware_logging:
-      enabled: true
-      default_topics:
-        pose:
-          frequency:  5 # Hz
-      custom_topics:
-        topic_name3: 
-          frequency: 1
-          vars: ["acc.x", "acc.y"]
+    # firmware_logging:
+    #   enabled: true
+    #   custom_topics:
+    #     topic_name3: 
+    #       frequency: 1
+    #       vars: ["acc.x", "acc.y"]
   cf5:
-    enabled: true
-    uri: radio://0/40/2M/E7E7E7E703
+    enabled: false
+    uri: radio://0/80/2M/E7E7E7E705
     initial_position: [0, -0.5, 0]
     type: cf21  # see robot_types
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
-    firmware_logging:
-      enabled: true
-      default_topics:
-        pose:
-          frequency:  5 # Hz
-      custom_topics:
-        topic_name3: 
-          frequency: 1
-          vars: ["acc.x", "acc.y", "acc.z"]
+    #firmware_logging:
+    #  custom_topics:
+    #    topic_name3: 
+    #      frequency: 1
+    #      vars: ["acc.x", "acc.y", "acc.z"]
 # Definition of the various robot types
 robot_types:
   cf21:
@@ -50,11 +43,11 @@ robot_types:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
     #firmware_logging:
-      #enabled: true
-      #default_topics:
-      #  pose:
-      #    frequency: 1 # Hz
-    #  custom_topics:
+    #   enabled: true
+    #   default_topics:
+    #   pose:
+    #     frequency: 1 # Hz
+    #   custom_topics:
     #    topic_name3: 
     #      frequency: 1
     #      vars: ["acc.x", "acc.y", "acc.z"]
@@ -84,13 +77,13 @@ all:
      # remove to disable default topic
       pose:
         frequency: 10 # Hz
-    custom_topics:
-      topic_name1:
-        frequency: 10 # Hz
-        vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
-      topic_name2:
-        frequency: 1 # Hz
-        vars: ["stabilizer.roll", "stabilizer.pitch", "stabilizer.yaw"]
+    #custom_topics:
+    #  topic_name1:
+    #    frequency: 10 # Hz
+    #    vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
+    #  topic_name2:
+    #    frequency: 1 # Hz
+    #    vars: ["stabilizer.roll", "stabilizer.pitch", "stabilizer.yaw"]
   firmware_params:
     commander:
       enHighLevel: 1

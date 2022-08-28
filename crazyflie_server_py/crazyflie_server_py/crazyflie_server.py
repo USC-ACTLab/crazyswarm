@@ -4,6 +4,7 @@ A crazyflie server for communicating with several crazyflies
     Bitcraze
 """
 
+from logging import exception
 import rclpy
 from rclpy.node import Node
 from ament_index_python.packages import get_package_share_directory
@@ -319,10 +320,10 @@ class CrazyflieServer(Node):
 
                 self.get_logger().info(f"{link_uri} setup custom logging")
 
-                self.create_service(
-                    RemoveLogging, self.cf_dict[link_uri] + "/remove_logging", partial(self._remove_logging, uri=link_uri))
-                self.create_service(
-                    AddLogging, self.cf_dict[link_uri] + "/add_logging", partial(self._add_logging, uri=link_uri))
+            self.create_service(
+                RemoveLogging, self.cf_dict[link_uri] + "/remove_logging", partial(self._remove_logging, uri=link_uri))
+            self.create_service(
+                AddLogging, self.cf_dict[link_uri] + "/add_logging", partial(self._add_logging, uri=link_uri))
 
         self.get_logger().info("All Crazyflies loggging are initialized")
 
@@ -597,24 +598,24 @@ class CrazyflieServer(Node):
                 self.destroy_publisher(
                     self.swarm._cfs[uri].logging["pose_publisher"])
                 self.get_logger().info(f"{uri}: Remove pose logging")
-            except Exception as e:
+            except rclpy.exceptions.ParameterNotDeclaredException:
                 self.get_logger().info(
-                    f"{uri}: Failed to remove {topic_name} logging")
-                self.get_logger().info(str(e))
+                    f"{uri}: No logblock of {topic_name} has been found ")
                 response.success = False
                 return response
         else:
             try:
+                self.undeclare_parameter( self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
+                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/vars/")
                 self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["log_config"].stop(
                 )
                 for log_name in self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["vars"]:
                     self.destroy_publisher(
                         self.swarm._cfs[uri].logging["custom_log_publisher"][log_name])
                 self.get_logger().info(f"{uri}: Remove {topic_name} logging")
-            except Exception as e:
+            except rclpy.exceptions.ParameterNotDeclaredException:
                 self.get_logger().info(
-                    f"{uri}: Failed to remove {topic_name} logging")
-                self.get_logger().info(str(e))
+                    f"{uri}: No logblock of {topic_name} has been found ")
                 response.success = False
                 return response
 
@@ -638,10 +639,9 @@ class CrazyflieServer(Node):
                 self.swarm._cfs[uri].logging["pose_log_config"].period_in_ms = 1000 / frequency
                 self.swarm._cfs[uri].logging["pose_log_config"].start()
                 self.get_logger().info(f"{uri}: Add {topic_name} logging")
-            except Exception as e:
+            except rclpy.exceptions.ParameterAlreadyDeclaredException:
                 self.get_logger().info(
-                    f"{uri}: Failed to add {topic_name} logging")
-                self.get_logger().info(str(e))
+                    f"{uri}: The content the logging of {topic_name} has already started ")
                 response.success = False
                 return response
         else:
@@ -659,6 +659,7 @@ class CrazyflieServer(Node):
                     self.swarm._cfs[uri].logging["custom_log_publisher"][log_name] = self.create_publisher(
                         cf_log_to_ros_topic[log_type], self.cf_dict[uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
                 self.swarm._cfs[uri].cf.log.add_config(lg_custom)
+
                 lg_custom.data_received_cb.add_callback(
                     partial(self._log_custom_data_callback, uri=uri))
                 lg_custom.error_cb.add_callback(self._log_error_callback)
@@ -670,16 +671,23 @@ class CrazyflieServer(Node):
                 self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["frequency"] = frequency
 
                 self.get_logger().info(f"{uri}: Add {topic_name} logging")
-            except Exception as e:
+            except KeyError as e:
                 self.get_logger().info(
                     f"{uri}: Failed to add {topic_name} logging")
-                self.get_logger().info(str(e))
+                self.get_logger().info(str(e) + "is not in TOC")
+                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
+                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/vars/")
+                response.success = False
+                return response
+            except rclpy.exceptions.ParameterAlreadyDeclaredException:
+                self.get_logger().info(
+                    f"{uri}: The content or part of the logging of {topic_name} has already started ")
                 response.success = False
                 return response
 
         response.success = True
         return response
-
+        
 
 def main(args=None):
 

@@ -8,6 +8,12 @@ robots:
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
+    # firmware_logging:
+    #   enabled: true
+    #   custom_topics:
+    #     topic_name3: 
+    #       frequency: 1
+    #       vars: ["acc.x", "acc.y"]
   cf5:
     enabled: false
     uri: radio://0/80/2M/E7E7E7E705
@@ -16,7 +22,11 @@ robots:
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
-
+    #firmware_logging:
+    #  custom_topics:
+    #    topic_name3: 
+    #      frequency: 1
+    #      vars: ["acc.x", "acc.y", "acc.z"]
 # Definition of the various robot types
 robot_types:
   cf21:
@@ -32,6 +42,15 @@ robot_types:
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
+    #firmware_logging:
+    #   enabled: true
+    #   default_topics:
+    #   pose:
+    #     frequency: 1 # Hz
+    #   custom_topics:
+    #    topic_name3: 
+    #      frequency: 1
+    #      vars: ["acc.x", "acc.y", "acc.z"]
 
   cf21_mocap_deck:
     motion_capture:
@@ -43,6 +62,7 @@ robot_types:
     battery:
       voltage_warning: 3.8  # V
       voltage_critical: 3.7 # V
+
     # firmware_params:
     #   kalman:
     #     pNAcc_xy: 1.0 # default 0.5
@@ -51,6 +71,19 @@ robot_types:
 all:
   # firmware parameters for all drones (use robot_types/type_name to set per type, or
   # robots/drone_name to set per drone)
+  firmware_logging:
+    enabled: false
+    default_topics:
+     # remove to disable default topic
+      pose:
+        frequency: 10 # Hz
+    #custom_topics:
+    #  topic_name1:
+    #    frequency: 10 # Hz
+    #    vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
+    #  topic_name2:
+    #    frequency: 1 # Hz
+    #    vars: ["stabilizer.roll", "stabilizer.pitch", "stabilizer.yaw"]
   firmware_params:
     commander:
       enHighLevel: 1

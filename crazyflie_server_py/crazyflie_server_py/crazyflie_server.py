@@ -7,10 +7,8 @@ A crazyflie server for communicating with several crazyflies
     2022 - K. N. McGuire (Bitcraze AB)
 """
 
-from logging import exception
 import rclpy
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
 
 import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory

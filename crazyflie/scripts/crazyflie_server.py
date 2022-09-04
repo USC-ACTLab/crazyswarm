@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 A crazyflie server for communicating with several crazyflies
     based on the official crazyflie python library from 

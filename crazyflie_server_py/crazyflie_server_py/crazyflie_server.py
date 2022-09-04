@@ -1,13 +1,14 @@
 """
 A crazyflie server for communicating with several crazyflies
     based on the official crazyflie python library from 
-    Bitcraze
+    Bitcraze AB
+
+
+    2022 - K. N. McGuire (Bitcraze AB)
 """
 
-from logging import exception
 import rclpy
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
 
 import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
@@ -23,8 +24,6 @@ from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 
 import tf_transformations
 
-import os
-import yaml
 from functools import partial
 from math import radians
 
@@ -32,12 +31,23 @@ cf_log_to_ros_topic = {
     "uint8_t": UInt8,
     "uint16_t": UInt16,
     "uint32_t": UInt32,
-    "int8_t ": Int8,
+    "int8_t": Int8,
     "int16_t": Int16,
     "int32_t": Int32,
     "float": Float32,
 }
 
+cf_log_to_ros_param = {
+    "uint8_t": ParameterType.PARAMETER_INTEGER,
+    "uint16_t": ParameterType.PARAMETER_INTEGER,
+    "uint32_t": ParameterType.PARAMETER_INTEGER,
+    "int8_t": ParameterType.PARAMETER_INTEGER,
+    "int16_t": ParameterType.PARAMETER_INTEGER,
+    "int32_t": ParameterType.PARAMETER_INTEGER,
+    "FP16": ParameterType.PARAMETER_DOUBLE,
+    "float": ParameterType.PARAMETER_DOUBLE,
+    "double": ParameterType.PARAMETER_DOUBLE,
+}
 
 class CrazyflieServer(Node):
     def __init__(self):
@@ -47,35 +57,30 @@ class CrazyflieServer(Node):
             automatically_declare_parameters_from_overrides=True,
         )
 
-        # Read out crazyflie URIs
-        crazyflies_yaml = os.path.join(
-            get_package_share_directory(
-                "crazyflie"), "config", "crazyflies.yaml"
-        )
-        with open(crazyflies_yaml) as f:
-            data = yaml.safe_load(f)
+        # Turn ROS parameters into a dictionary
+        self._ros_parameters = self._param_to_dict(self._parameters)
 
         self.uris = []
         self.cf_dict = {}
         self.uri_dict = {}
         self.type_dict = {}
 
+        robot_data = self._ros_parameters["robots"]
+
         # Create easy lookup tables for uri, name and types
-        for crazyflie in data["robots"]:
-            uri = data["robots"][crazyflie]["uri"]
-            self.uris.append(uri)
-            self.cf_dict[uri] = crazyflie
-            self.uri_dict[crazyflie] = uri
-            type_cf = data["robots"][crazyflie]["type"]
-            self.type_dict[uri] = type_cf
+        for crazyflie in robot_data:
+            if robot_data[crazyflie]["enabled"]:
+                uri = robot_data[crazyflie]["uri"]
+                self.uris.append(uri)
+                self.cf_dict[uri] = crazyflie
+                self.uri_dict[crazyflie] = uri
+                type_cf = robot_data[crazyflie]["type"]
+                self.type_dict[uri] = type_cf
 
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
-
-        # Turn ROS parameters into a dictionary
-        self._ros_parameters = self._param_to_dict(self._parameters)
 
         # Initialize logging, services and parameters for each crazyflie
         for link_uri in self.uris:
@@ -133,7 +138,7 @@ class CrazyflieServer(Node):
                 pose_logging_enabled = True
             except KeyError:
                 pass
-
+            
             # Setup crazyflie logblocks and ROS2 publishers
             lg_pose = LogConfig(
                 name='Pose', period_in_ms=1000 / pose_logging_freq)
@@ -146,7 +151,7 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["pose_logging_enabled"] = pose_logging_enabled
             self.swarm._cfs[link_uri].logging["pose_logging_freq"] = pose_logging_freq
             self.swarm._cfs[link_uri].logging["pose_log_config"] = lg_pose
-            if pose_logging_enabled:
+            if pose_logging_enabled and logging_enabled:
                 self.swarm._cfs[link_uri].logging["pose_publisher"] = self.create_publisher(
                     PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
             else:
@@ -196,8 +201,14 @@ class CrazyflieServer(Node):
                         "frequency"] = custom_log_topics[log_group_name]["frequency"]
 
         # Now all crazyflies are initialized, open links!
-        self.swarm.open_links()
-
+        try:
+            self.swarm.open_links()
+        except Exception as e:
+            # Close node if one of the Crazyflies can not be found
+            self.get_logger().info("Error!: One or more Crazyflies can not be found. ")
+            self.get_logger().info("Check if you got the right URIs or if they are turned on")
+            exit()
+        
         # Create services for the entire swarm and each individual crazyflie
         self.create_service(Takeoff, "all/takeoff", self._takeoff_callback)
         self.create_service(Land, "all/land", self._land_callback)
@@ -383,69 +394,51 @@ class CrazyflieServer(Node):
                 for param in sorted(p_toc[group].keys()):
                     name = group + "." + param
 
-                    final_value = None
-
-                    # First check and set global parameters
-                    global_init_param_name = "all.firmware_params." + name
-                    global_parameter = self.get_parameter_or(
-                        global_init_param_name)
-                    if global_parameter.value is not None:
-                        final_value = global_parameter.value
-
-                    # Then check and set Type parameters
-                    type_init_param_name = (
-                        "robot_types."
-                        + self.type_dict[link_uri]
-                        + ".firmware_params."
-                        + name
-                    )
-                    type_parameter = self.get_parameter_or(
-                        type_init_param_name)
-                    if type_parameter.value is not None:
-                        final_value = type_parameter.value
-
-                    # Then check and set individual parameters
-                    cf_init_param_name = (
-                        "robots."
-                        + self.cf_dict[link_uri]
-                        + ".firmware_params."
-                        + name
-                    )
-                    cf_parameter = self.get_parameter_or(cf_init_param_name)
-                    if cf_parameter.value is not None:
-                        final_value = cf_parameter.value
-
+                    # Check the parameter type 
                     elem = p_toc[group][param]
                     type_cf_param = elem.ctype
-                    if type_cf_param == "float":
-                        parameter_descriptor = ParameterDescriptor(
-                            type=ParameterType.PARAMETER_DOUBLE
-                        )
-                    else:
-                        parameter_descriptor = ParameterDescriptor(
-                            type=ParameterType.PARAMETER_INTEGER
-                        )
+                    parameter_descriptor = ParameterDescriptor(type=cf_log_to_ros_param[type_cf_param])
 
-                    if final_value is not None:
+                    # Check ros parameters if an parameter should be set
+                    #   Parameter sets for individual robots has priority,
+                    #   then robot types, then all (all robots)
+                    set_param_value = None
+                    try:
+                        set_param_value = self._ros_parameters["all"]["firmware_params"][group][param]
+                    except KeyError:
+                        pass
+                    try:
+                        set_param_value = self._ros_parameters["robot_types"][self.cf_dict[link_uri]]["firmware_params"][group][param]
+                    except KeyError:
+                        pass
+                    try:
+                        set_param_value = self._ros_parameters["robots"][self.cf_dict[link_uri]]["firmware_params"][group][param]
+                    except KeyError:
+                        pass
+
+                    if set_param_value is not None:
                         # If value is found in initial parameters,
                         # set crazyflie firmware value and declare value in ROS2 parameter
                         # Note: currently this is not possible to get the most recent from the
                         #       crazyflie with get_value due to threading.
-                        cf.param.set_value(name, final_value)
+                        cf.param.set_value(name, set_param_value)
                         self.get_logger().info(
-                            f" {link_uri}: {name} is set to {final_value}"
+                            f" {link_uri}: {name} is set to {set_param_value}"
                         )
                         self.declare_parameter(
                             self.cf_dict[link_uri] +
                             "/params/" + group + "/" + param,
-                            value=final_value,
+                            value=set_param_value,
                             descriptor=parameter_descriptor,
                         )
                     else:
-                        # If value is net found in initial parameter set
+                        # If value is not found in initial parameter set
                         # get crazyflie paramter value and declare that value in ROS2 parameter
 
-                        cf_param_value = cf.param.get_value(name)
+                        if cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_INTEGER:
+                            cf_param_value = int(cf.param.get_value(name))
+                        elif cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_DOUBLE:
+                            cf_param_value = float(cf.param.get_value(name))
 
                         self.declare_parameter(
                             self.cf_dict[link_uri] +

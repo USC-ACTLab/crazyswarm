@@ -406,17 +406,17 @@ class CrazyflieServer(Node):
                     #   then robot types, then all (all robots)
                     set_param_value = None
                     try:
-                        set_param_value = self._ros_parameters["all"]["firmware_params"][name]
+                        set_param_value = self._ros_parameters["all"]["firmware_params"][group][param]
                     except KeyError:
-                        continue
+                        pass
                     try:
-                        set_param_value = self._ros_parameters["robot_types"]["firmware_params"][name]
+                        set_param_value = self._ros_parameters["robot_types"][self.cf_dict[link_uri]]["firmware_params"][group][param]
                     except KeyError:
-                        continue
+                        pass
                     try:
-                        set_param_value = self._ros_parameters["robots"]["firmware_params"][name]
+                        set_param_value = self._ros_parameters["robots"][self.cf_dict[link_uri]]["firmware_params"][group][param]
                     except KeyError:
-                        continue
+                        pass
 
                     if set_param_value is not None:
                         # If value is found in initial parameters,
@@ -437,7 +437,10 @@ class CrazyflieServer(Node):
                         # If value is not found in initial parameter set
                         # get crazyflie paramter value and declare that value in ROS2 parameter
 
-                        cf_param_value = cf.param.get_value(name)
+                        if cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_INTEGER:
+                            cf_param_value = int(cf.param.get_value(name))
+                        elif cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_DOUBLE:
+                            cf_param_value = float(cf.param.get_value(name))
 
                         self.declare_parameter(
                             self.cf_dict[link_uri] +

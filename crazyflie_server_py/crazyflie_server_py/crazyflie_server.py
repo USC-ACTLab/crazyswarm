@@ -47,35 +47,29 @@ class CrazyflieServer(Node):
             automatically_declare_parameters_from_overrides=True,
         )
 
-        # Read out crazyflie URIs
-        crazyflies_yaml = os.path.join(
-            get_package_share_directory(
-                "crazyflie"), "config", "crazyflies.yaml"
-        )
-        with open(crazyflies_yaml) as f:
-            data = yaml.safe_load(f)
+        # Turn ROS parameters into a dictionary
+        self._ros_parameters = self._param_to_dict(self._parameters)
 
         self.uris = []
         self.cf_dict = {}
         self.uri_dict = {}
         self.type_dict = {}
 
+        robot_data = self._ros_parameters["robots"]
+
         # Create easy lookup tables for uri, name and types
-        for crazyflie in data["robots"]:
-            uri = data["robots"][crazyflie]["uri"]
+        for crazyflie in robot_data:
+            uri = robot_data[crazyflie]["uri"]
             self.uris.append(uri)
             self.cf_dict[uri] = crazyflie
             self.uri_dict[crazyflie] = uri
-            type_cf = data["robots"][crazyflie]["type"]
+            type_cf = robot_data[crazyflie]["type"]
             self.type_dict[uri] = type_cf
 
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
         self.swarm = Swarm(self.uris, factory=factory)
         self.swarm.fully_connected_crazyflie_cnt = 0
-
-        # Turn ROS parameters into a dictionary
-        self._ros_parameters = self._param_to_dict(self._parameters)
 
         # Initialize logging, services and parameters for each crazyflie
         for link_uri in self.uris:

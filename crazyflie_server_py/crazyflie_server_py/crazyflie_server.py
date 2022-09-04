@@ -140,7 +140,7 @@ class CrazyflieServer(Node):
                 pose_logging_enabled = True
             except KeyError:
                 pass
-
+            
             # Setup crazyflie logblocks and ROS2 publishers
             lg_pose = LogConfig(
                 name='Pose', period_in_ms=1000 / pose_logging_freq)
@@ -153,7 +153,7 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["pose_logging_enabled"] = pose_logging_enabled
             self.swarm._cfs[link_uri].logging["pose_logging_freq"] = pose_logging_freq
             self.swarm._cfs[link_uri].logging["pose_log_config"] = lg_pose
-            if pose_logging_enabled:
+            if pose_logging_enabled and logging_enabled:
                 self.swarm._cfs[link_uri].logging["pose_publisher"] = self.create_publisher(
                     PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
             else:

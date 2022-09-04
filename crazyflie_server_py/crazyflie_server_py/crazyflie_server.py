@@ -33,7 +33,7 @@ cf_log_to_ros_topic = {
     "uint8_t": UInt8,
     "uint16_t": UInt16,
     "uint32_t": UInt32,
-    "int8_t ": Int8,
+    "int8_t": Int8,
     "int16_t": Int16,
     "int32_t": Int32,
     "float": Float32,
@@ -43,7 +43,7 @@ cf_log_to_ros_param = {
     "uint8_t": ParameterType.PARAMETER_INTEGER,
     "uint16_t": ParameterType.PARAMETER_INTEGER,
     "uint32_t": ParameterType.PARAMETER_INTEGER,
-    "int8_t ": ParameterType.PARAMETER_INTEGER,
+    "int8_t": ParameterType.PARAMETER_INTEGER,
     "int16_t": ParameterType.PARAMETER_INTEGER,
     "int32_t": ParameterType.PARAMETER_INTEGER,
     "FP16": ParameterType.PARAMETER_DOUBLE,
@@ -71,12 +71,13 @@ class CrazyflieServer(Node):
 
         # Create easy lookup tables for uri, name and types
         for crazyflie in robot_data:
-            uri = robot_data[crazyflie]["uri"]
-            self.uris.append(uri)
-            self.cf_dict[uri] = crazyflie
-            self.uri_dict[crazyflie] = uri
-            type_cf = robot_data[crazyflie]["type"]
-            self.type_dict[uri] = type_cf
+            if robot_data[crazyflie]["enabled"]:
+                uri = robot_data[crazyflie]["uri"]
+                self.uris.append(uri)
+                self.cf_dict[uri] = crazyflie
+                self.uri_dict[crazyflie] = uri
+                type_cf = robot_data[crazyflie]["type"]
+                self.type_dict[uri] = type_cf
 
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")
@@ -202,8 +203,14 @@ class CrazyflieServer(Node):
                         "frequency"] = custom_log_topics[log_group_name]["frequency"]
 
         # Now all crazyflies are initialized, open links!
-        self.swarm.open_links()
-
+        try:
+            self.swarm.open_links()
+        except Exception as e:
+            # Close node if one of the Crazyflies can not be found
+            self.get_logger().info("Error!: One or more Crazyflies can not be found. ")
+            self.get_logger().info("Check if you got the right URIs or if they are turned on")
+            exit()
+        
         # Create services for the entire swarm and each individual crazyflie
         self.create_service(Takeoff, "all/takeoff", self._takeoff_callback)
         self.create_service(Land, "all/land", self._land_callback)
@@ -392,18 +399,24 @@ class CrazyflieServer(Node):
                     # Check the parameter type 
                     elem = p_toc[group][param]
                     type_cf_param = elem.ctype
-                    parameter_descriptor = ParameterDescriptor(cf_log_to_ros_param[type_cf_param])
+                    parameter_descriptor = ParameterDescriptor(type=cf_log_to_ros_param[type_cf_param])
 
                     # Check ros parameters if an parameter should be set
                     #   Parameter sets for individual robots has priority,
                     #   then robot types, then all (all robots)
                     set_param_value = None
-                    if name in self._ros_parameters["all"]["firmware_params"]:
+                    try:
                         set_param_value = self._ros_parameters["all"]["firmware_params"][name]
-                    if name in self._ros_parameters["robot_types"]["firmware_params"]:
+                    except KeyError:
+                        continue
+                    try:
                         set_param_value = self._ros_parameters["robot_types"]["firmware_params"][name]
-                    if name in self._ros_parameters["robots"]["firmware_params"]:
+                    except KeyError:
+                        continue
+                    try:
                         set_param_value = self._ros_parameters["robots"]["firmware_params"][name]
+                    except KeyError:
+                        continue
 
                     if set_param_value is not None:
                         # If value is found in initial parameters,

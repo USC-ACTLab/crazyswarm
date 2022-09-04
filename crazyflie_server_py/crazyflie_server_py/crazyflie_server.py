@@ -1,7 +1,10 @@
 """
 A crazyflie server for communicating with several crazyflies
     based on the official crazyflie python library from 
-    Bitcraze
+    Bitcraze AB
+
+
+    2022 - K. N. McGuire (Bitcraze AB)
 """
 
 from logging import exception
@@ -23,8 +26,6 @@ from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 
 import tf_transformations
 
-import os
-import yaml
 from functools import partial
 from math import radians
 
@@ -38,6 +39,17 @@ cf_log_to_ros_topic = {
     "float": Float32,
 }
 
+cf_log_to_ros_param = {
+    "uint8_t": ParameterType.PARAMETER_INTEGER,
+    "uint16_t": ParameterType.PARAMETER_INTEGER,
+    "uint32_t": ParameterType.PARAMETER_INTEGER,
+    "int8_t ": ParameterType.PARAMETER_INTEGER,
+    "int16_t": ParameterType.PARAMETER_INTEGER,
+    "int32_t": ParameterType.PARAMETER_INTEGER,
+    "FP16": ParameterType.PARAMETER_DOUBLE,
+    "float": ParameterType.PARAMETER_DOUBLE,
+    "double": ParameterType.PARAMETER_DOUBLE,
+}
 
 class CrazyflieServer(Node):
     def __init__(self):
@@ -377,66 +389,39 @@ class CrazyflieServer(Node):
                 for param in sorted(p_toc[group].keys()):
                     name = group + "." + param
 
-                    final_value = None
-
-                    # First check and set global parameters
-                    global_init_param_name = "all.firmware_params." + name
-                    global_parameter = self.get_parameter_or(
-                        global_init_param_name)
-                    if global_parameter.value is not None:
-                        final_value = global_parameter.value
-
-                    # Then check and set Type parameters
-                    type_init_param_name = (
-                        "robot_types."
-                        + self.type_dict[link_uri]
-                        + ".firmware_params."
-                        + name
-                    )
-                    type_parameter = self.get_parameter_or(
-                        type_init_param_name)
-                    if type_parameter.value is not None:
-                        final_value = type_parameter.value
-
-                    # Then check and set individual parameters
-                    cf_init_param_name = (
-                        "robots."
-                        + self.cf_dict[link_uri]
-                        + ".firmware_params."
-                        + name
-                    )
-                    cf_parameter = self.get_parameter_or(cf_init_param_name)
-                    if cf_parameter.value is not None:
-                        final_value = cf_parameter.value
-
+                    # Check the parameter type 
                     elem = p_toc[group][param]
                     type_cf_param = elem.ctype
-                    if type_cf_param == "float":
-                        parameter_descriptor = ParameterDescriptor(
-                            type=ParameterType.PARAMETER_DOUBLE
-                        )
-                    else:
-                        parameter_descriptor = ParameterDescriptor(
-                            type=ParameterType.PARAMETER_INTEGER
-                        )
+                    parameter_descriptor = ParameterDescriptor(cf_log_to_ros_param[type_cf_param])
 
-                    if final_value is not None:
+                    # Check ros parameters if an parameter should be set
+                    #   Parameter sets for individual robots has priority,
+                    #   then robot types, then all (all robots)
+                    set_param_value = None
+                    if name in self._ros_parameters["all"]["firmware_params"]:
+                        set_param_value = self._ros_parameters["all"]["firmware_params"][name]
+                    if name in self._ros_parameters["robot_types"]["firmware_params"]:
+                        set_param_value = self._ros_parameters["robot_types"]["firmware_params"][name]
+                    if name in self._ros_parameters["robots"]["firmware_params"]:
+                        set_param_value = self._ros_parameters["robots"]["firmware_params"][name]
+
+                    if set_param_value is not None:
                         # If value is found in initial parameters,
                         # set crazyflie firmware value and declare value in ROS2 parameter
                         # Note: currently this is not possible to get the most recent from the
                         #       crazyflie with get_value due to threading.
-                        cf.param.set_value(name, final_value)
+                        cf.param.set_value(name, set_param_value)
                         self.get_logger().info(
-                            f" {link_uri}: {name} is set to {final_value}"
+                            f" {link_uri}: {name} is set to {set_param_value}"
                         )
                         self.declare_parameter(
                             self.cf_dict[link_uri] +
                             "/params/" + group + "/" + param,
-                            value=final_value,
+                            value=set_param_value,
                             descriptor=parameter_descriptor,
                         )
                     else:
-                        # If value is net found in initial parameter set
+                        # If value is not found in initial parameter set
                         # get crazyflie paramter value and declare that value in ROS2 parameter
 
                         cf_param_value = cf.param.get_value(name)

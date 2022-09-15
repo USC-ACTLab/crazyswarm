@@ -17,7 +17,7 @@ from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 from cflib.crazyflie.log import LogConfig
 
-from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
+from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging, StartTrajectory
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 
 from std_srvs.srv import Empty
@@ -217,6 +217,7 @@ class CrazyflieServer(Node):
         self.create_service(Takeoff, "all/takeoff", self._takeoff_callback)
         self.create_service(Land, "all/land", self._land_callback)
         self.create_service(GoTo, "all/go_to", self._go_to_callback)
+        self.create_service(StartTrajectory, "all/start_trajectory", self._start_trajectory_callback)
 
         for uri in self.cf_dict:
             name = self.cf_dict[uri]
@@ -233,6 +234,9 @@ class CrazyflieServer(Node):
             )
             self.create_service(
                 GoTo, name + "/go_to", partial(self._go_to_callback, uri=uri)
+            )
+            self.create_service(
+                StartTrajectory, name + "/start_trajectory", partial(self._start_trajectory_callback, uri=uri)
             )
             self.create_subscription(
                 Twist, name +
@@ -543,12 +547,13 @@ class CrazyflieServer(Node):
         return response
 
     def _go_to_callback(self, request, response, uri="all"):
-        duration = float(request.duration.sec) + \
-            float(request.duration.nanosec / 1e9)
         """
         Service callback to have the crazyflie go to 
             a certain position in high level commander
         """
+        duration = float(request.duration.sec) + \
+            float(request.duration.nanosec / 1e9)
+
         self.get_logger().info(
             "go_to(position=%f,%f,%f m, yaw=%f rad, duration=%f s, relative=%d, group_mask=%d)"
             % (
@@ -581,6 +586,31 @@ class CrazyflieServer(Node):
                 duration,
                 relative=request.relative,
                 group_mask=request.group_mask,
+            )
+        return response
+    
+    def _start_trajectory_callback(self, request, response, uri="all"):
+        self.get_logger().info("start_trajectory(id=%d, timescale=%f, reversed=%d, relative=%d, group_mask=%d)"%
+            (request.trajectory_id,
+            request.timescale,
+            request.reversed,
+            request.relative,
+            request.group_mask))
+
+        if uri == "all":
+            for link_uri in self.uris:
+                self.swarm._cfs[link_uri].cf.high_level_commander.start_trajectory(request.trajectory_id, 
+                    time_scale = request.timescale, 
+                    reversed = request.reversed,
+                    relative = request.relative,
+                    group_mask=request.group_mask)
+        else:
+            self.swarm._cfs[uri].cf.high_level_commander.start_trajectory(
+                request.trajectory_id,
+                time_scale = request.timescale,
+                reversed = request.reversed,
+                relative = request.relative,
+                group_mask=request.group_mask
             )
         return response
 

@@ -20,6 +20,7 @@ from cflib.crazyflie.log import LogConfig
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 
+from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
@@ -212,12 +213,17 @@ class CrazyflieServer(Node):
             exit()
         
         # Create services for the entire swarm and each individual crazyflie
+        self.create_service(Empty, "all/emergency", self._emergency_callback)
         self.create_service(Takeoff, "all/takeoff", self._takeoff_callback)
         self.create_service(Land, "all/land", self._land_callback)
         self.create_service(GoTo, "all/go_to", self._go_to_callback)
 
         for uri in self.cf_dict:
             name = self.cf_dict[uri]
+            self.create_service(
+                Empty, name +
+                "/emergency", partial(self._emergency_callback, uri=uri)
+            )
             self.create_service(
                 Takeoff, name +
                 "/takeoff", partial(self._takeoff_callback, uri=uri)
@@ -477,12 +483,22 @@ class CrazyflieServer(Node):
                 if param_split[1] == "logs":
                     return SetParametersResult(successful=True)
         return SetParametersResult(successful=False)
+    
+    def _emergency_callback(self, request, response, uri="all"):
+        if uri == "all":
+            for link_uri in self.uris:
+                self.swarm._cfs[link_uri].cf.loc.send_emergency_stop()
+        else:
+            self.swarm._cfs[uri].cf.loc.send_emergency_stop()
+
+        return response
 
     def _takeoff_callback(self, request, response, uri="all"):
         """
         Service callback to take the crazyflie land to 
             a certain height in high level commander
         """
+
         duration = float(request.duration.sec) + \
             float(request.duration.nanosec / 1e9)
         self.get_logger().info(

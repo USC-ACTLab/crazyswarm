@@ -18,7 +18,7 @@ from cflib.crazyflie.swarm import Swarm
 from cflib.crazyflie.log import LogConfig
 
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
-from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory
+from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 
 from std_srvs.srv import Empty
@@ -241,6 +241,9 @@ class CrazyflieServer(Node):
             )
             self.create_service(
                 UploadTrajectory, name + "/upload_trajectory", partial(self._upload_trajectory_callback, uri=uri) 
+            )
+            self.create_service(
+                NotifySetpointsStop, name + "/notify_setpoints_stop", partial(self._notify_setpoints_stop_callback, uri=uri) 
             )
             self.create_subscription(
                 Twist, name +
@@ -593,8 +596,13 @@ class CrazyflieServer(Node):
             )
         return response
 
+    def _notify_setpoints_stop_callback(self, request, response, uri="all"):
+        self.get_logger().info("Notify setpoint stop not yet implemented")
+        response.success = False
+        return response
+
     def _upload_trajectory_callback(self, request, response, uri="all"):
-        self.get_logger().info("Upload trajectory not yet implemented")
+        self.get_logger().info("Notify trajectory not yet implemented")
         response.success = False
         return response
     

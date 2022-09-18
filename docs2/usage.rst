@@ -68,3 +68,36 @@ In the second terminal
 .. code-block:: bash
 
     ros2 run crazyflie_examples hello_world
+
+Vizualization
+-------------
+
+RVIZ2 Pose
+~~~~~~~~~~
+
+In crazyflie.yaml, make sure that this following is added or uncommented
+
+.. code-block:: bash
+    
+    all:
+    ...
+    firmware_logging:
+        enabled: true
+        default_topics:
+        pose:
+            frequency: 10 # Hz
+
+In the first terminal, launch the server (CFlib backend only for now)
+
+.. code-block:: bash
+
+    ros2 launch crazyflie launch.py backend:=cflib
+
+In the second terminal
+
+.. code-block:: bash
+
+    rviz2
+
+Then set 'fixed frame' to 'world' and add the TF plugin. Then in 'TF', check  the 'show names' checkbox.
+The crazyflie names should appear with their estimated position.

@@ -23,10 +23,11 @@ from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, Paramet
 
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, TransformStamped
 from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 
 import tf_transformations
+from tf2_ros import TransformBroadcaster
 
 from functools import partial
 from math import radians
@@ -70,6 +71,9 @@ class CrazyflieServer(Node):
         self.type_dict = {}
 
         robot_data = self._ros_parameters["robots"]
+
+        # Init a transform broadcaster
+        self.tfbr = TransformBroadcaster(self)
 
         # Create easy lookup tables for uri, name and types
         for crazyflie in robot_data:
@@ -363,12 +367,16 @@ class CrazyflieServer(Node):
         Once pose data is retrieved from the Crazyflie, 
             send out the ROS2 topic for Pose
         """
+
+        cf_name = self.cf_dict[uri]
+
         x = data.get('stateEstimate.x')
         y = data.get('stateEstimate.y')
         z = data.get('stateEstimate.z')
         roll = radians(data.get('stabilizer.roll'))
         pitch = radians(-1.0 * data.get('stabilizer.pitch'))
         yaw = radians(data.get('stabilizer.yaw'))
+        q = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
 
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -376,12 +384,24 @@ class CrazyflieServer(Node):
         msg.pose.position.x = x
         msg.pose.position.y = y
         msg.pose.position.z = z
-        q = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
         msg.pose.orientation.x = q[0]
         msg.pose.orientation.y = q[1]
         msg.pose.orientation.z = q[2]
         msg.pose.orientation.w = q[3]
         self.swarm._cfs[uri].logging["pose_publisher"].publish(msg)
+
+        t_base = TransformStamped()
+        t_base.header.stamp = self.get_clock().now().to_msg()
+        t_base.header.frame_id = 'world'
+        t_base.child_frame_id = cf_name
+        t_base.transform.translation.x = x
+        t_base.transform.translation.y = y
+        t_base.transform.translation.z = z
+        t_base.transform.rotation.x = q[0]
+        t_base.transform.rotation.y = q[1]
+        t_base.transform.rotation.z = q[2]
+        t_base.transform.rotation.w = q[3]
+        self.tfbr.sendTransform(t_base)
 
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
         """

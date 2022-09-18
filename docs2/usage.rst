@@ -69,8 +69,11 @@ In the second terminal
 
     ros2 run crazyflie_examples hello_world
 
-RVIZ2 Pose Vizualization (Only CFlib backend)
-~~~~~~~~~~~~~~
+Vizualization
+-------------
+
+RVIZ2 Pose
+~~~~~~~~~~
 
 In crazyflie.yaml, make sure that this following is added or uncommented
 
@@ -83,7 +86,7 @@ In crazyflie.yaml, make sure that this following is added or uncommented
         pose:
             frequency: 10 # Hz
 
-In the first terminal, launch
+In the first terminal, launch the server (CFlib backend only for now)
 
 .. code-block:: bash
 

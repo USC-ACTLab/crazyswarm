@@ -78,6 +78,7 @@ RVIZ2 Pose
 In crazyflie.yaml, make sure that this following is added or uncommented
 
 .. code-block:: bash
+    
     all:
     ...
     firmware_logging:

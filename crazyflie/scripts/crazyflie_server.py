@@ -598,37 +598,14 @@ class CrazyflieServer(Node):
 
     def _notify_setpoints_stop_callback(self, request, response, uri="all"):
         self.get_logger().info("Notify setpoint stop not yet implemented")
-        response.success = False
         return response
 
     def _upload_trajectory_callback(self, request, response, uri="all"):
         self.get_logger().info("Notify trajectory not yet implemented")
-        response.success = False
         return response
     
     def _start_trajectory_callback(self, request, response, uri="all"):
-        self.get_logger().info("start_trajectory(id=%d, timescale=%f, reversed=%d, relative=%d, group_mask=%d)"%
-            (request.trajectory_id,
-            request.timescale,
-            request.reversed,
-            request.relative,
-            request.group_mask))
-
-        if uri == "all":
-            for link_uri in self.uris:
-                self.swarm._cfs[link_uri].cf.high_level_commander.start_trajectory(request.trajectory_id, 
-                    time_scale = request.timescale, 
-                    reversed = request.reversed,
-                    relative = request.relative,
-                    group_mask=request.group_mask)
-        else:
-            self.swarm._cfs[uri].cf.high_level_commander.start_trajectory(
-                request.trajectory_id,
-                time_scale = request.timescale,
-                reversed = request.reversed,
-                relative = request.relative,
-                group_mask=request.group_mask
-            )
+        self.get_logger().info("Start trajectory not yet implemented")
         return response
 
     def _cmd_vel_changed(self, msg, uri=""):

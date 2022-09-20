@@ -306,26 +306,12 @@ class CrazyflieServer(Node):
             cf_handle = self.swarm._cfs[link_uri]
             cf = cf_handle.cf
 
+            # Start logging for Pose
             if cf_handle.logging["pose_logging_enabled"] and cf_handle.logging["enabled"]:
-                lg_pose = cf_handle.logging["pose_log_config"]
-                try:
-                    cf.log.add_config(lg_pose)
-                    lg_pose.data_received_cb.add_callback(
-                        partial(self._log_pose_data_callback, uri=link_uri))
-                    lg_pose.error_cb.add_callback(self._log_error_callback)
-                    lg_pose.start()
-                    frequency = cf_handle.logging["pose_logging_freq"]
-                    self.declare_parameter(
-                        self.cf_dict[link_uri] + "/logs/pose/frequency/", frequency)
-                    self.get_logger().info(
-                        f"{link_uri} setup logging for pose at freq {frequency}")
-                except KeyError as e:
-                    self.get_logger().info(f'{link_uri}: Could not start log configuration,'
-                                           '{} not found in TOC'.format(str(e)))
-                except AttributeError:
-                    self.get_logger().info(
-                        f'{link_uri}: Could not add log config, bad configuration.')
-
+                prefix = "pose"
+                callback_fnc = self._log_pose_data_callback
+                self._init_predefined_logging(prefix, link_uri, callback_fnc)
+            
             cf_handle.l_toc = cf.log.toc.toc
             if len(cf_handle.logging["custom_log_groups"]) != 0 and cf_handle.logging["enabled"]:
 
@@ -365,6 +351,27 @@ class CrazyflieServer(Node):
 
         self.get_logger().info("All Crazyflies loggging are initialized")
 
+    def _init_predefined_logging(self, prefix, link_uri, callback_fnc):
+        cf_handle = self.swarm._cfs[link_uri]
+        cf = cf_handle.cf
+        lg = cf_handle.logging[prefix + "_log_config"]
+        try:
+            cf.log.add_config(lg)
+            lg.data_received_cb.add_callback(
+                partial(self.callback_fnc, uri=link_uri))
+            lg.error_cb.add_callback(self._log_error_callback)
+            lg.start()
+            frequency = cf_handle.logging[prefix + "_logging_freq"]
+            self.declare_parameter(
+                self.cf_dict[link_uri] + "/logs/" + prefix + "/frequency/", frequency)
+            self.get_logger().info(
+                f"{link_uri} setup logging for {prefix} at freq {frequency}")
+        except KeyError as e:
+            self.get_logger().info(f'{link_uri}: Could not start log configuration,'
+                                    '{} not found in TOC'.format(str(e)))
+        except AttributeError:
+            self.get_logger().info(
+                f'{link_uri}: Could not add log config, bad configuration.')
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
         """

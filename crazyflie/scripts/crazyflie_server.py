@@ -31,7 +31,7 @@ import tf_transformations
 from tf2_ros import TransformBroadcaster
 
 from functools import partial
-from math import radians
+from math import radians, pi 
 
 cf_log_to_ros_topic = {
     "uint8_t": UInt8,
@@ -386,6 +386,31 @@ class CrazyflieServer(Node):
     
     def _log_scan_data_callback(self, timestamp, data, logconf, uri):
         cf_name = self.cf_dict[uri]
+        max_range = 3.49
+        front_range = float(data.get('range.front'))/1000.0
+        left_range = float(data.get('range.left'))/1000.0
+        back_range = float(data.get('range.back'))/1000.0
+        right_range = float(data.get('range.right'))/1000.0
+        if front_range > max_range:
+            front_range = float("inf")
+        if left_range > max_range:
+            left_range = float("inf")
+        if right_range > max_range:
+            right_range = float("inf")
+        if back_range > max_range:
+            back_range = float("inf")  
+        self.ranges = [back_range, left_range, front_range, right_range, back_range]
+
+        msg = LaserScan()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = cf_name
+        msg.range_min = 0.01
+        msg.range_max = 3.49
+        msg.ranges = self.ranges
+        msg.angle_min = 0.5 * 2* pi
+        msg.angle_max =  -0.5 * 2 * pi
+        msg.angle_increment = -1.0 * pi/2
+        self.laser_publisher.publish(msg)
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
         """

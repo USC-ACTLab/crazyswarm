@@ -126,26 +126,7 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["enabled"] = logging_enabled
 
             # check if pose can be logged
-            pose_logging_enabled = False
-            pose_logging_freq = 10
-            try:
-                pose_logging_freq = self._ros_parameters['all'][
-                    "firmware_logging"]["default_topics"]["pose"]["frequency"]
-                pose_logging_enabled = True
-            except KeyError:
-                pass
-            try:
-                pose_logging_freq = self._ros_parameters['robot_types'][cf_type][
-                    "firmware_logging"]["default_topics"]["pose"]["frequency"]
-                pose_logging_enabled = True
-            except KeyError:
-                pass
-            try:
-                pose_logging_freq = self._ros_parameters['robots'][cf_name][
-                    "firmware_logging"]["default_topics"]["pose"]["frequency"]
-                pose_logging_enabled = True
-            except KeyError:
-                pass
+            pose_logging_enabled, pose_logging_freq = self._init_predefined_logblocks('pose', cf_type, cf_name)
             
             # Setup crazyflie logblocks and ROS2 publishers
             lg_pose = LogConfig(
@@ -253,6 +234,30 @@ class CrazyflieServer(Node):
                 Twist, name +
                 "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
+
+    def _init_predefined_logblocks(self, prefix, cf_type, cf_name):
+        logging_enabled = False
+        logging_freq = 10
+        try:
+            logging_freq = self._ros_parameters['all'][
+                "firmware_logging"]["default_topics"][prefix]["frequency"]
+            logging_enabled = True
+        except KeyError:
+            pass
+        try:
+            logging_freq = self._ros_parameters['robot_types'][cf_type][
+                "firmware_logging"]["default_topics"][prefix]["frequency"]
+            logging_enabled = True
+        except KeyError:
+            pass
+        try:
+            logging_freq = self._ros_parameters['robots'][cf_name][
+                "firmware_logging"]["default_topics"][prefix]["frequency"]
+            logging_enabled = True
+        except KeyError:
+            pass
+
+        return logging_enabled, logging_freq
 
     def _param_to_dict(self, param_ros):
         """

@@ -44,6 +44,30 @@ ROS2 terminal
     ros2 service call cf1/takeoff crazyflie_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
     ros2 service call cf1/land crazyflie_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
 
+Enabling Logblocks
+~~~~~~~~~~~~~
+
+In one terminal run
+.. code-block:: bash
+
+    ros2 launch crazyflie launch.py backend:=cflib
+
+In another terminal after sourcing the right setup.bash files, run:
+
+.. code-block:: bash
+
+    ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'topic_test', frequency: 10, vars: ['stateEstimate.x','stateEstimate.y','stateEstimate.z']}"
+    ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'pose', frequency: 10}
+
+With ROS2's rqt you can checkout the topics, or with 'ROS2 topics echo /cf2/pose'
+
+To close the logblocks again, run:
+
+.. code-block:: bash
+    ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'topic_test'}"
+    ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'pose'}"
+
+
 Teleoperation
 ~~~~~~~~~~~~~
 
@@ -72,8 +96,10 @@ In the second terminal
 Vizualization
 -------------
 
-RVIZ2 Pose
+RVIZ2 default topics
 ~~~~~~~~~~
+
+Make sure your crazyflie knows it's position, either by a flowdeck or another global positioning system
 
 In crazyflie.yaml, make sure that this following is added or uncommented
 
@@ -101,3 +127,10 @@ In the second terminal
 
 Then set 'fixed frame' to 'world' and add the TF plugin. Then in 'TF', check  the 'show names' checkbox.
 The crazyflie names should appear with their estimated position.
+
+This RVIZ2 visualization can be done for the default topics:
+* 'pose': '/cf1/pose/' Transforms and Pose 
+* 'odom': '/cf1/odom/' Odometry
+* 'scan': '/cf1/scan' Scan
+
+

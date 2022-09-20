@@ -25,6 +25,7 @@ from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
+from sensor_msgs.msg import LaserScan
 
 import tf_transformations
 from tf2_ros import TransformBroadcaster
@@ -69,6 +70,14 @@ class CrazyflieServer(Node):
         self.cf_dict = {}
         self.uri_dict = {}
         self.type_dict = {}
+
+        self.predef_log_type = {"pose": PoseStamped,
+                                "scan": LaserScan}
+        self.predef_log_vars = {"pose": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
+                                         'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw'],
+                                "scan": ['range.front', 'range.left', 'range.back', 'range.right']}
+        self.predef_log_fnc = {"pose": self._log_pose_data_callback,
+                               "scan": self._log_scan_data_callback}
 
         robot_data = self._ros_parameters["robots"]
 
@@ -125,11 +134,12 @@ class CrazyflieServer(Node):
 
             self.swarm._cfs[link_uri].logging["enabled"] = logging_enabled
 
-            # check if pose can be logged and setup crazyflie logblocks and ROS2 publishers
-            prefix = "pose"
-            list_logvar = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
-                           'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw']
-            self._init_predefined_logblocks(prefix, link_uri, list_logvar, logging_enabled, PoseStamped)
+            # check if predefine log blocks can be logged and setup crazyflie logblocks and ROS2 publishers
+            for predef_log_name in self.predef_log_type:
+                prefix = predef_log_name
+                topic_type = self.predef_log_type(predef_log_name)
+                list_logvar = self.predef_log_vars(predef_log_name)
+                self._init_predefined_logblocks(prefix, link_uri, list_logvar, logging_enabled, topic_type)
 
             # Check for any custom_log topics
             custom_logging_enabled = False
@@ -307,10 +317,11 @@ class CrazyflieServer(Node):
             cf = cf_handle.cf
 
             # Start logging for Pose
-            if cf_handle.logging["pose_logging_enabled"] and cf_handle.logging["enabled"]:
-                prefix = "pose"
-                callback_fnc = self._log_pose_data_callback
-                self._init_predefined_logging(prefix, link_uri, callback_fnc)
+            for predef_log_name in self.predef_log_type:
+                prefix = predef_log_name
+                if cf_handle.logging[prefix + "logging_enabled"] and cf_handle.logging["enabled"]:
+                    callback_fnc = self.predef_log_fnc[prefix]
+                    self._init_predefined_logging(prefix, link_uri, callback_fnc)
             
             cf_handle.l_toc = cf.log.toc.toc
             if len(cf_handle.logging["custom_log_groups"]) != 0 and cf_handle.logging["enabled"]:
@@ -358,7 +369,7 @@ class CrazyflieServer(Node):
         try:
             cf.log.add_config(lg)
             lg.data_received_cb.add_callback(
-                partial(self.callback_fnc, uri=link_uri))
+                partial(callback_fnc, uri=link_uri))
             lg.error_cb.add_callback(self._log_error_callback)
             lg.start()
             frequency = cf_handle.logging[prefix + "_logging_freq"]
@@ -372,6 +383,9 @@ class CrazyflieServer(Node):
         except AttributeError:
             self.get_logger().info(
                 f'{link_uri}: Could not add log config, bad configuration.')
+    
+    def _log_scan_data_callback(self, timestamp, data, logconf, uri):
+        cf_name = self.cf_dict[uri]
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
         """
@@ -656,7 +670,7 @@ class CrazyflieServer(Node):
         Service callback to remove logging blocks of the crazyflie
         """
         topic_name = request.topic_name
-        if topic_name == "pose":
+        if topic_name == self.predef_log_type.keys():
             try:
                 self.undeclare_parameter(
                     self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
@@ -696,7 +710,7 @@ class CrazyflieServer(Node):
         frequency = request.frequency
         variables = request.vars
         print(self.cf_dict[uri] + "/logs/pose/frequency/", frequency)
-        if topic_name == "pose":
+        if topic_name == self.predef_log_type.keys():
             try:
                 self.declare_parameter(
                     self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/", frequency)

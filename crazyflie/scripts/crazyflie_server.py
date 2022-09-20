@@ -125,26 +125,11 @@ class CrazyflieServer(Node):
 
             self.swarm._cfs[link_uri].logging["enabled"] = logging_enabled
 
-            # check if pose can be logged
-            pose_logging_enabled, pose_logging_freq = self._init_predefined_logblocks('pose', cf_type, cf_name)
-            
-            # Setup crazyflie logblocks and ROS2 publishers
-            lg_pose = LogConfig(
-                name='Pose', period_in_ms=1000 / pose_logging_freq)
-            lg_pose.add_variable('stateEstimate.x')
-            lg_pose.add_variable('stateEstimate.y')
-            lg_pose.add_variable('stateEstimate.z')
-            lg_pose.add_variable('stabilizer.roll', 'float')
-            lg_pose.add_variable('stabilizer.pitch', 'float')
-            lg_pose.add_variable('stabilizer.yaw', 'float')
-            self.swarm._cfs[link_uri].logging["pose_logging_enabled"] = pose_logging_enabled
-            self.swarm._cfs[link_uri].logging["pose_logging_freq"] = pose_logging_freq
-            self.swarm._cfs[link_uri].logging["pose_log_config"] = lg_pose
-            if pose_logging_enabled and logging_enabled:
-                self.swarm._cfs[link_uri].logging["pose_publisher"] = self.create_publisher(
-                    PoseStamped, self.cf_dict[link_uri] + "/pose", 10)
-            else:
-                self.swarm._cfs[link_uri].logging["pose_publisher"] = "empty"
+            # check if pose can be logged and setup crazyflie logblocks and ROS2 publishers
+            prefix = "pose"
+            list_logvar = ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
+                           'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw']
+            self._init_predefined_logblocks(prefix, link_uri, list_logvar, logging_enabled, PoseStamped)
 
             # Check for any custom_log topics
             custom_logging_enabled = False
@@ -235,7 +220,10 @@ class CrazyflieServer(Node):
                 "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
-    def _init_predefined_logblocks(self, prefix, cf_type, cf_name):
+    def _init_predefined_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
+        cf_name = self.cf_dict[link_uri]
+        cf_type = self.type_dict[link_uri]
+        
         logging_enabled = False
         logging_freq = 10
         try:
@@ -257,7 +245,18 @@ class CrazyflieServer(Node):
         except KeyError:
             pass
 
-        return logging_enabled, logging_freq
+        lg = LogConfig(
+            name=prefix, period_in_ms=1000 / logging_freq)
+        for logvar in list_logvar:
+            lg.add_variable(logvar)
+        self.swarm._cfs[link_uri].logging[prefix + "_logging_enabled"] = logging_enabled
+        self.swarm._cfs[link_uri].logging[prefix + "_logging_freq"] = logging_freq
+        self.swarm._cfs[link_uri].logging[prefix + "_log_config"] = lg
+        if logging_enabled and global_logging_enabled:
+            self.swarm._cfs[link_uri].logging[prefix + "_publisher"] = self.create_publisher(
+                topic_type, self.cf_dict[link_uri] + "/" + prefix, 10)
+        else:
+            self.swarm._cfs[link_uri].logging[prefix + "_publisher"] = "empty"
 
     def _param_to_dict(self, param_ros):
         """

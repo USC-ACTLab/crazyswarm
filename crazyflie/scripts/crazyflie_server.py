@@ -26,6 +26,7 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 from sensor_msgs.msg import LaserScan
+from nav_msgs.msg import Odometry
 
 import tf_transformations
 from tf2_ros import TransformBroadcaster
@@ -72,12 +73,16 @@ class CrazyflieServer(Node):
         self.type_dict = {}
 
         self.predef_log_type = {"pose": PoseStamped,
-                                "scan": LaserScan}
+                                "scan": LaserScan,
+                                "odom": Odometry}
         self.predef_log_vars = {"pose": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
                                          'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw'],
-                                "scan": ['range.front', 'range.left', 'range.back', 'range.right']}
+                                "scan": ['range.front', 'range.left', 'range.back', 'range.right'],
+                                "odom": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
+                                         'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw']}
         self.predef_log_fnc = {"pose": self._log_pose_data_callback,
-                               "scan": self._log_scan_data_callback}
+                               "scan": self._log_scan_data_callback,
+                               "odom": self._log_odom_data_callback}
 
         robot_data = self._ros_parameters["robots"]
 
@@ -410,7 +415,7 @@ class CrazyflieServer(Node):
         msg.angle_min = 0.5 * 2* pi
         msg.angle_max =  -0.5 * 2 * pi
         msg.angle_increment = -1.0 * pi/2
-        self.laser_publisher.publish(msg)
+        self.swarm._cfs[uri].logging["scan_publisher"].publish(msg)
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
         """
@@ -452,6 +457,27 @@ class CrazyflieServer(Node):
         t_base.transform.rotation.z = q[2]
         t_base.transform.rotation.w = q[3]
         self.tfbr.sendTransform(t_base)
+
+    def _log_odom_data_callback(self, timestamp, data, logconf, uri):
+        cf_name = self.cf_dict[uri]
+
+        x = data.get('stateEstimate.x')
+        y = data.get('stateEstimate.y')
+        z = data.get('stateEstimate.z')
+        roll = radians(data.get('stabilizer.roll'))
+        pitch = radians(-1.0 * data.get('stabilizer.pitch'))
+        yaw = radians(data.get('stabilizer.yaw'))
+        q = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
+        msg = Odometry()
+        msg.child_frame_id = cf_name
+        msg.pose.pose.position.x = x
+        msg.pose.pose.position.y = y
+        msg.pose.pose.position.z = z
+        msg.pose.pose.orientation.x = q[0]
+        msg.pose.pose.orientation.y = q[1]
+        msg.pose.pose.orientation.z = q[2]
+        msg.pose.pose.orientation.w = q[3]
+        self.swarm._cfs[uri].logging["odom_publisher"].publish(msg)
 
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
         """

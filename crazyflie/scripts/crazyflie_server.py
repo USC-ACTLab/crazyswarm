@@ -728,7 +728,7 @@ class CrazyflieServer(Node):
         Service callback to remove logging blocks of the crazyflie
         """
         topic_name = request.topic_name
-        if topic_name == self.default_log_type.keys():
+        if topic_name in self.default_log_type.keys():
             try:
                 self.undeclare_parameter(
                     self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
@@ -768,12 +768,12 @@ class CrazyflieServer(Node):
         frequency = request.frequency
         variables = request.vars
         print(self.cf_dict[uri] + "/logs/pose/frequency/", frequency)
-        if topic_name == self.default_log_type.keys():
+        if topic_name in self.default_log_type.keys():
             try:
                 self.declare_parameter(
                     self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/", frequency)
                 self.swarm._cfs[uri].logging[topic_name + "_publisher"] = self.create_publisher(
-                    PoseStamped, self.cf_dict[uri] + "/" + topic_name, 10)
+                    self.default_log_type[topic_name], self.cf_dict[uri] + "/" + topic_name, 10)
                 self.swarm._cfs[uri].logging[topic_name + "_log_config"].period_in_ms = 1000 / frequency
                 self.swarm._cfs[uri].logging[topic_name + "_log_config"].start()
                 self.get_logger().info(f"{uri}: Add {topic_name} logging")

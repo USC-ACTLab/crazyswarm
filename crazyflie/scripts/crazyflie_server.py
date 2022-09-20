@@ -659,11 +659,11 @@ class CrazyflieServer(Node):
         if topic_name == "pose":
             try:
                 self.undeclare_parameter(
-                    self.cf_dict[uri] + "/logs/pose/frequency/")
-                self.swarm._cfs[uri].logging["pose_log_config"].stop()
+                    self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
+                self.swarm._cfs[uri].logging[topic_name + "_log_config"].stop()
                 self.destroy_publisher(
-                    self.swarm._cfs[uri].logging["pose_publisher"])
-                self.get_logger().info(f"{uri}: Remove pose logging")
+                    self.swarm._cfs[uri].logging[topic_name + "_publisher"])
+                self.get_logger().info(f"{uri}: Remove {topic_name} logging")
             except rclpy.exceptions.ParameterNotDeclaredException:
                 self.get_logger().info(
                     f"{uri}: No logblock of {topic_name} has been found ")
@@ -699,11 +699,11 @@ class CrazyflieServer(Node):
         if topic_name == "pose":
             try:
                 self.declare_parameter(
-                    self.cf_dict[uri] + "/logs/pose/frequency/", frequency)
-                self.swarm._cfs[uri].logging["pose_publisher"] = self.create_publisher(
-                    PoseStamped, self.cf_dict[uri] + "/pose", 10)
-                self.swarm._cfs[uri].logging["pose_log_config"].period_in_ms = 1000 / frequency
-                self.swarm._cfs[uri].logging["pose_log_config"].start()
+                    self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/", frequency)
+                self.swarm._cfs[uri].logging[topic_name + "_publisher"] = self.create_publisher(
+                    PoseStamped, self.cf_dict[uri] + "/" + topic_name, 10)
+                self.swarm._cfs[uri].logging[topic_name + "_log_config"].period_in_ms = 1000 / frequency
+                self.swarm._cfs[uri].logging[topic_name + "_log_config"].start()
                 self.get_logger().info(f"{uri}: Add {topic_name} logging")
             except rclpy.exceptions.ParameterAlreadyDeclaredException:
                 self.get_logger().info(

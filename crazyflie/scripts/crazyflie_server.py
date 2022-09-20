@@ -145,7 +145,7 @@ class CrazyflieServer(Node):
                 prefix = default_log_name
                 topic_type = self.default_log_type[default_log_name]
                 list_logvar = self.default_log_vars[default_log_name]
-                self._init_predefined_logblocks(prefix, link_uri, list_logvar, logging_enabled, topic_type)
+                self._init_default_logblocks(prefix, link_uri, list_logvar, logging_enabled, topic_type)
 
             # Check for any custom_log topics
             custom_logging_enabled = False
@@ -237,7 +237,10 @@ class CrazyflieServer(Node):
                 "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
             )
 
-    def _init_predefined_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
+    def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
+        """
+        Prepare default logblocks as defined in crazyflies.yaml
+        """
         cf_name = self.cf_dict[link_uri]
         cf_type = self.type_dict[link_uri]
         
@@ -328,7 +331,7 @@ class CrazyflieServer(Node):
                 prefix = default_log_name
                 if cf_handle.logging[prefix + "_logging_enabled"] and cf_handle.logging["enabled"]:
                     callback_fnc = self.default_log_fnc[prefix]
-                    self._init_predefined_logging(prefix, link_uri, callback_fnc)
+                    self._init_default_logging(prefix, link_uri, callback_fnc)
             
             cf_handle.l_toc = cf.log.toc.toc
             if len(cf_handle.logging["custom_log_groups"]) != 0 and cf_handle.logging["enabled"]:
@@ -369,7 +372,10 @@ class CrazyflieServer(Node):
 
         self.get_logger().info("All Crazyflies loggging are initialized")
 
-    def _init_predefined_logging(self, prefix, link_uri, callback_fnc):
+    def _init_default_logging(self, prefix, link_uri, callback_fnc):
+        """
+        Sets up all the default log blocks and ROS2 publishers for the crazyflie
+        """
         cf_handle = self.swarm._cfs[link_uri]
         cf = cf_handle.cf
         lg = cf_handle.logging[prefix + "_log_config"]
@@ -392,6 +398,10 @@ class CrazyflieServer(Node):
                 f'{link_uri}: Could not add log config, bad configuration.')
     
     def _log_scan_data_callback(self, timestamp, data, logconf, uri):
+        """
+        Once multiranger range is retrieved from the Crazyflie, 
+            send out the ROS2 topic for Scan
+        """
         cf_name = self.cf_dict[uri]
         max_range = 3.49
         front_range = float(data.get('range.front'))/1000.0
@@ -461,6 +471,10 @@ class CrazyflieServer(Node):
         self.tfbr.sendTransform(t_base)
 
     def _log_odom_data_callback(self, timestamp, data, logconf, uri):
+        """
+        Once pose and velocity data is retrieved from the Crazyflie, 
+            send out the ROS2 topic for Odometry in 2D (no z-axis)
+        """
         cf_name = self.cf_dict[uri]
 
         x = data.get('stateEstimate.x')

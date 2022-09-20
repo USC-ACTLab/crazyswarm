@@ -64,6 +64,7 @@ With ROS2's rqt you can checkout the topics, or with 'ROS2 topics echo /cf2/pose
 To close the logblocks again, run:
 
 .. code-block:: bash
+
     ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'topic_test'}"
     ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'pose'}"
 

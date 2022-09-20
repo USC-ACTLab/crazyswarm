@@ -32,7 +32,7 @@ import tf_transformations
 from tf2_ros import TransformBroadcaster
 
 from functools import partial
-from math import radians, pi 
+from math import radians, pi, cos, sin
 
 cf_log_to_ros_topic = {
     "uint8_t": UInt8,
@@ -71,16 +71,17 @@ class CrazyflieServer(Node):
         self.cf_dict = {}
         self.uri_dict = {}
         self.type_dict = {}
-
-        self.predef_log_type = {"pose": PoseStamped,
+        
+        # Assign default topic types, variables and callbacks
+        self.default_log_type = {"pose": PoseStamped,
                                 "scan": LaserScan,
                                 "odom": Odometry}
-        self.predef_log_vars = {"pose": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
+        self.default_log_vars = {"pose": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
                                          'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw'],
                                 "scan": ['range.front', 'range.left', 'range.back', 'range.right'],
-                                "odom": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
-                                         'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw']}
-        self.predef_log_fnc = {"pose": self._log_pose_data_callback,
+                                "odom": ['stateEstimate.x', 'stateEstimate.y', 'stabilizer.yaw',
+                                         'kalman.statePX', 'kalman.statePY', 'gyro.z']}
+        self.default_log_fnc = {"pose": self._log_pose_data_callback,
                                "scan": self._log_scan_data_callback,
                                "odom": self._log_odom_data_callback}
 
@@ -140,10 +141,10 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["enabled"] = logging_enabled
 
             # check if predefine log blocks can be logged and setup crazyflie logblocks and ROS2 publishers
-            for predef_log_name in self.predef_log_type:
-                prefix = predef_log_name
-                topic_type = self.predef_log_type(predef_log_name)
-                list_logvar = self.predef_log_vars(predef_log_name)
+            for default_log_name in self.default_log_type:
+                prefix = default_log_name
+                topic_type = self.default_log_type[default_log_name]
+                list_logvar = self.default_log_vars[default_log_name]
                 self._init_predefined_logblocks(prefix, link_uri, list_logvar, logging_enabled, topic_type)
 
             # Check for any custom_log topics
@@ -195,7 +196,8 @@ class CrazyflieServer(Node):
         except Exception as e:
             # Close node if one of the Crazyflies can not be found
             self.get_logger().info("Error!: One or more Crazyflies can not be found. ")
-            self.get_logger().info("Check if you got the right URIs or if they are turned on")
+            self.get_logger().info("Check if you got the right URIs, if they are turned on" +
+                                   " or if your script have proper access to a Crazyradio PA")
             exit()
         
         # Create services for the entire swarm and each individual crazyflie
@@ -322,10 +324,10 @@ class CrazyflieServer(Node):
             cf = cf_handle.cf
 
             # Start logging for Pose
-            for predef_log_name in self.predef_log_type:
-                prefix = predef_log_name
-                if cf_handle.logging[prefix + "logging_enabled"] and cf_handle.logging["enabled"]:
-                    callback_fnc = self.predef_log_fnc[prefix]
+            for default_log_name in self.default_log_type:
+                prefix = default_log_name
+                if cf_handle.logging[prefix + "_logging_enabled"] and cf_handle.logging["enabled"]:
+                    callback_fnc = self.default_log_fnc[prefix]
                     self._init_predefined_logging(prefix, link_uri, callback_fnc)
             
             cf_handle.l_toc = cf.log.toc.toc
@@ -463,20 +465,25 @@ class CrazyflieServer(Node):
 
         x = data.get('stateEstimate.x')
         y = data.get('stateEstimate.y')
-        z = data.get('stateEstimate.z')
-        roll = radians(data.get('stabilizer.roll'))
-        pitch = radians(-1.0 * data.get('stabilizer.pitch'))
         yaw = radians(data.get('stabilizer.yaw'))
-        q = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
+        vx = data.get('kalman.statePX')
+        vy = data.get('kalman.statePY')
+        yawrate = data.get('gyro.z')
+        q = tf_transformations.quaternion_from_euler(0, 0, yaw)
         msg = Odometry()
         msg.child_frame_id = cf_name
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "world"
         msg.pose.pose.position.x = x
         msg.pose.pose.position.y = y
-        msg.pose.pose.position.z = z
         msg.pose.pose.orientation.x = q[0]
         msg.pose.pose.orientation.y = q[1]
         msg.pose.pose.orientation.z = q[2]
         msg.pose.pose.orientation.w = q[3]
+        msg.twist.twist.linear.x = vx
+        msg.twist.twist.linear.y = vy
+        msg.twist.twist.angular.z = yawrate
+
         self.swarm._cfs[uri].logging["odom_publisher"].publish(msg)
 
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
@@ -721,7 +728,7 @@ class CrazyflieServer(Node):
         Service callback to remove logging blocks of the crazyflie
         """
         topic_name = request.topic_name
-        if topic_name == self.predef_log_type.keys():
+        if topic_name == self.default_log_type.keys():
             try:
                 self.undeclare_parameter(
                     self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
@@ -761,7 +768,7 @@ class CrazyflieServer(Node):
         frequency = request.frequency
         variables = request.vars
         print(self.cf_dict[uri] + "/logs/pose/frequency/", frequency)
-        if topic_name == self.predef_log_type.keys():
+        if topic_name == self.default_log_type.keys():
             try:
                 self.declare_parameter(
                     self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/", frequency)

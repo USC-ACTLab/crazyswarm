@@ -45,7 +45,7 @@ ROS2 terminal
     ros2 service call cf1/land crazyflie_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
 
 Enabling Logblocks
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
 
 In one terminal run
 .. code-block:: bash
@@ -97,7 +97,7 @@ Vizualization
 -------------
 
 RVIZ2 default topics
-~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 Make sure your crazyflie knows it's position, either by a flowdeck or another global positioning system
 

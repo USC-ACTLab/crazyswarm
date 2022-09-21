@@ -62,7 +62,7 @@ def generate_launch_description():
             remappings=[
                 ('takeoff', 'cf231/takeoff'),
                 ('land', 'cf231/land'),
-                ('cmd_vel', 'cf231/cmd_vel'),
+                ('cmd_vel_legacy', 'cf231/cmd_vel_legacy'),
                 ('cmd_full_state', 'cf231/cmd_full_state'),
                 ('notify_setpoints_stop', 'cf231/notify_setpoints_stop'),
                 ('joy', 'cf231/joy'),
@@ -76,7 +76,7 @@ def generate_launch_description():
             remappings=[
                 ('takeoff', 'cf5/takeoff'),
                 ('land', 'cf5/land'),
-                ('cmd_vel', 'cf5/cmd_vel'),
+                ('cmd_vel_legacy', 'cf5/cmd_vel_legacy'),
                 ('cmd_full_state', 'cf5/cmd_full_state'),
                 ('notify_setpoints_stop', 'cf5/notify_setpoints_stop'),
                 ('joy', 'cf5/joy'),

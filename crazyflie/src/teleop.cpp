@@ -49,7 +49,7 @@ public:
         subscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
             "joy", 1, std::bind(&TeleopNode::joyChanged, this, _1));
 
-        pub_cmd_vel_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+        pub_cmd_vel_legacy_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_legacy", 10);
         pub_cmd_full_state_ = this->create_publisher<crazyflie_interfaces::msg::FullState>("cmd_full_state", 10);
 
         this->declare_parameter("frequency", 0);
@@ -152,7 +152,7 @@ private:
         }
 
         if (mode_ == "cmd_rpy") { 
-            pub_cmd_vel_->publish(twist_);
+            pub_cmd_vel_legacy_->publish(twist_);
         }
         if (mode_ == "cmd_vel_world") {   
 
@@ -283,7 +283,7 @@ private:
     rclcpp::Client<Takeoff>::SharedPtr client_takeoff_;
     rclcpp::Client<Land>::SharedPtr client_land_;
     rclcpp::Client<NotifySetpointsStop>::SharedPtr client_notify_setpoints_stop_;
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_vel_;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_vel_legacy_;
     rclcpp::Publisher<crazyflie_interfaces::msg::FullState>::SharedPtr pub_cmd_full_state_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr timer_takeoff_;

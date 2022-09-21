@@ -234,7 +234,7 @@ class CrazyflieServer(Node):
             )
             self.create_subscription(
                 Twist, name +
-                "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
+                "/cmd_vel_legacy", partial(self._cmd_vel_legacy_changed, uri=uri), 10
             )
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
@@ -725,7 +725,7 @@ class CrazyflieServer(Node):
         self.get_logger().info("Start trajectory not yet implemented")
         return response
 
-    def _cmd_vel_changed(self, msg, uri=""):
+    def _cmd_vel_legacy_changed(self, msg, uri=""):
         """
         Topic update callback to control the attitude and thrust
             of the crazyflie with teleop

@@ -104,7 +104,7 @@ public:
     service_upload_trajectory_ = node->create_service<UploadTrajectory>(name + "/upload_trajectory", std::bind(&CrazyflieROS::upload_trajectory, this, _1, _2));
     service_notify_setpoints_stop_ = node->create_service<NotifySetpointsStop>(name + "/notify_setpoints_stop", std::bind(&CrazyflieROS::notify_setpoints_stop, this, _1, _2));
 
-    subscription_cmd_vel_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_changed, this, _1));
+    subscription_cmd_vel_legacy_ = node->create_subscription<geometry_msgs::msg::Twist>(name + "/cmd_vel_legacy", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_vel_legacy_changed, this, _1));
     subscription_cmd_full_state_ = node->create_subscription<crazyflie_interfaces::msg::FullState>(name + "/cmd_full_state", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_full_state_changed, this, _1));
     subscription_cmd_position_ = node->create_subscription<crazyflie_interfaces::msg::Position>(name + "/cmd_position", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_position_changed, this, _1));
 
@@ -257,7 +257,7 @@ private:
     cf_.sendPositionSetpoint(x, y, z, yaw);
   }
 
-  void cmd_vel_changed(const geometry_msgs::msg::Twist::SharedPtr msg)
+  void cmd_vel_legacy_changed(const geometry_msgs::msg::Twist::SharedPtr msg)
   {
     float roll = msg->linear.y;
     float pitch = - (msg->linear.x);
@@ -457,7 +457,7 @@ private:
   std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
   // std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> cb_handles_;
 
-  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_legacy_;
   rclcpp::Subscription<crazyflie_interfaces::msg::FullState>::SharedPtr subscription_cmd_full_state_;
   rclcpp::Subscription<crazyflie_interfaces::msg::Position>::SharedPtr subscription_cmd_position_;
 };
@@ -789,7 +789,7 @@ public:
     m_serviceSetGroupMask = n.advertiseService(tf_prefix + "/set_group_mask", &CrazyflieROS::setGroupMask, this);
     m_serviceNotifySetpointsStop = n.advertiseService(tf_prefix + "/notify_setpoints_stop", &CrazyflieROS::notifySetpointsStop, this);
 
-    m_subscribeCmdVel = n.subscribe(tf_prefix + "/cmd_vel", 1, &CrazyflieROS::cmdVelChanged, this);
+    m_subscribeCmdVel = n.subscribe(tf_prefix + "/cmd_vel_legacy", 1, &CrazyflieROS::cmdVelChanged, this);
     m_subscribeCmdPosition = n.subscribe(tf_prefix + "/cmd_position", 1, &CrazyflieROS::cmdPositionSetpoint, this);
     m_subscribeCmdFullState = n.subscribe(tf_prefix + "/cmd_full_state", 1, &CrazyflieROS::cmdFullStateSetpoint, this);
     m_subscribeCmdVelocityWorld = n.subscribe(tf_prefix + "/cmd_velocity_world", 1, &CrazyflieROS::cmdVelocityWorldSetpoint, this);

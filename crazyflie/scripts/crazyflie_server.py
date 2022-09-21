@@ -11,6 +11,7 @@ A crazyflie server for communicating with several crazyflies
 
 import rclpy
 from rclpy.node import Node
+import time
 
 import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
@@ -33,6 +34,8 @@ from tf2_ros import TransformBroadcaster
 
 from functools import partial
 from math import radians, pi, cos, sin
+
+FIX_HEIGHT_CMD_VEL_2D = False
 
 cf_log_to_ros_topic = {
     "uint8_t": UInt8,
@@ -107,6 +110,13 @@ class CrazyflieServer(Node):
 
         # Initialize logging, services and parameters for each crazyflie
         for link_uri in self.uris:
+            
+            # Only used for the pos hold mode
+            self.swarm._cfs[link_uri].cmd_vel_2d = {}
+            self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] = True
+            self.swarm._cfs[uri].cmd_vel_2d['current_height'] = 0.0
+            self.swarm._cfs[uri].cmd_vel_2d['timestamp'] = 0.0
+            self.swarm._cfs[uri].cmd_vel_2d['msg'] = Twist
 
             # Connect callbacks for different connection states of the crazyflie
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(
@@ -234,8 +244,41 @@ class CrazyflieServer(Node):
             )
             self.create_subscription(
                 Twist, name +
-                "/cmd_vel", partial(self._cmd_vel_changed, uri=uri), 10
+                "/cmd_vel_legacy", partial(self._cmd_vel_legacy_changed, uri=uri), 10
             )
+            self.create_subscription(
+                Twist, name +
+                "/cmd_vel_2d", partial(self._cmd_vel_2d_changed, uri=uri), 10
+            )
+        if FIX_HEIGHT_CMD_VEL_2D:
+            timer_period = 0.1
+            self.create_timer(timer_period, self.send_hover_command)
+
+    def send_hover_command(self):
+        for uri in self.cf_dict:
+            height = self.swarm._cfs[uri].cmd_vel_2d['current_height']
+            if height<0.2:
+                return
+            timestamp = self.swarm._cfs[uri].cmd_vel_2d['timestamp']
+
+            if time.time() < timestamp + 0.5:
+                self.get_logger().info(f'{uri}: Received 2d twist message')
+
+                msg = self.swarm._cfs[uri].cmd_vel_2d['msg']
+
+                vx = msg.linear.y
+                vy = msg.linear.x
+                yawrate = msg.angular.z
+                self.swarm._cfs[uri].cf.commander.send_hover_setpoint(
+                    vx, vy, yawrate, height)
+                self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] = False
+            else:
+                if self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] == False:
+                    self.get_logger().info(f'{uri}: Sent Position hold')
+
+                    self.swarm._cfs[uri].cf.high_level_commander.go_to(0,0,0,0,0,relative=1)
+                    self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] = True
+
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
         """
@@ -639,10 +682,14 @@ class CrazyflieServer(Node):
                 self.swarm._cfs[link_uri].cf.high_level_commander.takeoff(
                     request.height, duration
                 )
+                self.swarm._cfs[link_uri].cmd_vel_2d['current_height'] = request.height
+
         else:
             self.swarm._cfs[uri].cf.high_level_commander.takeoff(
                 request.height, duration
             )
+            self.swarm._cfs[uri].cmd_vel_2d['current_height'] = request.height
+
 
         return response
 
@@ -663,10 +710,13 @@ class CrazyflieServer(Node):
                 self.swarm._cfs[link_uri].cf.high_level_commander.land(
                     request.height, duration, group_mask=request.group_mask
                 )
+                self.swarm._cfs[link_uri].cmd_vel_2d['current_height'] = request.height
         else:
             self.swarm._cfs[uri].cf.high_level_commander.land(
                 request.height, duration, group_mask=request.group_mask
             )
+            self.swarm._cfs[uri].cmd_vel_2d['current_height'] = request.height
+
 
         return response
 
@@ -725,7 +775,7 @@ class CrazyflieServer(Node):
         self.get_logger().info("Start trajectory not yet implemented")
         return response
 
-    def _cmd_vel_changed(self, msg, uri=""):
+    def _cmd_vel_legacy_changed(self, msg, uri=""):
         """
         Topic update callback to control the attitude and thrust
             of the crazyflie with teleop
@@ -736,6 +786,22 @@ class CrazyflieServer(Node):
         thrust = int(min(max(msg.linear.z, 0, 0), 60000))
         self.swarm._cfs[uri].cf.commander.send_setpoint(
             roll, pitch, yawrate, thrust)
+
+    def _cmd_vel_2d_changed(self, msg, uri=""):
+        """
+        Topic update callback to control the 2d velocity and thrust
+            of the crazyflie with teleop
+        """
+        self.swarm._cfs[uri].cmd_vel_2d['timestamp'] = time.time()
+        self.swarm._cfs[uri].cmd_vel_2d['msg'] = msg
+
+        if FIX_HEIGHT_CMD_VEL_2D is False:
+            vx = msg.linear.y
+            vy = msg.linear.x
+            z = msg.linear.z
+            yawrate = msg.angular.z
+            self.swarm._cfs[uri].cf.commander.send_hover_setpoint(
+                vx, vy, yawrate, z)
 
     def _remove_logging(self, request, response, uri="all"):
         """

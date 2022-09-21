@@ -62,7 +62,7 @@ def generate_launch_description():
                 ('emergency', 'all/emergency'),
                 ('takeoff', 'cf6/takeoff'),
                 ('land', 'cf6/land'),
-                ('cmd_vel', 'cf6/cmd_vel'),
+                ('cmd_vel_legacy', 'cf6/cmd_vel_legacy'),
                 ('cmd_full_state', 'cf6/cmd_full_state'),
                 ('notify_setpoints_stop', 'cf6/notify_setpoints_stop'),
             ],

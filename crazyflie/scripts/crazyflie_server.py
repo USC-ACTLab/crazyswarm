@@ -258,14 +258,12 @@ class CrazyflieServer(Node):
         for uri in self.cf_dict:
             height = self.swarm._cfs[uri].cmd_vel_2d['current_height']
             if height<0.2:
-                self.get_logger().info(" not during takeoff")
                 return
             timestamp = self.swarm._cfs[uri].cmd_vel_2d['timestamp']
 
             if time.time() < timestamp + 0.5:
                 msg = self.swarm._cfs[uri].cmd_vel_2d['msg']
 
-                self.get_logger().info('send hovercommand')
                 vx = msg.linear.y
                 vy = msg.linear.x
                 yawrate = msg.angular.z
@@ -274,7 +272,7 @@ class CrazyflieServer(Node):
                 self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] = False
             else:
                 if self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] == False:
-                    self.get_logger().info('send pos hold')
+                    self.get_logger().info(f'{uri}: Sent Position hold')
 
                     self.swarm._cfs[uri].cf.high_level_commander.go_to(0,0,0,0,0,relative=1)
                     self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] = True

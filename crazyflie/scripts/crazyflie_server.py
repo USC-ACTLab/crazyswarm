@@ -236,6 +236,10 @@ class CrazyflieServer(Node):
                 Twist, name +
                 "/cmd_vel_legacy", partial(self._cmd_vel_legacy_changed, uri=uri), 10
             )
+            self.create_subscription(
+                Twist, name +
+                "/cmd_vel_2d", partial(self._cmd_vel_2d_changed, uri=uri), 10
+            )
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
         """
@@ -736,6 +740,18 @@ class CrazyflieServer(Node):
         thrust = int(min(max(msg.linear.z, 0, 0), 60000))
         self.swarm._cfs[uri].cf.commander.send_setpoint(
             roll, pitch, yawrate, thrust)
+
+    def _cmd_vel_2d_changed(self, msg, uri=""):
+        """
+        Topic update callback to control the 2d velocity and thrust
+            of the crazyflie with teleop
+        """
+        vx = msg.linear.y
+        vy = msg.linear.x
+        z = msg.linear.z
+        yawrate = msg.angular.z
+        self.swarm._cfs[uri].cf.commander.send_hover_setpoint(
+            vx, vy, yawrate, z)
 
     def _remove_logging(self, request, response, uri="all"):
         """

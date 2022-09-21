@@ -18,7 +18,7 @@ import rclpy
 import rclpy.node
 import rowan
 from std_srvs.srv import Empty
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Point, Twist
 from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
@@ -177,6 +177,10 @@ class Crazyflie:
         self.cmdPositionPublisher = node.create_publisher(Position, prefix + "/cmd_position", 1)
         self.cmdPositionMsg = Position()
         self.cmdPositionMsg.header.frame_id = "/world"
+
+
+        self.cmdVelocity2DPublisher = node.create_publisher(Twist, prefix + "/cmd_vel_2d", 1)
+        self.cmdVelocity2DMsg = Twist()
 
         # self.cmdVelocityWorldPublisher = rospy.Publisher(prefix + "/cmd_velocity_world", VelocityWorld, queue_size=1)
         # self.cmdVelocityWorldMsg = VelocityWorld()
@@ -617,6 +621,13 @@ class Crazyflie:
         self.cmdPositionMsg.z   = pos[2]
         self.cmdPositionMsg.yaw = yaw
         self.cmdPositionPublisher.publish(self.cmdPositionMsg)
+
+    def cmdVelocity2D(self, vx_body, vy_body, height, yawrate = 0.0):
+        self.cmdVelocity2DMsg.linear.x = vx_body
+        self.cmdVelocity2DMsg.linear.y = vy_body
+        self.cmdVelocity2DMsg.linear.z = height
+        self.cmdVelocity2DMsg.angular.z = yawrate
+        self.cmdVelocity2DPublisher.publish(self.cmdVelocity2DMsg)
 
     # def setLEDColor(self, r, g, b):
     #     """Sets the color of the LED ring deck.

@@ -262,6 +262,8 @@ class CrazyflieServer(Node):
             timestamp = self.swarm._cfs[uri].cmd_vel_2d['timestamp']
 
             if time.time() < timestamp + 0.5:
+                self.get_logger().info(f'{uri}: Received 2d twist message')
+
                 msg = self.swarm._cfs[uri].cmd_vel_2d['msg']
 
                 vx = msg.linear.y

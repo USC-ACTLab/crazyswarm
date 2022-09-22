@@ -113,10 +113,10 @@ class CrazyflieServer(Node):
             
             # Only used for the pos hold mode
             self.swarm._cfs[link_uri].cmd_vel_2d = {}
-            self.swarm._cfs[uri].cmd_vel_2d['hold_pos'] = True
-            self.swarm._cfs[uri].cmd_vel_2d['current_height'] = 0.0
-            self.swarm._cfs[uri].cmd_vel_2d['timestamp'] = 0.0
-            self.swarm._cfs[uri].cmd_vel_2d['msg'] = Twist
+            self.swarm._cfs[link_uri].cmd_vel_2d['hold_pos'] = True
+            self.swarm._cfs[link_uri].cmd_vel_2d['current_height'] = 0.0
+            self.swarm._cfs[link_uri].cmd_vel_2d['timestamp'] = 0.0
+            self.swarm._cfs[link_uri].cmd_vel_2d['msg'] = Twist
 
             # Connect callbacks for different connection states of the crazyflie
             self.swarm._cfs[link_uri].cf.fully_connected.add_callback(

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+"""
+A Twist message handler that get incoming twist messages from 
+    external packages and handles proper takeoff, landing and
+    hover commands of connected crazyflie in the crazyflie_server
+    node
+
+    2022 - K. N. McGuire (Bitcraze AB)
+"""
 import rclpy
 from rclpy.node import Node
 

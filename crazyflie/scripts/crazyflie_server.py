@@ -21,6 +21,7 @@ from cflib.crazyflie.log import LogConfig
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
 from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
+from crazyflie_interfaces.msg import Hover
 
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
@@ -33,7 +34,7 @@ import tf_transformations
 from tf2_ros import TransformBroadcaster
 
 from functools import partial
-from math import radians, pi, cos, sin
+from math import degrees, radians, pi, cos, sin
 
 FIX_HEIGHT_CMD_VEL_2D = False
 
@@ -249,6 +250,10 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Twist, name +
                 "/cmd_vel_2d", partial(self._cmd_vel_2d_changed, uri=uri), 10
+            )
+            self.create_subscription(
+                Hover, name +
+                "/cmd_hover", partial(self._cmd_hover_changed, uri=uri), 10
             )
         if FIX_HEIGHT_CMD_VEL_2D:
             timer_period = 0.1
@@ -803,6 +808,18 @@ class CrazyflieServer(Node):
             self.swarm._cfs[uri].cf.commander.send_hover_setpoint(
                 vx, vy, yawrate, z)
 
+    def _cmd_hover_changed(self, msg, uri=""):
+        """
+        Topic update callback to control the 2d velocity and thrust
+            of the crazyflie with teleop
+        """
+        vx = msg.vx
+        vy = msg.vy
+        z = msg.z_distance
+        yawrate = -1.0*degrees(msg.yaw_rate)
+        self.swarm._cfs[uri].cf.commander.send_hover_setpoint(vx, vy, yawrate, z)
+        self.get_logger().info(f"{uri}: Received hover topic {vx} {vy} {yawrate} {z}")
+
     def _remove_logging(self, request, response, uri="all"):
         """
         Service callback to remove logging blocks of the crazyflie
@@ -847,7 +864,6 @@ class CrazyflieServer(Node):
         topic_name = request.topic_name
         frequency = request.frequency
         variables = request.vars
-        print(self.cf_dict[uri] + "/logs/pose/frequency/", frequency)
         if topic_name in self.default_log_type.keys():
             try:
                 self.declare_parameter(

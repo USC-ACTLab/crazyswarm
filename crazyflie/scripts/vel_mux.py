@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
 
@@ -6,7 +8,7 @@ from crazyflie_interfaces.srv import Takeoff, Land
 from crazyflie_interfaces.msg import Hover
 import time
 
-HEIGHT = 0.8
+HEIGHT = 0.3
 
 class VelMux(Node):
     def __init__(self):
@@ -18,12 +20,13 @@ class VelMux(Node):
             10)
         self.msg_cmd_vel = Twist()
         self.received_first_cmd_vel = False
-        prefix = '/cf2'
+        prefix = '/cf1'
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback)
-        self.take_off_client = self.create_client(Takeoff, prefix + '/take_off')
-        self.publisher_hover = self.create_publisher(Hover, prefix + '/cmd_vel_hover/', 10)
-        self.land_client = self.create_client(Takeoff, prefix + '/land')
+        self.take_off_client = self.create_client(Takeoff, prefix + '/takeoff')
+        self.publisher_hover = self.create_publisher(Hover, prefix + '/cmd_hover', 10)
+        self.land_client = self.create_client(Land, prefix + '/land')
+        self.cf_has_taken_off = False
 
 
     def cmd_vel_callback(self, msg):
@@ -34,12 +37,14 @@ class VelMux(Node):
     def timer_callback(self):
         if self.received_first_cmd_vel and self.cf_has_taken_off is False:
             print('take off!')
-            req = Takeoff.request()
+            req = Takeoff.Request()
             req.height = HEIGHT
-            req.duration = 2.0
+            req.duration = rclpy.duration.Duration(seconds=2.0).to_msg()
             self.future = self.take_off_client.call_async(req)
-            rclpy.spin_until_future_complete(self, self.future)
             self.cf_has_taken_off = True
+            time.sleep(2.0)
+
+        print(self.msg_cmd_vel)
         
         if self.received_first_cmd_vel and self.cf_has_taken_off:
             if self.msg_cmd_vel.linear.z >= 0:
@@ -51,12 +56,12 @@ class VelMux(Node):
                 msg.z_distance = HEIGHT
                 self.publisher_hover.publish(msg)
             else:
-                req = Land.request()
+                req = Land.Request()
                 req.height = 0.1
-                req.duration = 2.0
+                req.duration = rclpy.duration.Duration(seconds=2.0).to_msg()
                 self.future = self.land_client.call_async(req)
-                rclpy.spin_until_future_complete(self, self.future)
                 self.cf_has_taken_off = False
+                self.received_first_cmd_vel = False
 
 
 def main(args=None):

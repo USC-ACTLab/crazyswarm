@@ -102,6 +102,7 @@ install(TARGETS
 install(PROGRAMS
   scripts/crazyflie_server.py
   scripts/chooser.py
+  scripts/vel_mux.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -48,6 +48,7 @@ Enabling Logblocks
 ~~~~~~~~~~~~~~~~~~
 
 In one terminal run
+
 .. code-block:: bash
 
     ros2 launch crazyflie launch.py backend:=cflib
@@ -69,8 +70,8 @@ To close the logblocks again, run:
     ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'pose'}"
 
 
-Teleoperation
-~~~~~~~~~~~~~
+Teleoperation controller
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 We currently assume an XBox controller (the button mapping can be changed in teleop.yaml). It is possible to fly in different modes, including attitude-control and position-control (in which case any localization system can assist.)
 
@@ -78,6 +79,27 @@ We currently assume an XBox controller (the button mapping can be changed in tel
 
     ros2 launch crazyflie launch.py
 
+
+Teleoperation keyboard
+~~~~~~~~~~~~~~~~~~~~~~
+We have an example of the telop_twist_keyboard package working together with the crazyflie
+
+First make sure that the crazyflies.yaml has the right URI and if you are using the flowdeck, 
+set the controller to 1 (PID)
+
+Then, run the following launch file to start up the crazyflie server (CFlib):
+
+.. code-block:: bash
+
+    ros2 launch crazyflie_examples keyboard_velmux_launch.py
+
+in another terminal run:
+
+.. code-block:: bash
+
+    ros2 run teleop_twist_keyboard telop_twist_keyboard
+
+Use 't' to take off, and 'b' to land. For the rest, use the instructions of the telop package. 
 
 Python scripts
 ~~~~~~~~~~~~~~

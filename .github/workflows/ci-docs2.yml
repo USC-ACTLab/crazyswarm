@@ -16,6 +16,7 @@ jobs:
 
     - name: Install dependencies
       run: |
+        sudo apt update
         sudo apt install texlive-latex-extra dvipng
         sudo pip3 install -U setuptools
         sudo pip3 install -U -r docs2/requirements.txt

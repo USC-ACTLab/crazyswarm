@@ -87,6 +87,11 @@ class CrazyflieServer(Node):
                                "scan": self._log_scan_data_callback,
                                "odom": self._log_odom_data_callback}
 
+        self.world_tf_name = "world"
+        try:
+            self.world_tf_name = self._ros_parameters["world_tf_name"]
+        except KeyError:
+            pass
         robot_data = self._ros_parameters["robots"]
 
         # Init a transform broadcaster
@@ -453,7 +458,7 @@ class CrazyflieServer(Node):
 
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "world"
+        msg.header.frame_id = self.world_tf_name
         msg.pose.position.x = x
         msg.pose.position.y = y
         msg.pose.position.z = z
@@ -465,7 +470,7 @@ class CrazyflieServer(Node):
 
         t_base = TransformStamped()
         t_base.header.stamp = self.get_clock().now().to_msg()
-        t_base.header.frame_id = 'world'
+        t_base.header.frame_id = self.world_tf_name
         t_base.child_frame_id = cf_name
         t_base.transform.translation.x = x
         t_base.transform.translation.y = y
@@ -493,7 +498,7 @@ class CrazyflieServer(Node):
         msg = Odometry()
         msg.child_frame_id = cf_name
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "world"
+        msg.header.frame_id = self.world_tf_name
         msg.pose.pose.position.x = x
         msg.pose.pose.position.y = y
         msg.pose.pose.orientation.x = q[0]

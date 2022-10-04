@@ -506,6 +506,18 @@ class CrazyflieServer(Node):
 
         self.swarm._cfs[uri].logging["odom_publisher"].publish(msg)
 
+        t_base = TransformStamped()
+        t_base.header.stamp = self.get_clock().now().to_msg()
+        t_base.header.frame_id = 'odom'
+        t_base.child_frame_id = cf_name
+        t_base.transform.translation.x = x
+        t_base.transform.translation.y = y
+        t_base.transform.rotation.x = q[0]
+        t_base.transform.rotation.y = q[1]
+        t_base.transform.rotation.z = q[2]
+        t_base.transform.rotation.w = q[3]
+        self.tfbr.sendTransform(t_base)
+
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
         """
         Once custom log block is retrieved from the Crazyflie, 

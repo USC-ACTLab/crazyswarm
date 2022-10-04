@@ -88,6 +88,7 @@ Contents
 .. toctree::
    installation
    usage
+   tutorials
    faq
    :maxdepth: 1
 

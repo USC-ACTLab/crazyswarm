@@ -10,7 +10,8 @@ You can connect the Crazyflie through ROS2 with existing packages like the `SLAM
 With a `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ and `Multi-ranger <https://www.bitcraze.io/products/multi-ranger-deck/>`_
 ) a simple map can be created.
 
-Mind that this will only show the mapping, as the ray matching with the sparse multiranger is quite challenging for the SLAM toolbox. 
+.. warning::
+  Mind that this will only show the mapping part of SLAM, as the ray matching with the sparse multiranger is quite challenging for the SLAM toolbox. 
 
 Preperation
 ~~~~~~~~~~~
@@ -21,7 +22,7 @@ Assuming you have installed ROS2 and Crazyswarm2 according to the instructions a
 
     sudo apt-get install ros-galactic-slam-toolbox
 
-Go to crazyflie/config/crazyflie.yaml, change the URI of the crazyflie to the one yours has:
+Go to crazyflie/config/crazyflie.yaml, change the URI of the crazyflie to the one yours has and put the crazyflies you don't use on 'enabled: false':
 
 .. code-block:: bash
 
@@ -52,6 +53,54 @@ Also make sure that that the standard controller is set to 1 (PID) for the flowd
 
 Connecting with the Crazyflie
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's first look at the launch file real quick (multiranger_mapping_launch.py):
+
+
+.. code-block:: bash
+
+    return LaunchDescription([
+        Node(
+            package='crazyflie',
+            executable='crazyflie_server.py',
+            name='crazyflie_server',
+            output='screen',
+            parameters=[server_params],
+        ),
+        Node(
+            package='crazyflie',
+            executable='vel_mux.py',
+            name='vel_mux',
+            output='screen',
+            parameters=[{"hover_height": 0.3},
+                        {"incoming_twist_topic": "/cmd_vel"},
+                        {"robot_prefix": "/cf1"}]
+        ),
+        Node(
+        parameters=[
+          {'odom_frame': 'odom'},
+          {'map_frame': 'world'},
+          {'base_frame': 'cf1'},
+          {'scan_topic': '/cf1/scan'},
+          {'use_scan_matching': False},
+          {'max_laser_range': 3.5},
+          {'resolution': 0.1},
+          {'minimum_travel_distance': 0.01},
+          {'minimum_travel_heading': 0.001},
+          {'map_update_interval': 0.1}
+        ],
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen'),
+    ])
+
+Here is an explanation of the nodes:
+
+* The first node enables the crazyflie server, namely the python version (cflib) as that currently has logging enabled. This takes the crazyflies.yaml file you just edited and uses those values to setup the crazyflie.
+* The second node is a velocity command handler, which takes an incoming twist message, makes the Crazyflie take off to a fixed height and enables velocity control of external packages (you'll see why soon enough).
+* The third node is the slam toolbox node. You noted that we gave it some different parameters, where we upped the speed of the map generation, descreased the resolution and turn of ray matching as mentioned in the warning above.
+
 
 Turn on your crazyflie and put it in the middle of the room you would like to map.
 
@@ -98,6 +147,7 @@ Now, open up a  rviv2 window in a seperate terminal with :
     rviz2
 
 Add the following displays and panels to RVIZ:
+
 * Changed the 'Fixed frame' to 'world
 * 'Add' button under displays and 'by topic' tab, select the '/map' topic.
 * 'Add' button under displays and 'by display type' add a transform.
@@ -120,10 +170,18 @@ While still connected to the crazyflie with the server, open another terminal an
 
 and make the crazyflie take off with the 't' key on your keyboard. Now fly around the room to make a map of it.
 
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; margin-bottom: 20pt; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="https://www.youtube.com/embed/-NfKnlJMAHQ" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+
 Tip: start with turning slowely with yaw, which should be enough to get most of the room. 
 
 
-Once you are happy, you can save the map with 'Save Map' in the SLAM toolbox panel, and land the crazyflie with 't'
+Once you are happy, you can save the map with 'Save Map' in the SLAM toolbox panel, and land the crazyflie with 't' with teleop_twist_keyboard. 
+
+If not, you could tweak with the parameters of  the `SLAM toolbox <https://github.com/SteveMacenski/slam_toolbox/>`_ to get a better result.
 
 
 

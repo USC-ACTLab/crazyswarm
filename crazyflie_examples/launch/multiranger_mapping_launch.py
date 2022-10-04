@@ -26,7 +26,6 @@ def generate_launch_description():
             name='crazyflie_server',
             output='screen',
             parameters=[server_params],
-            #remappings = [('/cmd_vel','/cf2/cmd_vel_2d')]
         ),
         Node(
             package='crazyflie',

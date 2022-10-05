@@ -1,7 +1,9 @@
 .. _tutorials:
 
-Tutorials
-=========
+ROS2 Tutorials
+==============
+
+This page shows tutorials that connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
 
 Mapping with the SLAM toolbox
 -----------------------------
@@ -191,6 +193,9 @@ With the previous tutorial you made a map of the environment, so now it is time 
 
 Preperation
 ~~~~~~~~~~~
+.. note::
+
+  This tutorial assume you have taken the above mapping tutorial first. 
 
 Find the all the files that were created by the RVIZ2 slam toolbox plugin, which should be in format \*.yaml, \*.posegraph, \*.data and \*.pgm, and copy them in the /crazyflie_examples/data/ folder. 
 Either you can replace those that are there already, or call them different and just change the name in the launch file, which I will explain now.
@@ -204,7 +209,7 @@ Next, install the Navigation2 Bringup package:
 Looking at the Launch file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's take a look at the launch file now
+Let's take a look at the launch file (multiranger_nav3_launch.py) now
 
 .. code-block:: python
 
@@ -277,7 +282,16 @@ The next two nodes are new, which are included IncludeLaunchDescription to inclu
 Navigate the Crazyflie
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Open another terminal and open up a teleop_twist_keyboard just like last time. Press 't' on your keyboard to make the crazyflie fly
+In a terminal run the following from the crazyswarm2 source folder. 
+
+.. code-block:: bash
+
+    source install/setup.bash
+    ros2 launch crazyflie_examples multiranger_nav2_launch.py 
+
+We will not now show all the print-outs, just make sure that at the crazyflie is connected and it's outputing the right transforms and topics like in the mapping tutorial
+
+Now, open another terminal and open up a teleop_twist_keyboard just like last time. Press 't' on your keyboard to make the crazyflie fly
 
 On top of the RVIZ2 window, you see the button 'Nav2 goal'. Click at in a free spot in the map and watch the crazyflie go places :). 
 
@@ -292,7 +306,7 @@ Also try it out by putting obstacles along the path of the crazyflie like in the
 As you noticed, the movement around the obstacles are pretty conservative. You can tune the values in /config/nav2_params.yaml, like the global or local planner's inflation_layer or the size of the robot.
 Please check out  `NAV2's tuning documentation <https://navigation.ros.org/tuning/index.html/>`_ for more explanation of these values.
 
-.. warning::
+.. note::
   Final note. The SLAM performance and navigation performance of the Crazyflie with the multiranger is doable but not perfect. We absolutely encourage you to tweak and tune the parameters to get something better! (And if you do, please share :D)
 
 

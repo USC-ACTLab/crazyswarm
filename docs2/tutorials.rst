@@ -11,7 +11,7 @@ With a `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ and `Multi-
 ) a simple map can be created.
 
 .. warning::
-  Mind that this will only show the mapping part of SLAM, as the ray matching with the sparse multiranger is quite challenging for the SLAM toolbox. 
+  Mind that this will only show the mapping part of SLAM, as the ray matching with the sparse multiranger is quite challenging for the SLAM toolbox
 
 Preperation
 ~~~~~~~~~~~
@@ -102,7 +102,7 @@ Here is an explanation of the nodes:
 * The third node is the slam toolbox node. You noted that we gave it some different parameters, where we upped the speed of the map generation, descreased the resolution and turn of ray matching as mentioned in the warning above.
 
 
-Turn on your crazyflie and put it in the middle of the room you would like to map.
+Turn on your crazyflie and put it in the middle of the room you would like to map. Make sure to mark the starting position for later.
 
 Now startup the crazyflie server with the following example launch file, after sourcing the setup.bash ofcourse:
 
@@ -184,11 +184,115 @@ Once you are happy, you can save the map with 'Save Map' in the SLAM toolbox pan
 If not, you could tweak with the parameters of  the `SLAM toolbox <https://github.com/SteveMacenski/slam_toolbox/>`_ to get a better result.
 
 
+Connecting with Nav2 Bringup
+----------------------------
 
+With the previous tutorial you made a map of the environment, so now it is time to use it for navigation!
 
+Preperation
+~~~~~~~~~~~
 
+Find the all the files that were created by the RVIZ2 slam toolbox plugin, which should be in format \*.yaml, \*.posegraph, \*.data and \*.pgm, and copy them in the /crazyflie_examples/data/ folder. 
+Either you can replace those that are there already, or call them different and just change the name in the launch file, which I will explain now.
 
+Next, install the Navigation2 Bringup package:
 
+.. code-block:: bash
 
+  NAV2 sudo apt-get install ros-galactic-nav2-bringup
+
+Looking at the Launch file
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Let's take a look at the launch file now
+
+.. code-block:: python
+
+    return LaunchDescription([
+        Node(
+            package='crazyflie',
+            executable='crazyflie_server.py',
+            name='crazyflie_server',
+            output='screen',
+            parameters=[{"world_tf_name": 'map'}, 
+                        server_params],
+        ),
+        Node(
+            package='crazyflie',
+            executable='vel_mux.py',
+            name='vel_mux',
+            output='screen',
+            parameters=[{"hover_height": 0.3},
+                        {"incoming_twist_topic": "/cmd_vel"},
+                        {"robot_prefix": "/cf1"}]
+        ),
+        Node(
+        parameters=[
+          {'odom_frame': 'odom'},
+          {'map_frame': 'map'},
+          {'base_frame': 'cf1'},
+          {'scan_topic': '/cf1/scan'},
+          {'use_scan_matching': False},
+          {'max_laser_range': 3.5},
+          {'resolution': 0.1},
+          {'minimum_travel_distance': 0.01},
+          {'minimum_travel_heading': 0.001},
+          {'map_update_interval': 0.1},
+          {'mode': 'localization'},
+          {"map_file_name":  + '/data/map'},
+          {"map_start_pose": [0.0, 0.0, 0.0]} ],
+        package='slam_toolbox',
+        executable='localization_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen'),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup_launch_dir, 'bringup_launch.py')),
+            launch_arguments={'slam': 'False',
+                            'use_sim_time': 'false',
+                            'map': cf_examples_dir + '/data/map.yaml',
+                            'params_file': os.path.join(cf_examples_dir, 'nav2_params.yaml'),
+                            'autostart': 'true',
+                            'use_composition': 'true',
+                            'transform_publish_period': '0.02'
+                            }.items()
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup_launch_dir, 'rviz_launch.py')),
+            launch_arguments={
+                            'rviz_config': os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz')}.items())
+    ])
+
+The crazyflie_server, vel_mux and slam toolbox nodes are obviously the same as the mapping launch file example, with some key differences:
+
+* crazyflie_server: An extra parameter called 'world_tf_name' which changes the name of the 'world' transform to 'map'. This is to ensure compatibilty with the NAV2 bringup node later.
+* slam toolbox:  'map_frame' set to 'map, 'mode' set to localization with a 'map_file_name' and 'map_start_pose' (now remember marking the start position of the mapping tutorial?)
+
+The next two nodes are new, which are included IncludeLaunchDescription to include other launch files (since these are pretty big).
+
+* Navigation Bringup: 'slam' is set to false since that is already enabled, 'map' includes the yaml file of what was created in the previous mapping tutorial. 'params_file' contains all the parameters that have been altered a bit for the crazyflie.
+* RVIZ2: 'rviz_config' is set to a default rviz2 file of Nav2 that saves us the trouble of setting everything up by hand. 
+
+Navigate the Crazyflie
+~~~~~~~~~~~~~~~~~~~~~~
+
+Open another terminal and open up a teleop_twist_keyboard just like last time. Press 't' on your keyboard to make the crazyflie fly
+
+On top of the RVIZ2 window, you see the button 'Nav2 goal'. Click at in a free spot in the map and watch the crazyflie go places :). 
+
+Also try it out by putting obstacles along the path of the crazyflie like in the video here.
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; margin-bottom: 20pt; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="https://www.youtube.com/embed/1BKLPkQ6Gz8" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+
+As you noticed, the movement around the obstacles are pretty conservative. You can tune the values in /config/nav2_params.yaml, like the global or local planner's inflation_layer or the size of the robot.
+Please check out  `NAV2's tuning documentation <https://navigation.ros.org/tuning/index.html/>`_ for more explanation of these values.
+
+.. warning::
+  Final note. The SLAM performance and navigation performance of the Crazyflie with the multiranger is doable but not perfect. We absolutely encourage you to tweak and tune the parameters to get something better! (And if you do, please share :D)
 
 

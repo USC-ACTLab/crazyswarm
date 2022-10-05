@@ -3,6 +3,9 @@
 ROS2 Tutorials
 ==============
 
+.. warning::
+  These tutorials are advanced and still underdevelopment. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions.
+
 This page shows tutorials that connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
 
 Mapping with the SLAM toolbox
@@ -12,7 +15,7 @@ You can connect the Crazyflie through ROS2 with existing packages like the `SLAM
 With a `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ and `Multi-ranger <https://www.bitcraze.io/products/multi-ranger-deck/>`_
 ) a simple map can be created.
 
-.. warning::
+.. note::
   Mind that this will only show the mapping part of SLAM, as the ray matching with the sparse multiranger is quite challenging for the SLAM toolbox
 
 Preperation
@@ -204,7 +207,7 @@ Next, install the Navigation2 Bringup package:
 
 .. code-block:: bash
 
-  NAV2 sudo apt-get install ros-galactic-nav2-bringup
+  sudo apt-get install ros-galactic-nav2-bringup
 
 Looking at the Launch file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -219,7 +222,7 @@ Let's take a look at the launch file (multiranger_nav3_launch.py) now
             executable='crazyflie_server.py',
             name='crazyflie_server',
             output='screen',
-            parameters=[{"world_tf_name": 'map'}, 
+            parameters=[{"world_tf_name": 'map'},
                         server_params],
         ),
         Node(
@@ -244,10 +247,10 @@ Let's take a look at the launch file (multiranger_nav3_launch.py) now
           {'minimum_travel_heading': 0.001},
           {'map_update_interval': 0.1},
           {'mode': 'localization'},
-          {"map_file_name":  + '/data/map'},
+          {"map_file_name": cf_examples_dir + "/data/" + map_name},
           {"map_start_pose": [0.0, 0.0, 0.0]} ],
         package='slam_toolbox',
-        executable='localization_slam_toolbox_node',
+        executable='async_slam_toolbox_node',
         name='slam_toolbox',
         output='screen'),
         IncludeLaunchDescription(
@@ -255,7 +258,7 @@ Let's take a look at the launch file (multiranger_nav3_launch.py) now
                 os.path.join(bringup_launch_dir, 'bringup_launch.py')),
             launch_arguments={'slam': 'False',
                             'use_sim_time': 'false',
-                            'map': cf_examples_dir + '/data/map.yaml',
+                            'map': cf_examples_dir + "/data/" + map_name + ".yaml",
                             'params_file': os.path.join(cf_examples_dir, 'nav2_params.yaml'),
                             'autostart': 'true',
                             'use_composition': 'true',
@@ -282,7 +285,7 @@ The next two nodes are new, which are included IncludeLaunchDescription to inclu
 Navigate the Crazyflie
 ~~~~~~~~~~~~~~~~~~~~~~
 
-In a terminal run the following from the crazyswarm2 source folder. 
+In a terminal run the following from the ros2 workspace. 
 
 .. code-block:: bash
 

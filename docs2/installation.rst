@@ -5,15 +5,15 @@ Installation
 
 Crazyswarm2 runs on **Ubuntu Linux** in one of the following configurations:
 
-====== ====== ========
-Ubuntu Python ROS2
------- ------ --------
-20.04  3.7    Galactic
-====== ====== ========
+====== ======== ========
+Ubuntu Python   ROS2
+------ -------- --------
+20.04  3.7, 3.8 Galactic
+====== ======== ========
 
 .. warning::
-   The `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/about>`_ is not supported.
-   You must install Ubuntu either directly on the computer (recommended) or in a VM.
+   The `Windows Subsystem for Linux (WSL) <https://docs.microsoft.com/en-us/windows/wsl/about>`_ is experimentally supported but you'll have to use `usbipd-win <https://github.com/dorssel/usbipd-win/>`_.
+   This program will link the crazyradio directly with WS, but beware of bugs. Check out their `WSL connect guide <https://github.com/dorssel/usbipd-win/wiki/WSL-support/>`_.
 
 .. warning::
    Avoid using a virtual machine if possible: they add additional latency and might cause issues with the visualization tools.

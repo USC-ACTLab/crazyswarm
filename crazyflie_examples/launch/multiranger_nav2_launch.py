@@ -20,29 +20,10 @@ def generate_launch_description():
 
     server_params = crazyflies
 
+    cf_examples_dir = get_package_share_directory("crazyflie_examples")
     bringup_dir = get_package_share_directory('nav2_bringup')
-    launch_dir = os.path.join(bringup_dir, 'launch')
+    bringup_launch_dir = os.path.join(bringup_dir, 'launch')
 
-    mapfile='/home/knmcguire/development/collaborations/crazyswarm2/ros2_ws/map_1664875492.yaml'
-
-    bringup_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_dir, 'bringup_launch.py')),
-        launch_arguments={'slam': 'False',
-                          'use_sim_time': 'false',
-                          'map': get_package_share_directory("crazyflie_examples") + '/data/map.yaml',
-                          'params_file': os.path.join(get_package_share_directory("crazyflie_examples"), 'nav2_params.yaml'),
-                          'autostart': 'true',
-                          'use_composition': 'true',
-                          'transform_publish_period': '0.02'
-                          }.items()
-    )
-
-    rviz_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(launch_dir, 'rviz_launch.py')),
-        launch_arguments={
-                          'rviz_config': os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz')}.items())
 
     return LaunchDescription([
         Node(
@@ -75,12 +56,27 @@ def generate_launch_description():
           {'minimum_travel_heading': 0.001},
           {'map_update_interval': 0.1},
           {'mode': 'localization'},
-          {"map_file_name": get_package_share_directory("crazyflie_examples") + '/data/map'},
+          {"map_file_name":  + '/data/map'},
           {"map_start_pose": [0.0, 0.0, 0.0]} ],
         package='slam_toolbox',
-        executable='async_slam_toolbox_node',
+        executable='localization_slam_toolbox_node',
         name='slam_toolbox',
         output='screen'),
-        bringup_cmd,
-        rviz_cmd
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup_launch_dir, 'bringup_launch.py')),
+            launch_arguments={'slam': 'False',
+                            'use_sim_time': 'false',
+                            'map': cf_examples_dir + '/data/map.yaml',
+                            'params_file': os.path.join(cf_examples_dir, 'nav2_params.yaml'),
+                            'autostart': 'true',
+                            'use_composition': 'true',
+                            'transform_publish_period': '0.02'
+                            }.items()
+        ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(bringup_launch_dir, 'rviz_launch.py')),
+            launch_arguments={
+                            'rviz_config': os.path.join(bringup_dir, 'rviz', 'nav2_default_view.rviz')}.items())
     ])

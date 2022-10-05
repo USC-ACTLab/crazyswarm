@@ -8,6 +8,77 @@ ROS2 Tutorials
 
 This page shows tutorials that connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
 
+
+Teleoperation keyboard
+----------------------
+
+We have an example of the telop_twist_keyboard package working together with the crazyflie
+
+First make sure that the crazyflies.yaml has the right URI and if you are using the `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie.  
+set the controller to 1 (PID)
+
+Then, run the following launch file to start up the crazyflie server (CFlib):
+
+.. code-block:: bash
+
+    ros2 launch crazyflie_examples keyboard_velmux_launch.py
+
+in another terminal run:
+
+.. code-block:: bash
+
+    ros2 run teleop_twist_keyboard telop_twist_keyboard
+
+Use 't' to take off, and 'b' to land. For the rest, use the instructions of the telop package. 
+
+
+Vizualization with RVIZ2
+------------------------
+
+
+Make sure your crazyflie knows it's position, either by a  `flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie. 
+
+In crazyflie.yaml, make sure that this following is added or uncommented
+
+.. code-block:: bash
+    
+    all:
+    ...
+    firmware_logging:
+        enabled: true
+        default_topics:
+        pose:
+            frequency: 10 # Hz
+
+In the first terminal, launch the server (CFlib backend only for now)
+
+.. code-block:: bash
+
+    ros2 launch crazyflie launch.py backend:=cflib
+
+In the second terminal
+
+.. code-block:: bash
+
+    rviz2
+
+Then set 'fixed frame' to 'world' and add the TF plugin. Then in 'TF', check  the 'show names' checkbox.
+The crazyflie names should appear with their estimated position.
+
+This RVIZ2 visualization can be done for the default topics:
+
+* 'pose': '/cf1/pose/' Transforms and Pose 
+* 'odom': '/cf1/odom/' Odometry
+* 'scan': '/cf1/scan' Scan
+
+Here you can see an example of 5 crazyflies with the Pose default topic enabled, while taking off and landing
+
+.. raw:: html
+
+    <div style="position: relative; padding-bottom: 56.25%; margin-bottom: 20pt; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+        <iframe src="https://www.youtube.com/embed/w99hLldcSp4" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+    </div>
+
 Mapping with the SLAM toolbox
 -----------------------------
 
@@ -55,6 +126,7 @@ Also make sure that that the standard controller is set to 1 (PID) for the flowd
     stabilizer:
       estimator: 2 # 1: complementary, 2: kalman
       controller: 1 # 1: PID, 2: mellinger
+
 
 Connecting with the Crazyflie
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,7 +177,6 @@ Here is an explanation of the nodes:
 * The first node enables the crazyflie server, namely the python version (cflib) as that currently has logging enabled. This takes the crazyflies.yaml file you just edited and uses those values to setup the crazyflie.
 * The second node is a velocity command handler, which takes an incoming twist message, makes the Crazyflie take off to a fixed height and enables velocity control of external packages (you'll see why soon enough).
 * The third node is the slam toolbox node. You noted that we gave it some different parameters, where we upped the speed of the map generation, descreased the resolution and turn of ray matching as mentioned in the warning above.
-
 
 Turn on your crazyflie and put it in the middle of the room you would like to map. Make sure to mark the starting position for later.
 

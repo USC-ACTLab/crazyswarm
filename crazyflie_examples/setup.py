@@ -30,7 +30,6 @@ setup(
             'nice_hover = crazyflie_examples.nice_hover:main',
             'figure8 = crazyflie_examples.figure8:main',
             'cmd_full_state = crazyflie_examples.cmd_full_state:main',
-            'cmd_vel_2d = crazyflie_examples.cmd_vel_2d:main',
         ],
     },
 )

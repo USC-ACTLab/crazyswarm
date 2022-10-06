@@ -3,10 +3,12 @@
 ROS2 Tutorials
 ==============
 
-.. warning::
-  These tutorials are advanced and still underdevelopment. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions.
+This page shows tutorials which connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
 
-This page shows tutorials that connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
+
+.. warning::
+  These tutorials are for advanced use and still under development. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions.
+
 
 
 Teleoperation keyboard
@@ -14,7 +16,7 @@ Teleoperation keyboard
 
 We have an example of the telop_twist_keyboard package working together with the crazyflie
 
-First make sure that the crazyflies.yaml has the right URI and if you are using the `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie.  
+First, make sure that the crazyflies.yaml has the right URI and if you are using the `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie.  
 set the controller to 1 (PID)
 
 Then, run the following launch file to start up the crazyflie server (CFlib):
@@ -36,7 +38,7 @@ Vizualization with RVIZ2
 ------------------------
 
 
-Make sure your crazyflie knows it's position, either by a  `flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie. 
+Make sure your crazyflie knows its position, either by a  `flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie. 
 
 In crazyflie.yaml, make sure that this following is added or uncommented
 
@@ -62,7 +64,7 @@ In the second terminal
 
     rviz2
 
-Then set 'fixed frame' to 'world' and add the TF plugin. Then in 'TF', check  the 'show names' checkbox.
+Then set 'fixed frame' to 'world' and add the TF plugin. Then in 'TF', check the 'show names' checkbox.
 The crazyflie names should appear with their estimated position.
 
 This RVIZ2 visualization can be done for the default topics:
@@ -87,7 +89,7 @@ With a `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ and `Multi-
 ) a simple map can be created.
 
 .. note::
-  Mind that this will only show the mapping part of SLAM, as the ray matching with the sparse multiranger is quite challenging for the SLAM toolbox
+  Mind that this will only show the mapping part of SLAM, as the ray matching with the sparse sensing Multi-ranger is quite challenging for the SLAM toolbox
 
 Preperation
 ~~~~~~~~~~~
@@ -118,7 +120,7 @@ And enable the following default topic logging:
       scan:
         frequency: 10 # Hz
 
-Also make sure that that the standard controller is set to 1 (PID) for the flowdeck and the state estimator is set to 2 (kalman):
+Also, make sure that the standard controller is set to 1 (PID) for the flowdeck and the state estimator is set to 2 (kalman):
 
 .. code-block:: bash
 
@@ -174,13 +176,13 @@ Let's first look at the launch file real quick (multiranger_mapping_launch.py):
 
 Here is an explanation of the nodes:
 
-* The first node enables the crazyflie server, namely the python version (cflib) as that currently has logging enabled. This takes the crazyflies.yaml file you just edited and uses those values to setup the crazyflie.
+* The first node enables the crazyflie server, namely the python version (cflib) as that currently has logging enabled. This takes the crazyflies.yaml file you just edited and uses those values to set up the crazyflie.
 * The second node is a velocity command handler, which takes an incoming twist message, makes the Crazyflie take off to a fixed height and enables velocity control of external packages (you'll see why soon enough).
-* The third node is the slam toolbox node. You noted that we gave it some different parameters, where we upped the speed of the map generation, descreased the resolution and turn of ray matching as mentioned in the warning above.
+* The third node is the slam toolbox node. You noted that we gave it some different parameters, where we upped the speed of the map generation, decreased the resolution and turn of ray matching as mentioned in the warning above.
 
 Turn on your crazyflie and put it in the middle of the room you would like to map. Make sure to mark the starting position for later.
 
-Now startup the crazyflie server with the following example launch file, after sourcing the setup.bash ofcourse:
+Now startup the crazyflie server with the following example launch file, after sourcing the 'setup.bash' of course:
 
 .. code-block:: bash
 
@@ -252,7 +254,10 @@ and make the crazyflie take off with the 't' key on your keyboard. Now fly aroun
         <iframe src="https://www.youtube.com/embed/-NfKnlJMAHQ" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
-Tip: start with turning slowely with yaw, which should be enough to get most of the room. 
+
+.. note::
+
+    Tip: start with turning slowly with yaw, which should be enough to get most of the room. 
 
 
 Once you are happy, you can save the map with 'Save Map' in the SLAM toolbox panel, and land the crazyflie with 't' with teleop_twist_keyboard. 
@@ -272,7 +277,7 @@ Preperation
   This tutorial assume you have taken the above mapping tutorial first. 
 
 Find the all the files that were created by the RVIZ2 slam toolbox plugin, which should be in format \*.yaml, \*.posegraph, \*.data and \*.pgm, and copy them in the /crazyflie_examples/data/ folder. 
-Either you can replace those that are there already, or call them different and just change the name in the launch file, which I will explain now.
+Either you can replace those that are there already ('map.\*'), or call them different and just change the name in the launch file, which will be explain now.
 
 Next, install the Navigation2 Bringup package:
 
@@ -283,7 +288,7 @@ Next, install the Navigation2 Bringup package:
 Looking at the Launch file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Let's take a look at the launch file (multiranger_nav3_launch.py) now
+Let's take a look at the launch file (multiranger_nav3_launch.py):
 
 .. code-block:: python
 
@@ -363,9 +368,9 @@ In a terminal run the following from the ros2 workspace.
     source install/setup.bash
     ros2 launch crazyflie_examples multiranger_nav2_launch.py 
 
-We will not now show all the print-outs, just make sure that at the crazyflie is connected and it's outputing the right transforms and topics like in the mapping tutorial
+We will not now show all the print-outs, just make sure that at the crazyflie is connected and it outputs the right transforms and topics like in the mapping tutorial
 
-Now, open another terminal and open up a teleop_twist_keyboard just like last time. Press 't' on your keyboard to make the crazyflie fly
+Now, open another terminal and open up a teleop_twist_keyboard just like last time. Press 't' on your keyboard to make the crazyflie fly.
 
 On top of the RVIZ2 window, you see the button 'Nav2 goal'. Click at in a free spot in the map and watch the crazyflie go places :). 
 

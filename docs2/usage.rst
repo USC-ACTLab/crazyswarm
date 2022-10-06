@@ -18,9 +18,9 @@ Configuration
 
 All configuration files are in crazyflie/config. 
 
-* crazyflies.yaml : Setting up everything related to the crazyflie connection  server
-* motion_capture.yaml : configs for the motion capture package
-* teleop\_\*.yaml : configs for remote controls
+* crazyflies.yaml : setting up everything related to the crazyflie connection server.
+* motion_capture.yaml : configs for the motion capture package.
+* teleop\_\*.yaml : configs for remote controls.
 
 crazyflies.yaml
 ~~~~~~~~~~~~~~~
@@ -43,7 +43,7 @@ They can also be enabled in case you don't want the server to connect with it.
         initial_position: [0, -0.5, 0]
         type: cf21  # see robot_types
 
-The yaml file also contains different robot_types, to indicate differences between each crazyflie :
+The yaml file also contains different robot_types, to indicate differences between each platform:
 
 .. code-block:: bash
 
@@ -188,7 +188,3 @@ In the second terminal
 .. code-block:: bash
 
     ros2 run crazyflie_examples hello_world
-
-
-
-

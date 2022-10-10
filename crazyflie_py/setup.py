@@ -13,7 +13,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Wolfgang Hönig',
+    maintainer='Wolfgang Hönig, Kimberly McGuire',
     maintainer_email='hoenig@tu-berlin.de',
     description='Simple Python interface for Crazyswarm2',
     license='MIT',

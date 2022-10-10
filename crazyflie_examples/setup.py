@@ -19,7 +19,7 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Wolfgang Hönig',
+    maintainer='Wolfgang Hönig, Kimberly McGuire',
     maintainer_email='hoenig@tu-berlin.de',
     description='Examples for Crayzswarm2 ROS stack',
     license='MIT',

@@ -4,7 +4,7 @@
   <name>crazyflie_interfaces</name>
   <version>2.0.0</version>
   <description>Interfaces for Crazyswarm2 package.</description>
-  <maintainer email="hoenig@tu-berlin.de">Wolfgang Hönig</maintainer>
+  <maintainer email="hoenig@tu-berlin.de">Wolfgang Hönig, Kimberly McGuire</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

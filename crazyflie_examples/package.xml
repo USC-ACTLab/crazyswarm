@@ -4,7 +4,7 @@
   <name>crazyflie_examples</name>
   <version>2.0.0</version>
   <description>Examples for the Crazyswarm2 ROS stack</description>
-  <maintainer email="hoenig@tu-berlin.de">Wolfgang Hönig</maintainer>
+  <maintainer email="hoenig@tu-berlin.de">Wolfgang Hönig, Kimberly McGuire</maintainer>
   <license>MIT</license>
 
   <depend>rclpy</depend>

@@ -9,6 +9,7 @@ Crazyswarm2 runs on **Ubuntu Linux** in one of the following configurations:
 Ubuntu Python   ROS2
 ------ -------- --------
 20.04  3.7, 3.8 Galactic
+22.04  3.10     Humble
 ====== ======== ========
 
 .. warning::
@@ -21,7 +22,7 @@ Ubuntu Python   ROS2
 First Installation
 ------------------
 
-1. If needed, install ROS2 using the instructions at https://docs.ros.org/en/galactic/Installation.html.
+1. If needed, install ROS2 using the instructions at https://docs.ros.org/en/galactic/Installation.html or https://docs.ros.org/en/humble/Installation.html.
 
 2. Install dependencies
 

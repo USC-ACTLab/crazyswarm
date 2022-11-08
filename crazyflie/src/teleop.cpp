@@ -59,38 +59,38 @@ public:
         this->declare_parameter("auto_yaw_rate", 0.0);
         this->get_parameter<double>("auto_yaw_rate", auto_yaw_rate_);
 
-        this->declare_parameter(mode_ + ".x_velocity_axis");
+        this->declare_parameter<int>(mode_ + ".x_velocity_axis");
         this->get_parameter<int>(mode_ + ".x_velocity_axis", axes_.x.axis);
-        this->declare_parameter(mode_ + ".y_velocity_axis");
+        this->declare_parameter<int>(mode_ + ".y_velocity_axis");
         this->get_parameter<int>(mode_ + ".y_velocity_axis", axes_.y.axis);
-        this->declare_parameter(mode_ + ".z_velocity_axis");
+        this->declare_parameter<int>(mode_ + ".z_velocity_axis");
         this->get_parameter<int>(mode_ + ".z_velocity_axis", axes_.z.axis);
-        this->declare_parameter(mode_ + ".yaw_velocity_axis");
+        this->declare_parameter<int>(mode_ + ".yaw_velocity_axis");
         this->get_parameter<int>(mode_ + ".yaw_velocity_axis", axes_.yaw.axis);
-        this->declare_parameter(mode_ + ".x_velocity_max");
+        this->declare_parameter<double>(mode_ + ".x_velocity_max");
         this->get_parameter<double>(mode_ + ".x_velocity_max", axes_.x.max);
-        this->declare_parameter(mode_ + ".y_velocity_max");
+        this->declare_parameter<double>(mode_ + ".y_velocity_max");
         this->get_parameter<double>(mode_ + ".y_velocity_max", axes_.y.max);
-        this->declare_parameter(mode_ + ".z_velocity_max");
+        this->declare_parameter<double>(mode_ + ".z_velocity_max");
         this->get_parameter<double>(mode_ + ".z_velocity_max", axes_.z.max);
-        this->declare_parameter(mode_ + ".yaw_velocity_max");
+        this->declare_parameter<double>(mode_ + ".yaw_velocity_max");
         this->get_parameter<double>(mode_ + ".yaw_velocity_max", axes_.yaw.max);
 
-        this->declare_parameter("initial_position.x");
+        this->declare_parameter<float>("initial_position.x");
         this->get_parameter<float>("initial_position.x", state_.x);
-        this->declare_parameter("initial_position.y");
+        this->declare_parameter<float>("initial_position.y");
         this->get_parameter<float>("initial_position.y", state_.y);
-        this->declare_parameter("initial_position.z");
+        this->declare_parameter<float>("initial_position.z");
         this->get_parameter<float>("initial_position.z", state_.z);
 
         if (mode_ == "cmd_vel_world"){
-            this->declare_parameter(mode_ + ".x_limit");
+            this->declare_parameter(mode_ + ".x_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
             this->get_parameter(mode_ + ".x_limit", x_param);
             x_limit_ = x_param.as_double_array();
-            this->declare_parameter(mode_ + ".y_limit");
+            this->declare_parameter(mode_ + ".y_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
             this->get_parameter(mode_ + ".y_limit", y_param);
             y_limit_ = y_param.as_double_array();
-            this->declare_parameter(mode_ + ".z_limit");
+            this->declare_parameter(mode_ + ".z_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
             this->get_parameter(mode_ + ".z_limit", z_param);
             z_limit_ = z_param.as_double_array();
         }

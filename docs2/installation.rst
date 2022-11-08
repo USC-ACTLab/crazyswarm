@@ -29,6 +29,12 @@ First Installation
 
         sudo apt install libboost-program-options-dev libusb-1.0-0-dev
 
+    If you are planning to use the CFlib backend, do:
+
+    .. code-block:: bash
+        
+        pip3 install cflib
+
 3. Set up your ROS2 workspace
 
     .. code-block:: bash

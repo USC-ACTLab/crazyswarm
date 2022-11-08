@@ -87,6 +87,7 @@ Contents
 
 .. toctree::
    installation
+   overview
    usage
    tutorials
    faq

@@ -36,6 +36,7 @@ Crazyswarm2 was forked from Crazyswarm. However, there is also heavy re-design o
 - **Communication backend.**
   In Crazyswarm2, we rely on `crazyflie-link-cpp <https://github.com/bitcraze/crazyflie-link-cpp>`_ at the lowest layer, unlike a custom link implementation in Crazyswarm1.
   This new link uses priority queues that allows new features like uploading trajectories during the flight. Moreover, the new link should improve the overall (communication) robustness.
+  There is also experimental support for a `crazyflie-lib-python <https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/>`_ backend as well. 
 
 - **Support for Common UAV tasks.**
   Crazyswarm1 was designed to operate a swarm and did not include common features for single-robot operation, such as teleoperation. Crazyswarm2 replaces both Crazyswarm1 and crazyflie_ros, thus supporting arbitrary URIs, teleoperation etc.

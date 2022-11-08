@@ -35,7 +35,7 @@ It handles several low level communication aspects with the Crazyflies:
 - **Logging to ROS2 topics handling**: The server sets up logblocks for data streaming in the crazyflie, and transforms the received variables into ROS2 topcs.
 - **Run-time configuration**: Both parameters and logging can be configured in run-time while the server is connected with the Crazyflies. Please check :ref:`usage`.
 
-It also setups several fligth command services:
+It also setups several flight command services:
 
 - **Takeoff / Land / GoTo**: With a single service command and a given height or coordinate, you can make the connected crazyflies take off, go to a position and land.
 - **Upload / Start trajectory**: You can upload a predefined trajectory and indicate if the Crazyflies need to start flying it.

@@ -59,23 +59,6 @@ public:
         this->declare_parameter("auto_yaw_rate", 0.0);
         this->get_parameter<double>("auto_yaw_rate", auto_yaw_rate_);
 
-        this->declare_parameter<int>(mode_ + ".x_velocity_axis");
-        this->get_parameter<int>(mode_ + ".x_velocity_axis", axes_.x.axis);
-        this->declare_parameter<int>(mode_ + ".y_velocity_axis");
-        this->get_parameter<int>(mode_ + ".y_velocity_axis", axes_.y.axis);
-        this->declare_parameter<int>(mode_ + ".z_velocity_axis");
-        this->get_parameter<int>(mode_ + ".z_velocity_axis", axes_.z.axis);
-        this->declare_parameter<int>(mode_ + ".yaw_velocity_axis");
-        this->get_parameter<int>(mode_ + ".yaw_velocity_axis", axes_.yaw.axis);
-        this->declare_parameter<double>(mode_ + ".x_velocity_max");
-        this->get_parameter<double>(mode_ + ".x_velocity_max", axes_.x.max);
-        this->declare_parameter<double>(mode_ + ".y_velocity_max");
-        this->get_parameter<double>(mode_ + ".y_velocity_max", axes_.y.max);
-        this->declare_parameter<double>(mode_ + ".z_velocity_max");
-        this->get_parameter<double>(mode_ + ".z_velocity_max", axes_.z.max);
-        this->declare_parameter<double>(mode_ + ".yaw_velocity_max");
-        this->get_parameter<double>(mode_ + ".yaw_velocity_max", axes_.yaw.max);
-
         this->declare_parameter<float>("initial_position.x");
         this->get_parameter<float>("initial_position.x", state_.x);
         this->declare_parameter<float>("initial_position.y");
@@ -83,7 +66,17 @@ public:
         this->declare_parameter<float>("initial_position.z");
         this->get_parameter<float>("initial_position.z", state_.z);
 
-        if (mode_ == "cmd_vel_world"){
+        if (mode_ == "cmd_rpy") {
+            declareAndGetAxis(mode_ + ".roll", axes_.x);
+            declareAndGetAxis(mode_ + ".pitch", axes_.y);
+            declareAndGetAxis(mode_ + ".yawrate", axes_.yaw);
+            declareAndGetAxis(mode_ + ".thrust", axes_.z);
+        } else if (mode_ == "cmd_vel_world"){
+            declareAndGetAxis(mode_ + ".x_velocity", axes_.x);
+            declareAndGetAxis(mode_ + ".y_velocity", axes_.y);
+            declareAndGetAxis(mode_ + ".z_velocity", axes_.z);
+            declareAndGetAxis(mode_ + ".yaw_velocity", axes_.yaw);
+
             this->declare_parameter(mode_ + ".x_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
             this->get_parameter(mode_ + ".x_limit", x_param);
             x_limit_ = x_param.as_double_array();
@@ -126,7 +119,8 @@ private:
     struct Axis
     { 
         int axis;
-        double max;
+        float max;
+        float deadband;
     };
     struct
     {
@@ -236,7 +230,12 @@ private:
         if ((size_t) a.axis > msg->axes.size()) {
             return 0;
         }
-        return sign * msg->axes[a.axis - 1]*a.max;
+        auto result = sign * msg->axes[a.axis - 1]*a.max;
+        if (fabs(result) > a.deadband) {
+            return result;
+        } else {
+            return 0;
+        }
     }
     
     void emergency()
@@ -276,6 +275,16 @@ private:
         request2->height = 0.0;
         request2->duration = rclcpp::Duration::from_seconds(3.5);
         client_land_->async_send_request(request2);
+    }
+
+    void declareAndGetAxis(const std::string& name, Axis& axis)
+    {
+        this->declare_parameter<int>(name + ".axis");
+        this->get_parameter<int>(name + ".axis", axis.axis);
+        this->declare_parameter<float>(name + ".max");
+        this->get_parameter<float>(name + ".max", axis.max);
+        this->declare_parameter<float>(name + ".deadband");
+        this->get_parameter<float>(name + ".deadband", axis.deadband);
     }
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription_;

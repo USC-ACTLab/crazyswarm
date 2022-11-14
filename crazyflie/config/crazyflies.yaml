@@ -101,3 +101,6 @@ all:
       extQuatStdDev: 0.5e-1
     # kalman:
     #   resetEstimation: 1
+  broadcasts:
+    num_repeats: 15 # number of times broadcast commands are repeated
+    delay_between_repeats_ms: 1 # delay in milliseconds between individual repeats

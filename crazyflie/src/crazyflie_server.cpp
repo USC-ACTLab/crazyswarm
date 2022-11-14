@@ -475,6 +475,13 @@ public:
     service_land_ = this->create_service<Land>("all/land", std::bind(&CrazyflieServer::land, this, _1, _2));
     service_go_to_ = this->create_service<GoTo>("all/go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
 
+    // declare global commands
+    this->declare_parameter("all/broadcasts/num_repeats", 15);
+    this->declare_parameter("all/broadcasts/delay_between_repeats_ms", 1);
+
+    broadcasts_num_repeats_ = this->get_parameter("all/broadcasts/num_repeats").get_parameter_value().get<int>();
+    broadcasts_delay_between_repeats_ms_ = this->get_parameter("all/broadcasts/delay_between_repeats_ms").get_parameter_value().get<int>();
+
     // load crazyflies from params
     auto node_parameters_iface = this->get_node_parameters_interface();
     const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
@@ -514,10 +521,13 @@ private:
             std::shared_ptr<Empty::Response> response)
   {
     RCLCPP_INFO(logger_, "emergency()");
-    for (auto &bc : broadcaster_)
+    for (int i = 0; i < broadcasts_num_repeats_; ++i)
     {
-      auto &cfbc = bc.second;
-      cfbc->emergencyStop();
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->emergencyStop();
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
     }
   }
 
@@ -529,13 +539,15 @@ private:
                 request->timescale,
                 request->reversed,
                 request->group_mask);
-    for (auto &bc : broadcaster_)
-    {
-      auto &cfbc = bc.second;
-      cfbc->startTrajectory(request->trajectory_id,
-                          request->timescale,
-                          request->reversed,
-                          request->group_mask);
+    for (int i = 0; i < broadcasts_num_repeats_; ++i) {
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->startTrajectory(request->trajectory_id,
+                            request->timescale,
+                            request->reversed,
+                            request->group_mask);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
     }
   }
 
@@ -546,9 +558,12 @@ private:
                 request->height,
                 rclcpp::Duration(request->duration).seconds(),
                 request->group_mask);
-    for (auto& bc : broadcaster_) {
-      auto& cfbc = bc.second;
-      cfbc->takeoff(request->height, rclcpp::Duration(request->duration).seconds(), request->group_mask);
+    for (int i = 0; i < broadcasts_num_repeats_; ++i) {
+      for (auto& bc : broadcaster_) {
+        auto& cfbc = bc.second;
+        cfbc->takeoff(request->height, rclcpp::Duration(request->duration).seconds(), request->group_mask);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
     }
   }
 
@@ -559,9 +574,12 @@ private:
                 request->height,
                 rclcpp::Duration(request->duration).seconds(),
                 request->group_mask);
-    for (auto& bc : broadcaster_) {
-      auto& cfbc = bc.second;
-      cfbc->land(request->height, rclcpp::Duration(request->duration).seconds(), request->group_mask);
+    for (int i = 0; i < broadcasts_num_repeats_; ++i) {
+      for (auto& bc : broadcaster_) {
+        auto& cfbc = bc.second;
+        cfbc->land(request->height, rclcpp::Duration(request->duration).seconds(), request->group_mask);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
     }
   }
 
@@ -572,12 +590,14 @@ private:
                 request->goal.x, request->goal.y, request->goal.z, request->yaw,
                 rclcpp::Duration(request->duration).seconds(),
                 request->group_mask);
-    for (auto &bc : broadcaster_)
-    {
-      auto &cfbc = bc.second;
-      cfbc->goTo(request->goal.x, request->goal.y, request->goal.z, request->yaw,
-               rclcpp::Duration(request->duration).seconds(),
-               request->group_mask);
+    for (int i = 0; i < broadcasts_num_repeats_; ++i) {
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->goTo(request->goal.x, request->goal.y, request->goal.z, request->yaw,
+                rclcpp::Duration(request->duration).seconds(),
+                request->group_mask);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
     }
   }
 
@@ -640,6 +660,10 @@ private:
 
     // maps CF name -> CF id
     std::map<std::string, uint8_t> name_to_id_;
+
+    // global params
+    int broadcasts_num_repeats_;
+    int broadcasts_delay_between_repeats_ms_;
   };
 
 int main(int argc, char *argv[])

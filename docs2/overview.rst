@@ -63,4 +63,5 @@ Hover control     No       Yes
 Takeoff/Land srv  Yes      Yes
 Go_To srv         Yes      Yes
 Upload/start traj Yes      No
+Broadcasts        Yes      No
 ================= ======== =========

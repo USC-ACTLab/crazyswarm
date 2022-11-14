@@ -49,3 +49,28 @@ Crazyswarm2 was forked from Crazyswarm. However, there is also heavy re-design o
   In Crazyswarm1, a common swarm monitoring tool is the chooser.py (to enable/disable CFs, check the battery voltage etc.). However, this tool was not functioning while the swarm is operational.
   In contrast, Crazyswarm2 will allow common swarm monitoring tasks without restarting ROS nodes or launching additional tools. 
 
+
+How is Crazyswarm2 different from Bitcraze's cflib?
+---------------------------------------------------
+
+Both can be used to control several Crazyflies from a Python script.
+Here are some differences:
+
+- **Motion capture integration.**
+  Crazyswarm2 supports common motion capture systems using the ROS2 package `motion_capture_tracking <https://github.com/IMRCLab/motion_capture_tracking/tree/ros2>`_.
+  The Bitcraze API can *send* position measurements to the Crazyflie,
+  but does not know how to *get* position measurements from mocap hardware.
+  Moreover, the use of motion_capture_tracking allows to use identical or single motion capture markers.
+- **Broadcasts.**
+  Crazyswarm2 uses broadcast communication whenever possible to require fewer radios per Crazyflie. In contrast, the official SDK uses unicast communication instead.
+- **Simulation.**
+  Crazyswarm2 has a simulation mode with 3D graphics,
+  which makes it easy to validate complex scripts before running them on real hardware.
+- **Python firmware bindings.**
+  Crazyswarm2's simulator is built upon automatically generated Python bindings
+  for certain modules in the Crazyflie firmware.
+  The binding system can be helpful when developing new firmware modules,
+  especially when they are mathematically complex and hard to debug.
+- **ROS2 foundation.**
+  The Crazyswarm2 server program is a ROS2 node.
+  Our Python API is a thin wrapper around the ROS2 interface.

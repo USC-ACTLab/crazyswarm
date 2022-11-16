@@ -52,11 +52,11 @@ In crazyflie.yaml, make sure that this following is added or uncommented
         pose:
             frequency: 10 # Hz
 
-In the first terminal, launch the server (CFlib backend only for now)
+In the first terminal, launch the server (use `backend:=cflib` if you need odom or scan topics)
 
 .. code-block:: bash
 
-    ros2 launch crazyflie launch.py backend:=cflib
+    ros2 launch crazyflie launch.py
 
 In the second terminal
 

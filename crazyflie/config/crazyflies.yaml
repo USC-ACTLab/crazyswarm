@@ -69,7 +69,7 @@ robot_types:
 
 # global settings for all robots
 all:
-  # firmware parameters for all drones (use robot_types/type_name to set per type, or
+  # firmware logging for all drones (use robot_types/type_name to set per type, or
   # robots/drone_name to set per drone)
   firmware_logging:
     enabled: false
@@ -84,6 +84,8 @@ all:
     #  topic_name2:
     #    frequency: 1 # Hz
     #    vars: ["stabilizer.roll", "stabilizer.pitch", "stabilizer.yaw"]
+  # firmware parameters for all drones (use robot_types/type_name to set per type, or
+  # robots/drone_name to set per drone)
   firmware_params:
     commander:
       enHighLevel: 1

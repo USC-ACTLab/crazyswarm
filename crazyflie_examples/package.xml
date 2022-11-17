@@ -7,6 +7,9 @@
   <maintainer email="hoenig@tu-berlin.de">Wolfgang Hönig, Kimberly McGuire</maintainer>
   <license>MIT</license>
 
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
   <depend>rclpy</depend>
   <depend>crazyflie_py</depend>
 
@@ -16,6 +19,6 @@
   <test_depend>python3-pytest</test_depend>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

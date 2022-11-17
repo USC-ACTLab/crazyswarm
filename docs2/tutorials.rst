@@ -264,8 +264,6 @@ Once you are happy, you can save the map with 'Save Map' in the SLAM toolbox pan
 
 If not, you could tweak with the parameters of  the `SLAM toolbox <https://github.com/SteveMacenski/slam_toolbox/>`_ to get a better result.
 
-.. warning::
-    Anything you change in the launch file, you'll need to reinstall with 'colcon build --symlink-install' in the ros2_ws folder
 
 Connecting with Nav2 Bringup
 ----------------------------
@@ -386,9 +384,6 @@ Also try it out by putting obstacles along the path of the crazyflie like in the
 
 As you noticed, the movement around the obstacles are pretty conservative. You can tune the values in /config/nav2_params.yaml, like the global or local planner's inflation_layer or the size of the robot.
 Please check out  `NAV2's tuning documentation <https://navigation.ros.org/tuning/index.html/>`_ for more explanation of these values.
-
-.. warning::
-    Anything you change in the launch, config and data file, you'll need to reinstall with 'colcon build --symlink-install' in the ros2_ws folder. This is due to `this unresolved issue in colcon_core <https://github.com/colcon/colcon-core/issues/407/>`_.
 
 .. note::
   Final note. The SLAM performance and navigation performance of the Crazyflie with the multiranger is doable but not perfect. We absolutely encourage you to tweak and tune the parameters to get something better! (And if you do, please share :D)

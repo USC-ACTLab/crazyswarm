@@ -1,15 +1,5 @@
-ros_ws/build/
-ros_ws/devel/
-ros_ws/src/CMakeLists.txt
 .DS_Store
 crazyswarm2_sim_webots/
 *.pyc
 *.o
 *~
-*.mexa64
-# james's symlinks :)
-cfs.yaml
-firm
-client
-launch # ignore launch symlink
-!*ros_ws/*launch* # don't ignore folders with launch in the name

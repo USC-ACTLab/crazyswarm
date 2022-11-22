@@ -60,8 +60,9 @@ First Installation
 
     .. code-block:: bash
 
-        cd crazyflie_py/crazyflie_py/cfsim
-        CSW_PYTHON=python3 make
+        checkout crazyflie-firmware
+        make bindings_python
+        export PYTHONPATH=/home/whoenig/projects/crazyflie/crazyflie-firmware:$PYTHONPATH
 
 
 Updating

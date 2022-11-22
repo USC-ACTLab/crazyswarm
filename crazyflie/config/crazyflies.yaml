@@ -15,7 +15,7 @@ robots:
     #       frequency: 1
     #       vars: ["acc.x", "acc.y"]
   cf5:
-    enabled: false
+    enabled: true
     uri: radio://0/80/2M/E7E7E7E705
     initial_position: [0, -0.5, 0]
     type: cf21  # see robot_types

@@ -35,17 +35,6 @@ from math import degrees, radians, pi, cos, sin
 from .backend_rviz import BackendRviz
 from .crazyflie_sil import CrazyflieSIL
 
-class VirtualTime:
-    def __init__(self, dt):
-        self.t = 0
-        self.dt = dt
-
-    def step(self):
-        self.t += self.dt
-
-    def time(self):
-        return self.t
-
 
 class CrazyflieServer(Node):
     def __init__(self):
@@ -71,10 +60,8 @@ class CrazyflieServer(Node):
             pass
         robot_data = self._ros_parameters["robots"]
 
-        # Init a transform broadcaster
-        # self.tfbr = TransformBroadcaster(self)
-
-        self.vt = VirtualTime(0.1)
+        # initialize backend
+        self.backend = BackendRviz(self)
 
         # Create easy lookup tables for uri, name and types
         for cfname in robot_data:
@@ -82,7 +69,7 @@ class CrazyflieServer(Node):
                 self.cfs[cfname] = CrazyflieSIL(
                     cfname,
                     robot_data[cfname]["initial_position"],
-                    self.vt.time)
+                    self.backend.time)
 
         # Create services for the entire swarm and each individual crazyflie
         self.create_service(Empty, "all/emergency", self._emergency_callback)
@@ -125,13 +112,13 @@ class CrazyflieServer(Node):
             )
 
         # Initialize backend
-        self.backend = BackendRviz(self)
         self.backend.init([name for name, _ in self.cfs.items()], [cf.initialPosition for _, cf in self.cfs.items()])
 
-        self.timer = self.create_timer(0.1, self._timer_callback)
+        # step as fast as possible
+        max_dt = 0.0 if "max_dt" not in self._ros_parameters else self._ros_parameters["max_dt"]
+        self.timer = self.create_timer(max_dt, self._timer_callback)
 
     def _timer_callback(self):
-        self.vt.step()
         states = [cf.getSetpoint() for _, cf in self.cfs.items()]
         self.backend.step(states)
 

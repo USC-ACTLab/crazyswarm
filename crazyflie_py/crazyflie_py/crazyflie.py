@@ -711,7 +711,8 @@ class CrazyflieServer(rclpy.node.Node):
         The only ways to reset the firmware after an emergency stop has occurred
         are a physical hard reset or an nRF51 Reboot command.
         """
-        self.emergencyService.call_async(Empty.Request)
+        req = Empty.Request()
+        self.emergencyService.call_async(req)
 
     def takeoff(self, targetHeight, duration, groupMask = 0):
         """Broadcasted takeoff - fly straight up, then hover indefinitely.

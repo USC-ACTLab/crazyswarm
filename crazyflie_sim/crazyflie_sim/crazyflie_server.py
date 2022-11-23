@@ -248,8 +248,6 @@ class CrazyflieServer(Node):
         self.get_logger().info("cmd_hover not yet implemented")
 
     def _cmd_full_state_changed(self, msg, name):
-        # self.get_logger().info("cmd_full_state not yet implemented")
-        # TODO: convert quat to yaw
         q = [msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]
         rpy = rowan.to_euler(q)
 

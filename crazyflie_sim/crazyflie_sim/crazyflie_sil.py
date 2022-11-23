@@ -115,15 +115,6 @@ class CrazyflieSIL:
             traj = self.trajectories[trajectoryId]
             traj.t_begin = self.time_func()
             traj.timescale = timescale
-            # if relative:
-            #     traj.shift = firm.vzero()
-            #     if reverse:
-            #         traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)
-            #     else:
-            #         traj_init = firm.piecewise_eval(traj, traj.t_begin)
-            #     traj.shift = self.state.pos - traj_init.pos
-            # else:
-            #     traj.shift = firm.vzero()
             startfrom = self.state.pos
             firm.plan_start_trajectory(self.planner, traj, reverse, relative, startfrom)
 

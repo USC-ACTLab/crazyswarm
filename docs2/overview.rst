@@ -32,36 +32,49 @@ It has two backends that you can choose from:
 It handles several low level communication aspects with the Crazyflies:
 
 - **Parameter to ROS2 parameters handling**: It receives the parameter ToC from the Crazyflie, transforms it into ROS2 parameters, and sets the CF2 parameters based on the *crazyflies.yaml* input.
-- **Logging to ROS2 topics handling**: The server sets up logblocks for data streaming in the crazyflie, and transforms the received variables into ROS2 topcs.
+- **Logging to ROS2 topics handling**: The server sets up logblocks for data streaming in the crazyflie, and transforms the received variables into ROS2 topics.
 - **Run-time configuration**: Both parameters and logging can be configured in run-time while the server is connected with the Crazyflies. Please check :ref:`usage`.
 
 It also setups several flight command services:
 
 - **Takeoff / Land / GoTo**: With a single service command and a given height or coordinate, you can make the connected crazyflies take off, go to a position and land.
 - **Upload / Start trajectory**: You can upload a predefined trajectory and indicate if the Crazyflies need to start flying it.
-- **Emergency** : To turn off the motors in case something gooes wrong.
+- **Emergency** : To turn off the motors in case something goes wrong.
 - **/all or /cf2** : The services are setup either for all crazyflies to respond to, or each individual crazyflie, depended on the prefix. 
 
 Simulation
 ----------
-*Under development*
 
-Currently only a simple position based simulation exists (see :ref:`usage`), however this will change soon! 
+The simulator uses the Crazyflie firmware as a software-in-the-loop (SIL). It provides the same ROS interface as the server and therefore can be used with C++ or Python user code.
+
+Currently, the desired setpoint is visualized in rviz (see :ref:`usage`). However, the code is prepared to support physics-based simulation in the future as well.
 
 
 Support functionality with backends
 -----------------------------------
 
-================= ======== ========= 
-**Functionality** **Cpp**  **CFlib**
------------------ -------- ---------
-Parameters        Yes      Yes
-Logging           No       Yes
-Manual control    Yes      Yes
-Position control  Yes      No
-Hover control     No       Yes
-Takeoff/Land srv  Yes      Yes
-Go_To srv         Yes      Yes
-Upload/start traj Yes      No
-Broadcasts        Yes      No
-================= ======== =========
++---------------------+---------+-----------+---------+
+| **Functionality**   | **Cpp** | **CFlib** | **Sim** |
++=====================+=========+===========+=========+
+| Parameters          | Yes     | Yes       | No      |
++---------------------+---------+-----------+---------+
+| Logging             | No      | Yes       | No      |
++---------------------+---------+-----------+---------+
+| Broadcasts          | Yes     | No        | n/a     |
++---------------------+---------+-----------+---------+
+| Manual control                                      |
++---------------------+---------+-----------+---------+
+| - cmd_full_state    | Yes     | No        | Yes     |
++---------------------+---------+-----------+---------+
+| - cmd_position      | Yes     | No        | No      |
++---------------------+---------+-----------+---------+
+| - cmd_hover         | No      | Yes       | No      |
++---------------------+---------+-----------+---------+
+| High-level control                                  |
++---------------------+---------+-----------+---------+
+| - takeoff/land      | Yes     | Yes       | Yes     |
++---------------------+---------+-----------+---------+
+| - go_to             | Yes     | Yes       | Yes     |
++---------------------+---------+-----------+---------+
+| - upload/start traj | Yes     | No        | Yes     |
++---------------------+---------+-----------+---------+

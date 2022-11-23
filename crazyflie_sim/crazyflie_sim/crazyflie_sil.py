@@ -19,6 +19,14 @@ class CrazyflieState:
     def __repr__(self) -> str:
         return "{}".format(self.pos)
 
+class TrajectoryPolynomialPiece:
+    def __init__(self, poly_x, poly_y, poly_z, poly_yaw, duration):
+        self.poly_x = poly_x
+        self.poly_y = poly_y
+        self.poly_z = poly_z
+        self.poly_yaw = poly_yaw
+        self.duration = duration
+
 
 class CrazyflieSIL:
 
@@ -45,7 +53,7 @@ class CrazyflieSIL:
         self.trajectories = dict()
         self.setState = firm.traj_eval_zero()
 
-        # State. Public np.array-returning getters below for physics state.
+        # State.
         self.state = firm.traj_eval_zero()
         self.state.pos = firm.mkvec(*initialPosition)
         self.state.vel = firm.vzero()
@@ -76,47 +84,48 @@ class CrazyflieSIL:
     #         self.mode = CrazyflieSIL.MODE_IDLE
     #         firm.plan_stop(self.planner)
 
-    # def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
-    #     if self._isGroup(groupMask):
-    #         if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
-    #             # We need to update to the latest firmware that has go_to_from.
-    #             raise ValueError("goTo from low-level modes not yet supported.")
-    #         self.mode = CrazyflieSIL.MODE_HIGH_POLY
-    #         firm.plan_go_to(self.planner, relative, firm.mkvec(*goal), yaw, duration, self.time_func())
+    def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
+        if self._isGroup(groupMask):
+            if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
+                # We need to update to the latest firmware that has go_to_from.
+                raise ValueError("goTo from low-level modes not yet supported.")
+            self.mode = CrazyflieSIL.MODE_HIGH_POLY
+            firm.plan_go_to(self.planner, relative, firm.mkvec(*goal), yaw, duration, self.time_func())
 
-    # def uploadTrajectory(self, trajectoryId, pieceOffset, trajectory):
-    #     traj = firm.piecewise_traj()
-    #     traj.t_begin = 0
-    #     traj.timescale = 1.0
-    #     traj.shift = firm.mkvec(0, 0, 0)
-    #     traj.n_pieces = len(trajectory.polynomials)
-    #     traj.pieces = firm.malloc_poly4d(len(trajectory.polynomials))
-    #     for i, poly in enumerate(trajectory.polynomials):
-    #         piece = firm.pp_get_piece(traj, i)
-    #         piece.duration = poly.duration
-    #         for coef in range(0, 8):
-    #             firm.poly4d_set(piece, 0, coef, poly.px.p[coef])
-    #             firm.poly4d_set(piece, 1, coef, poly.py.p[coef])
-    #             firm.poly4d_set(piece, 2, coef, poly.pz.p[coef])
-    #             firm.poly4d_set(piece, 3, coef, poly.pyaw.p[coef])
-    #     self.trajectories[trajectoryId] = traj
+    def uploadTrajectory(self, trajectoryId: int, pieceOffset: int, pieces: list[TrajectoryPolynomialPiece]):
+        traj = firm.piecewise_traj()
+        traj.t_begin = 0
+        traj.timescale = 1.0
+        traj.shift = firm.mkvec(0, 0, 0)
+        traj.n_pieces = len(pieces)
+        traj.pieces = firm.poly4d_malloc(traj.n_pieces)
+        for i, piece in enumerate(pieces):
+            fwpiece = firm.piecewise_get(traj, i)
+            fwpiece.duration = piece.duration
+            for coef in range(0, 8):
+                firm.poly4d_set(fwpiece, 0, coef, piece.poly_x[coef])
+                firm.poly4d_set(fwpiece, 1, coef, piece.poly_y[coef])
+                firm.poly4d_set(fwpiece, 2, coef, piece.poly_z[coef])
+                firm.poly4d_set(fwpiece, 3, coef, piece.poly_yaw[coef])
+        self.trajectories[trajectoryId] = traj
 
-    # def startTrajectory(self, trajectoryId, timescale = 1.0, reverse = False, relative = True, groupMask = 0):
-    #     if self._isGroup(groupMask):
-    #         self.mode = CrazyflieSIL.MODE_HIGH_POLY
-    #         traj = self.trajectories[trajectoryId]
-    #         traj.t_begin = self.time_func()
-    #         traj.timescale = timescale
-    #         if relative:
-    #             traj.shift = firm.vzero()
-    #             if reverse:
-    #                 traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)
-    #             else:
-    #                 traj_init = firm.piecewise_eval(traj, traj.t_begin)
-    #             traj.shift = self.state.pos - traj_init.pos
-    #         else:
-    #             traj.shift = firm.vzero()
-    #         firm.plan_start_trajectory(self.planner, traj, reverse)
+    def startTrajectory(self, trajectoryId: int, timescale: float = 1.0, reverse: bool = False, relative: bool = True, groupMask: int = 0):
+        if self._isGroup(groupMask):
+            self.mode = CrazyflieSIL.MODE_HIGH_POLY
+            traj = self.trajectories[trajectoryId]
+            traj.t_begin = self.time_func()
+            traj.timescale = timescale
+            # if relative:
+            #     traj.shift = firm.vzero()
+            #     if reverse:
+            #         traj_init = firm.piecewise_eval_reversed(traj, traj.t_begin)
+            #     else:
+            #         traj_init = firm.piecewise_eval(traj, traj.t_begin)
+            #     traj.shift = self.state.pos - traj_init.pos
+            # else:
+            #     traj.shift = firm.vzero()
+            startfrom = self.state.pos
+            firm.plan_start_trajectory(self.planner, traj, reverse, relative, startfrom)
 
     # def notifySetpointsStop(self, remainValidMillisecs=100):
     #     # No-op - the real Crazyflie prioritizes streaming setpoints over
@@ -124,13 +133,13 @@ class CrazyflieSIL:
     #     # simulate this behavior.
     #     pass
 
-    # def cmdFullState(self, pos, vel, acc, yaw, omega):
-    #     self.mode = CrazyflieSIL.MODE_LOW_FULLSTATE
-    #     self.setState.pos = firm.mkvec(*pos)
-    #     self.setState.vel = firm.mkvec(*vel)
-    #     self.setState.acc = firm.mkvec(*acc)
-    #     self.setState.yaw = yaw
-    #     self.setState.omega = firm.mkvec(*omega)
+    def cmdFullState(self, pos, vel, acc, yaw, omega):
+        self.mode = CrazyflieSIL.MODE_LOW_FULLSTATE
+        self.setState.pos = firm.mkvec(*pos)
+        self.setState.vel = firm.mkvec(*vel)
+        self.setState.acc = firm.mkvec(*acc)
+        self.setState.yaw = yaw
+        self.setState.omega = firm.mkvec(*omega)
 
     # def cmdPosition(self, pos, yaw = 0):
     #     self.mode = CrazyflieSIL.MODE_LOW_POSITION

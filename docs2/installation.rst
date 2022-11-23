@@ -56,13 +56,15 @@ First Installation
     .. note::
        symlink-install allows you to edit Python and config files without running `colcon build` every time.
 
-5. Set up software-in-the-loop simulation
+5. Set up software-in-the-loop simulation (optional)
+
+    This currently requires cloning the Crazyflie firmware and building the Python bindings manually. In a separate folder (not part of your ROS2 workspace!):
 
     .. code-block:: bash
 
-        checkout crazyflie-firmware
+        git clone https://github.com/bitcraze/crazyflie-firmware.git
         make bindings_python
-        export PYTHONPATH=/home/whoenig/projects/crazyflie/crazyflie-firmware:$PYTHONPATH
+        export PYTHONPATH=<replace-with-path-to>/crazyflie-firmware:$PYTHONPATH
 
 
 Updating

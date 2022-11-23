@@ -1,39 +1,28 @@
 #!/usr/bin/env python3
 
 """
-A crazyflie server for communicating with several crazyflies
-    based on the official crazyflie python library from 
-    Bitcraze AB
+A crazyflie server for simulation.
 
 
-    2022 - K. N. McGuire (Bitcraze AB)
+    2022 - Wolfgang Hönig (TU Berlin)
 """
 
 import rclpy
 from rclpy.node import Node
-import time
+import rowan
 
-from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
+from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
-from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
-from crazyflie_interfaces.msg import Hover
+from crazyflie_interfaces.msg import Hover, FullState
 
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
-from geometry_msgs.msg import PoseStamped, TransformStamped
-from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
-from sensor_msgs.msg import LaserScan
-from nav_msgs.msg import Odometry
-
-# import tf_transformations
-# from tf2_ros import TransformBroadcaster
 
 from functools import partial
-from math import degrees, radians, pi, cos, sin
 
 # import BackendRviz from .backend_rviz
 from .backend_rviz import BackendRviz
-from .crazyflie_sil import CrazyflieSIL
+from .crazyflie_sil import CrazyflieSIL, TrajectoryPolynomialPiece
 
 
 class CrazyflieServer(Node):
@@ -46,11 +35,6 @@ class CrazyflieServer(Node):
 
         # Turn ROS parameters into a dictionary
         self._ros_parameters = self._param_to_dict(self._parameters)
-
-        # self.uris = []
-        # self.cf_dict = {}
-        # self.uri_dict = {}
-        # self.type_dict = {}
         self.cfs = dict()
         
         self.world_tf_name = "world"
@@ -110,6 +94,10 @@ class CrazyflieServer(Node):
                 Hover, name +
                 "/cmd_hover", partial(self._cmd_hover_changed, name=name), 10
             )
+            self.create_subscription(
+                FullState, name +
+                "/cmd_full_state", partial(self._cmd_full_state_changed, name=name), 10
+            )
 
         # Initialize backend
         self.backend.init([name for name, _ in self.cfs.items()], [cf.initialPosition for _, cf in self.cfs.items()])
@@ -136,12 +124,8 @@ class CrazyflieServer(Node):
                     t = t.setdefault(part, {})
         return tree
 
-    def _emergency_callback(self, request, response, uri="all"):
-        if uri == "all":
-            for link_uri in self.uris:
-                self.swarm._cfs[link_uri].cf.loc.send_emergency_stop()
-        else:
-            self.swarm._cfs[uri].cf.loc.send_emergency_stop()
+    def _emergency_callback(self, request, response, name="all"):
+        self.get_logger().info("emergency not yet implemented")
 
         return response
 
@@ -182,7 +166,7 @@ class CrazyflieServer(Node):
 
         return response
 
-    def _go_to_callback(self, request, response, uri="all"):
+    def _go_to_callback(self, request, response, name="all"):
         """
         Service callback to have the crazyflie go to 
             a certain position in high level commander
@@ -202,64 +186,79 @@ class CrazyflieServer(Node):
                 request.group_mask,
             )
         )
-        if uri == "all":
-            for link_uri in self.uris:
-                self.swarm._cfs[link_uri].cf.high_level_commander.go_to(
-                    request.goal.x,
-                    request.goal.y,
-                    request.goal.z,
-                    request.yaw,
-                    duration,
-                    relative=request.relative,
-                    group_mask=request.group_mask,
-                )
-        else:
-            self.swarm._cfs[uri].cf.high_level_commander.go_to(
-                request.goal.x,
-                request.goal.y,
-                request.goal.z,
-                request.yaw,
-                duration,
-                relative=request.relative,
-                group_mask=request.group_mask,
-            )
+        cfs = self.cfs if name == "all" else {name: self.cfs[name]}
+        for _, cf in cfs.items():
+            cf.goTo([request.goal.x, request.goal.y, request.goal.z], 
+                    request.yaw, duration, request.relative, request.group_mask)
+        
         return response
 
-    def _notify_setpoints_stop_callback(self, request, response, uri="all"):
+    def _notify_setpoints_stop_callback(self, request, response, name="all"):
         self.get_logger().info("Notify setpoint stop not yet implemented")
         return response
 
-    def _upload_trajectory_callback(self, request, response, uri="all"):
-        self.get_logger().info("Notify trajectory not yet implemented")
+    def _upload_trajectory_callback(self, request, response, name="all"):
+        self.get_logger().info("Upload trajectory(id=%d)" % (request.trajectory_id))
+
+        cfs = self.cfs if name == "all" else {name: self.cfs[name]}
+        for _, cf in cfs.items():
+            pieces = []
+            for piece in request.pieces:
+                poly_x = piece.poly_x
+                poly_y = piece.poly_y
+                poly_z = piece.poly_z
+                poly_yaw = piece.poly_yaw
+                duration = float(piece.duration.sec) + \
+                    float(piece.duration.nanosec / 1e9)
+                pieces.append(TrajectoryPolynomialPiece(poly_x, poly_y, poly_z, poly_yaw, duration))
+            cf.uploadTrajectory(request.trajectory_id, request.piece_offset, pieces)
+
         return response
     
-    def _start_trajectory_callback(self, request, response, uri="all"):
-        self.get_logger().info("Start trajectory not yet implemented")
+    def _start_trajectory_callback(self, request, response, name="all"):
+        self.get_logger().info(
+            "start_trajectory(id=%d, timescale=%f, reverse=%d, relative=%d, group_mask=%d)"
+            % (
+                request.trajectory_id,
+                request.timescale,
+                request.reversed,
+                request.relative,
+                request.group_mask,
+            )
+        )
+        cfs = self.cfs if name == "all" else {name: self.cfs[name]}
+        for _, cf in cfs.items():
+            cf.startTrajectory(request.trajectory_id, request.timescale, request.reversed, request.relative, request.group_mask)
+
         return response
 
-    def _cmd_vel_legacy_changed(self, msg, uri=""):
+    def _cmd_vel_legacy_changed(self, msg, name=""):
         """
         Topic update callback to control the attitude and thrust
             of the crazyflie with teleop
         """
-        roll = msg.linear.y
-        pitch = -msg.linear.x
-        yawrate = msg.angular.z
-        thrust = int(min(max(msg.linear.z, 0, 0), 60000))
-        self.swarm._cfs[uri].cf.commander.send_setpoint(
-            roll, pitch, yawrate, thrust)
+        self.get_logger().info("cmd_vel_legacy not yet implemented")
 
-    def _cmd_hover_changed(self, msg, uri=""):
+
+    def _cmd_hover_changed(self, msg, name=""):
         """
         Topic update callback to control the hover command
             of the crazyflie from the velocity multiplexer (vel_mux)
         """
-        vx = msg.vx
-        vy = msg.vy
-        z = msg.z_distance
-        yawrate = -1.0*degrees(msg.yaw_rate)
-        self.swarm._cfs[uri].cf.commander.send_hover_setpoint(vx, vy, yawrate, z)
-        self.get_logger().info(f"{uri}: Received hover topic {vx} {vy} {yawrate} {z}")
+        self.get_logger().info("cmd_hover not yet implemented")
+
+    def _cmd_full_state_changed(self, msg, name):
+        # self.get_logger().info("cmd_full_state not yet implemented")
+        # TODO: convert quat to yaw
+        q = [msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z]
+        rpy = rowan.to_euler(q)
+
+        self.cfs[name].cmdFullState(
+            [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z],
+            [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z],
+            [msg.acc.x, msg.acc.y, msg.acc.z],
+            rpy[2],
+            [msg.twist.angular.x, msg.twist.angular.y, msg.twist.angular.z])
 
 
 def main(args=None):

@@ -174,10 +174,10 @@ class Crazyflie:
     MODE_LOW_VELOCITY = 4
 
 
-    def __init__(self, id, initialPosition, timeHelper):
+    def __init__(self, cfname, initialPosition, timeHelper):
 
         # Core.
-        self.id = id
+        self.cfname = cfname
         self.groupMask = 0
         self.initialPosition = np.array(initialPosition)
         self.time = lambda: timeHelper.time()
@@ -459,16 +459,17 @@ class CrazyflieServer:
 
         self.crazyflies = []
         self.crazyfliesById = dict()
+        self.crazyfliesByName = dict()
         for cfname, cfsettings in cfg["robots"].items():
             if cfsettings["enabled"]:
                 initialPosition = cfsettings["initial_position"]
-                if "id" in cfsettings:
-                    cfid = int(cfsettings["id"])
-                elif "uri" in cfsettings:
-                    cfid = int(cfsettings["uri"][-2:], 16)
-                cf = Crazyflie(cfid, initialPosition, timeHelper)
+                cf = Crazyflie(cfname, initialPosition, timeHelper)
+                self.crazyfliesByName[cfname] = cf
                 self.crazyflies.append(cf)
-                self.crazyfliesById[cfid] = cf
+                # For legacy crazyswarm1 code, also provide crazyfliesById
+                if "uri" in cfsettings:
+                    cfid = int(cfsettings["uri"][-2:], 16)
+                    self.crazyfliesById[cfid] = cf
 
         self.timeHelper = timeHelper
         self.timeHelper.crazyflies = self.crazyflies

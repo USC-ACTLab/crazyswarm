@@ -89,20 +89,18 @@ class Crazyflie:
     The bulk of the module's functionality is contained in this class.
     """
 
-    def __init__(self, node, id, initialPosition):
+    def __init__(self, node, cfname, initialPosition):
         """Constructor.
 
         Args:
-            id (int): Integer ID in range [0, 255]. The last byte of the robot's
-                radio address.
+            cfname (string): Name of the robot names[ace]
             initialPosition (iterable of float): Initial position of the robot:
                 [x, y, z]. Typically on the floor of the experiment space with
                 z == 0.0.
             tf (tf.TransformListener): ROS TransformListener used to query the
                 robot's current state.
         """
-        self.id = id
-        prefix = "/cf" + str(id)
+        prefix = cfname
         self.prefix = prefix
         self.initialPosition = np.array(initialPosition)
         self.node = node
@@ -686,18 +684,17 @@ class CrazyflieServer(rclpy.node.Node):
 
         self.crazyflies = []
         self.crazyfliesById = dict()
+        self.crazyfliesByName = dict()
         for cfname, cfsettings in cfg["robots"].items():
             if cfsettings["enabled"]:
                 initialPosition = np.array(cfsettings["initial_position"])
-                if "id" in cfsettings:
-                    cfid = int(cfsettings["id"])
-                elif "uri" in cfsettings:
-                    cfid = int(cfsettings["uri"][-2:], 16)
-                print(cfid)
-                # cf = Crazyflie(id, initialPosition, self.tf)
-                cf = Crazyflie(self, cfid, initialPosition)
+                cf = Crazyflie(self, cfname, initialPosition)
                 self.crazyflies.append(cf)
-                self.crazyfliesById[cfid] = cf
+                self.crazyfliesByName[cfname] = cf
+                # For legacy crazyswarm1 code, also provide crazyfliesById
+                if "uri" in cfsettings:
+                    cfid = int(cfsettings["uri"][-2:], 16)
+                    self.crazyfliesById[cfid] = cf
 
     def emergency(self):
         """Emergency stop. Cuts power; causes future commands to be ignored.

@@ -95,16 +95,9 @@ public:
         }
 
         client_emergency_ = this->create_client<Empty>("emergency");
-        client_emergency_->wait_for_service();
-
         client_takeoff_ = this->create_client<Takeoff>("takeoff");
-        client_takeoff_->wait_for_service();
-
         client_land_ = this->create_client<Land>("land");
-        client_land_->wait_for_service();
-
         client_notify_setpoints_stop_ = this->create_client<NotifySetpointsStop>("notify_setpoints_stop");
-        client_notify_setpoints_stop_->wait_for_service();
     }
 
 private:
@@ -240,12 +233,20 @@ private:
     
     void emergency()
     {
+        if (!client_emergency_->service_is_ready()) {
+            RCLCPP_ERROR(get_logger(), "Emergency service not ready!");
+            return;
+        }
         auto request = std::make_shared<Empty::Request>();
         client_emergency_->async_send_request(request);
     }
 
     void takeoff()
     {
+        if (!client_takeoff_->service_is_ready()) {
+            RCLCPP_ERROR(get_logger(), "Takeoff service not ready!");
+            return;
+        }
         auto request = std::make_shared<Takeoff::Request>();
         request->group_mask = 0;
         request->height = 0.5;
@@ -261,13 +262,22 @@ private:
 
     void land()
     {
+        if (!client_land_->service_is_ready()) {
+            RCLCPP_ERROR(get_logger(), "Land service not ready!");
+            return;
+        }
+
         is_low_level_flight_active_ = false;
 
         // If we are in manual flight mode, first switch back to high-level mode
-        auto request1 = std::make_shared<NotifySetpointsStop::Request>();
-        request1->remain_valid_millisecs = 100;
-        request1->group_mask = 0;
-        client_notify_setpoints_stop_->async_send_request(request1);
+        if (!client_notify_setpoints_stop_->service_is_ready()) {
+            RCLCPP_ERROR(get_logger(), "NotifySetpointStop service not ready!");
+        } else {
+            auto request1 = std::make_shared<NotifySetpointsStop::Request>();
+            request1->remain_valid_millisecs = 100;
+            request1->group_mask = 0;
+            client_notify_setpoints_stop_->async_send_request(request1);
+        }
 
         // Now we should be able to land!
         auto request2 = std::make_shared<Land::Request>();

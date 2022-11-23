@@ -15,6 +15,10 @@ import cffirmware as firm
 class CrazyflieState:
     def __init__(self, fwstate):
         self.pos = np.array([fwstate.pos.x, fwstate.pos.y, fwstate.pos.z])
+        self.vel = np.array([fwstate.vel.x, fwstate.vel.y, fwstate.vel.z])
+        self.acc = np.array([fwstate.acc.x, fwstate.acc.y, fwstate.acc.z])
+        self.yaw = fwstate.yaw
+        self.omega = np.array([fwstate.omega.x, fwstate.omega.y, fwstate.omega.z])
 
     def __repr__(self) -> str:
         return "{}".format(self.pos)

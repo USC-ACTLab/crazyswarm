@@ -20,23 +20,20 @@ class BackendRviz:
     def time(self) -> float:
         return self.t
 
-    def step(self, states):
-        # print("step ", states)
-
+    def step(self, setpoints):
         # advance the time
         self.t += self.dt
 
-        # step the robot itself (here: we just visualize the desired state)
+        # step the robot itself (here: we just visualize the setpoint)
         msgs = []
-        for name, state in zip(self.names, states):
-            # print(state, type(state.pos[0]))
+        for name, setpoint in zip(self.names, setpoints):
             msg = TransformStamped()
             msg.header.stamp = self.node.get_clock().now().to_msg()
             msg.header.frame_id = "world"
             msg.child_frame_id = name
-            msg.transform.translation.x = state.pos[0]
-            msg.transform.translation.y = state.pos[1]
-            msg.transform.translation.z = state.pos[2]
+            msg.transform.translation.x = setpoint.pos[0]
+            msg.transform.translation.y = setpoint.pos[1]
+            msg.transform.translation.z = setpoint.pos[2]
             msg.transform.rotation.x = 0.0
             msg.transform.rotation.y = 0.0
             msg.transform.rotation.z = 0.0

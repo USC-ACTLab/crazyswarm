@@ -57,29 +57,3 @@ def poisson_disk_sample(n, dim, mindist):
             pts = np.concatenate([pts, pt[None,:]], axis=0)
     return pts
 
-
-def grid_yaml(rows, cols, spacing=0.5):
-    """Generate crazyflies.yaml string for a grid in the XZ plane.
-
-    Args:
-        rows (int): Number of rows (distinct X-values) in the grid.
-        cols (int): Number of columns (distinct Y-values) in the grid.
-        spacing (float): Grid spacing for both axes.
-
-    Returns:
-        yaml (str): String containing crazyflies.yaml. Will contain
-            (rows * cols) crazyflies, all assigned on radio channel 100.
-            Positions will be centered about the origin. No particular
-            id-position mapping should be assumed.
-    """
-    x, y = spacing * np.mgrid[:rows, :cols]
-    x -= np.mean(x)
-    y -= np.mean(y)
-    return "crazyflies:\n" + "\n".join([
-        """- channel: 100
-  id: {}
-  initialPosition: [{}, {}, 0.0]""".format(i, x, y)
-        for i, (x, y) in enumerate(zip(x.flat, y.flat))
-    ])
-
-

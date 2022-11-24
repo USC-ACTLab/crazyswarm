@@ -100,7 +100,7 @@ class Crazyflie:
             tf (tf.TransformListener): ROS TransformListener used to query the
                 robot's current state.
         """
-        prefix = cfname
+        prefix = "/" + cfname
         self.prefix = prefix
         self.initialPosition = np.array(initialPosition)
         self.node = node

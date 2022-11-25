@@ -29,6 +29,7 @@ First Installation
     .. code-block:: bash
 
         sudo apt install libboost-program-options-dev libusb-1.0-0-dev
+        pip3 install rowan
 
     If you are planning to use the CFlib backend, do:
 

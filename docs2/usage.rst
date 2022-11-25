@@ -125,6 +125,7 @@ Example:
 
 .. code-block:: bash
 
+    ros2 launch crazyflie launch.py backend:=sim
     ros2 run crazyflie_examples hello_world --ros-args -p use_sim_time:=True
 
 Physical Experiments

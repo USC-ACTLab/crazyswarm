@@ -13,10 +13,12 @@
 #include "crazyflie_interfaces/srv/notify_setpoints_stop.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include "crazyflie_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
 #include "crazyflie_interfaces/msg/full_state.hpp"
 #include "crazyflie_interfaces/msg/position.hpp"
+#include "crazyflie_interfaces/msg/log_data_generic.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -88,6 +90,13 @@ private:
     float y;
     float z;
     int32_t quatCompressed;
+  } __attribute__((packed));
+
+  struct logScan {
+    uint16_t front;
+    uint16_t left;
+    uint16_t back;
+    uint16_t right;
   } __attribute__((packed));
 
 public:
@@ -248,6 +257,48 @@ public:
                 {"stateEstimateZ", "quat"}
               }, cb));
             log_block_pose_->start(uint8_t(100.0f / (float)freq)); // this is in tens of milliseconds
+          }
+          else if (i.first.find("default_topics.scan") == 0) {
+            int freq = log_config_map["default_topics.scan.frequency"].get<int>();
+            RCLCPP_INFO(logger_, "Logging to /scan at %d Hz", freq);
+
+            publisher_scan_ = node->create_publisher<sensor_msgs::msg::LaserScan>(name + "/scan", 10);
+
+            std::function<void(uint32_t, const logScan*)> cb = std::bind(&CrazyflieROS::on_logging_scan, this, std::placeholders::_1, std::placeholders::_2);
+
+            log_block_scan_.reset(new LogBlock<logScan>(
+              &cf_,{
+                {"range", "front"},
+                {"range", "left"},
+                {"range", "back"},
+                {"range", "right"}
+              }, cb));
+            log_block_scan_->start(uint8_t(100.0f / (float)freq)); // this is in tens of milliseconds
+          }
+          else if (i.first.find("custom_topics") == 0
+                   && i.first.rfind(".vars") != std::string::npos) {
+            std::string topic_name = i.first.substr(14, i.first.size() - 14 - 5);
+
+            int freq = log_config_map["custom_topics." + topic_name + ".frequency"].get<int>();
+            auto vars = log_config_map["custom_topics." + topic_name + ".vars"].get<std::vector<std::string>>();
+            
+            RCLCPP_INFO(logger_, "Logging to %s at %d Hz", topic_name.c_str(), freq);
+
+            publishers_generic_.emplace_back(node->create_publisher<crazyflie_interfaces::msg::LogDataGeneric>(name + "/" + topic_name, 10));
+
+            std::function<void(uint32_t, std::vector<double>*, void* userData)> cb = std::bind(
+              &CrazyflieROS::on_logging_custom,
+              this,
+              std::placeholders::_1,
+              std::placeholders::_2,
+              std::placeholders::_3);
+
+            log_blocks_generic_.emplace_back(new LogBlockGeneric(
+              &cf_,
+              vars,
+              (void*)&publishers_generic_.back(),
+              cb));
+            log_blocks_generic_.back()->start(uint8_t(100.0f / (float)freq)); // this is in tens of milliseconds
           }
         }
       }
@@ -496,7 +547,7 @@ private:
     if (publisher_pose_) {
       geometry_msgs::msg::PoseStamped msg;
       msg.header.stamp = node_->get_clock()->now();
-      msg.header.frame_id = "world";
+      msg.header.frame_id = name_;
 
       msg.pose.position.x = data->x;
       msg.pose.position.y = data->y;
@@ -511,6 +562,49 @@ private:
 
       publisher_pose_->publish(msg);
     }
+  }
+
+  void on_logging_scan(uint32_t time_in_ms, const logScan* data) {
+    if (publisher_scan_) {
+      
+      const float max_range = 3.49;
+      float front_range = data->front / 1000.0f;
+      if (front_range > max_range) front_range = std::numeric_limits<float>::infinity();
+      float left_range = data->left / 1000.0f;
+      if (left_range > max_range) left_range = std::numeric_limits<float>::infinity();
+      float back_range = data->back / 1000.0f;
+      if (back_range > max_range) back_range = std::numeric_limits<float>::infinity();
+      float right_range = data->right / 1000.0f;
+      if (right_range > max_range) right_range = std::numeric_limits<float>::infinity();
+
+      sensor_msgs::msg::LaserScan msg;
+      msg.header.stamp = node_->get_clock()->now();
+      msg.header.frame_id = name_;
+      msg.range_min = 0.01;
+      msg.range_max = max_range;
+      msg.ranges.push_back(back_range);
+      msg.ranges.push_back(left_range);
+      msg.ranges.push_back(front_range);
+      msg.ranges.push_back(right_range);
+      msg.angle_min = 0.5 * 2 * M_PI;
+      msg.angle_max = -0.5 * 2 * M_PI;
+      msg.angle_increment = -1.0 * M_PI / 2;
+
+      publisher_scan_->publish(msg);
+    }
+  }
+
+  void on_logging_custom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
+
+    auto pub = reinterpret_cast<rclcpp::Publisher<crazyflie_interfaces::msg::LogDataGeneric>::SharedPtr*>(userData);
+
+    crazyflie_interfaces::msg::LogDataGeneric msg;
+    msg.header.stamp = node_->get_clock()->now();
+    msg.header.frame_id = "world";
+    msg.timestamp = time_in_ms;
+    msg.values = *values;
+
+    (*pub)->publish(msg);
   }
 
 private:
@@ -542,6 +636,12 @@ private:
   // logging
   std::unique_ptr<LogBlock<logPose>> log_block_pose_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose_;
+
+  std::unique_ptr<LogBlock<logScan>> log_block_scan_;
+  rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher_scan_;
+
+  std::list<std::unique_ptr<LogBlockGeneric>> log_blocks_generic_;
+  std::list<rclcpp::Publisher<crazyflie_interfaces::msg::LogDataGeneric>::SharedPtr> publishers_generic_;
 };
 
 class CrazyflieServer : public rclcpp::Node

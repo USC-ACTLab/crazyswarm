@@ -52,7 +52,7 @@ In crazyflie.yaml, make sure that this following is added or uncommented
         pose:
             frequency: 10 # Hz
 
-In the first terminal, launch the server (use `backend:=cflib` if you need odom or scan topics)
+In the first terminal, launch the server (use `backend:=cflib` if you need the odom topic)
 
 .. code-block:: bash
 

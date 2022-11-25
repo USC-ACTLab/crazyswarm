@@ -547,7 +547,7 @@ private:
     if (publisher_pose_) {
       geometry_msgs::msg::PoseStamped msg;
       msg.header.stamp = node_->get_clock()->now();
-      msg.header.frame_id = name_;
+      msg.header.frame_id = "world";
 
       msg.pose.position.x = data->x;
       msg.pose.position.y = data->y;

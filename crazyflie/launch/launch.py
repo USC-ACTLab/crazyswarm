@@ -90,10 +90,24 @@ def generate_launch_description():
             parameters=[server_params]
         ),
         Node(
+            package='crazyflie_sim',
+            executable='crazyflie_server',
+            condition=LaunchConfigurationEquals('backend','sim'),
+            name='crazyflie_server',
+            output='screen',
+            emulate_tty=True,
+            parameters=[server_params] + [{
+                "max_dt": 0.1,              # artificially limit the step() function (set to 0 to disable)
+            }]
+        ),
+        Node(
             package='rviz2',
             namespace='',
             executable='rviz2',
             name='rviz2',
-            # arguments=['-d' + os.path.join(get_package_share_directory('package_name'), 'config', 'config_file.rviz')]
+            arguments=['-d' + os.path.join(get_package_share_directory('crazyflie'), 'config', 'config.rviz')],
+            parameters=[{
+                "use_sim_time": True,
+            }]
         ),
     ])

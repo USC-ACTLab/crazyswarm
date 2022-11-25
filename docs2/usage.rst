@@ -11,6 +11,14 @@ Usage
         . install/local_setup.bash
 
 
+.. warning::
+    If you work in a shared network (lab, classroom) or similar, you might want to avoid 
+    controlling other robots. This is in particular true for simulation. In this case, 
+    you can use
+
+    .. code-block:: bash
+
+        export ROS_LOCALHOST_ONLY=1
 
 
 Configuration
@@ -110,14 +118,15 @@ The server node will upon initialization, first look at the params/logs from the
 Simulation
 ----------
 
-High-level Python scripts can be visualized before execution. The initial position and number of robots is taken from the crazyflies.yaml configuration file.
-The simulation uses the firmware code as software-in-the-loop, but (currently) does not include any dynamics.
+Any usage of the ROS API, including high-level Python scripts, can be visualized before execution. The initial position and number of robots is taken from the crazyflies.yaml configuration file.
+The simulation uses the firmware code as software-in-the-loop, but (currently) does not include any robot dynamics.
 
 Example:
 
 .. code-block:: bash
 
-    ros2 run crazyflie_examples hello_world --sim
+    ros2 launch crazyflie launch.py backend:=sim
+    ros2 run crazyflie_examples hello_world --ros-args -p use_sim_time:=True
 
 Physical Experiments
 --------------------

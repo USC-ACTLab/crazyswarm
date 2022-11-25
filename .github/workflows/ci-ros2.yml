@@ -77,5 +77,6 @@ jobs:
             crazyflie
             crazyflie_examples
             crazyflie_interfaces
+            crazyflie_sim
           target-ros2-distro: ${{ matrix.ros_distribution }}
           vcs-repo-file-url: rosinstall

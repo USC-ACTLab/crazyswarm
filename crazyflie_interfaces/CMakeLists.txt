@@ -19,7 +19,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/FullState.msg"
-  "msg/GenericLogData.msg"
+  "msg/LogDataGeneric.msg"
   "msg/Hover.msg"
   "msg/LogBlock.msg"
   "msg/Position.msg"

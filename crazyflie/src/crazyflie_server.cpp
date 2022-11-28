@@ -4,7 +4,8 @@
 
 #include <crazyflie_cpp/Crazyflie.h>
 
-#include "rclcpp/rclcpp.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 #include "std_srvs/srv/empty.hpp"
 #include "crazyflie_interfaces/srv/start_trajectory.hpp"
 #include "crazyflie_interfaces/srv/takeoff.hpp"
@@ -12,10 +13,14 @@
 #include "crazyflie_interfaces/srv/go_to.hpp"
 #include "crazyflie_interfaces/srv/notify_setpoints_stop.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
 #include "crazyflie_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
 #include "crazyflie_interfaces/msg/full_state.hpp"
 #include "crazyflie_interfaces/msg/position.hpp"
+#include "crazyflie_interfaces/msg/log_data_generic.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -81,6 +86,21 @@ std::set<std::string> extract_names(
 // ROS wrapper for a single Crazyflie object
 class CrazyflieROS
 {
+private:
+  struct logPose {
+    float x;
+    float y;
+    float z;
+    int32_t quatCompressed;
+  } __attribute__((packed));
+
+  struct logScan {
+    uint16_t front;
+    uint16_t left;
+    uint16_t back;
+    uint16_t right;
+  } __attribute__((packed));
+
 public:
   CrazyflieROS(
     const std::string& link_uri,
@@ -95,6 +115,8 @@ public:
       cf_logger_,
       std::bind(&CrazyflieROS::on_console, this, std::placeholders::_1))
     , name_(name)
+    , node_(node)
+    , tf_broadcaster_(node)
   {
     service_emergency_ = node->create_service<Empty>(name + "/emergency", std::bind(&CrazyflieROS::emergency, this, _1, _2));
     service_start_trajectory_ = node->create_service<StartTrajectory>(name + "/start_trajectory", std::bind(&CrazyflieROS::start_trajectory, this, _1, _2));
@@ -111,6 +133,22 @@ public:
     auto start = std::chrono::system_clock::now();
 
     cf_.logReset();
+
+    auto node_parameters_iface = node->get_node_parameters_interface();
+    const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
+        node_parameters_iface->get_parameter_overrides();
+
+    // declares a lambda, to be used as local function
+    auto update_map = [&parameter_overrides](std::map<std::string, rclcpp::ParameterValue>& map, const std::string& pattern)
+    {
+      for (const auto &i : parameter_overrides) {
+        if (i.first.find(pattern) == 0) {
+          size_t start = pattern.size() + 1;
+          const auto group_and_name = i.first.substr(start);
+          map[group_and_name] = i.second;
+        }
+      }
+    };
 
     if (enable_parameters) {
       int numParams = 0;
@@ -162,31 +200,16 @@ public:
       // 2.) check robot_types/<type_name>/firmware_params
       // 3.) check robots/<robot_name>/firmware_params
       // where the higher order is used if defined on multiple levels.
-      auto node_parameters_iface = node->get_node_parameters_interface();
-      const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
-          node_parameters_iface->get_parameter_overrides();
 
       // <group>.<name> -> value map
       std::map<std::string, rclcpp::ParameterValue> set_param_map;
 
-      // declares a lambda, to be used as local function
-      auto update_map = [&set_param_map, &parameter_overrides](const std::string& pattern)
-      {
-        for (const auto &i : parameter_overrides) {
-          if (i.first.find(pattern) == 0) {
-            size_t start = pattern.size() + 1;
-            const auto group_and_name = i.first.substr(start);
-            set_param_map[group_and_name] = i.second;
-          }
-        }
-      };
-
       // check global settings/firmware_params
-      update_map("all.firmware_params");
+      update_map(set_param_map, "all.firmware_params");
       // check robot_types/<type_name>/firmware_params
-      update_map("robot_types." + cf_type + ".firmware_params");
+      update_map(set_param_map, "robot_types." + cf_type + ".firmware_params");
       // check robots/<robot_name>/firmware_params
-      update_map("robots." + name_ + ".firmware_params");
+      update_map(set_param_map, "robots." + name_ + ".firmware_params");
 
       // Update parameters
       for (const auto&i : set_param_map) {
@@ -194,6 +217,92 @@ public:
         auto result = node->set_parameter(rclcpp::Parameter(paramName, i.second));
         if (!result.successful) {
             RCLCPP_ERROR(logger_, "Could not set param %s (%s)", i.first.c_str(), result.reason.c_str());
+        }
+      }
+    }
+
+    // Logging
+    {
+      // <group>.<name> -> value map
+      std::map<std::string, rclcpp::ParameterValue> log_config_map;
+
+      // Get logging configuration as specified in the configuration files, as in the following order
+      // 1.) check all/firmware_logging
+      // 2.) check robot_types/<type_name>/firmware_logging
+      // 3.) check robots/<robot_name>/firmware_logging
+      // where the higher order is used if defined on multiple levels.
+      update_map(log_config_map, "all.firmware_logging");
+      // check robot_types/<type_name>/firmware_logging
+      update_map(log_config_map, "robot_types." + cf_type + ".firmware_logging");
+      // check robots/<robot_name>/firmware_logging
+      update_map(log_config_map, "robots." + name_ + ".firmware_logging");
+
+      // check if logging is enabled for this drone
+      bool logging_enabled = log_config_map["enabled"].get<bool>();
+      if (logging_enabled) {
+        cf_.requestLogToc(/*forceNoCache*/);
+
+        for (const auto&i : log_config_map) {
+          // check if any of the default topics are enabled
+          if (i.first.find("default_topics.pose") == 0) {
+            int freq = log_config_map["default_topics.pose.frequency"].get<int>();
+            RCLCPP_INFO(logger_, "Logging to /pose at %d Hz", freq);
+
+            publisher_pose_ = node->create_publisher<geometry_msgs::msg::PoseStamped>(name + "/pose", 10);
+
+            std::function<void(uint32_t, const logPose*)> cb = std::bind(&CrazyflieROS::on_logging_pose, this, std::placeholders::_1, std::placeholders::_2);
+
+            log_block_pose_.reset(new LogBlock<logPose>(
+              &cf_,{
+                {"stateEstimate", "x"},
+                {"stateEstimate", "y"},
+                {"stateEstimate", "z"},
+                {"stateEstimateZ", "quat"}
+              }, cb));
+            log_block_pose_->start(uint8_t(100.0f / (float)freq)); // this is in tens of milliseconds
+          }
+          else if (i.first.find("default_topics.scan") == 0) {
+            int freq = log_config_map["default_topics.scan.frequency"].get<int>();
+            RCLCPP_INFO(logger_, "Logging to /scan at %d Hz", freq);
+
+            publisher_scan_ = node->create_publisher<sensor_msgs::msg::LaserScan>(name + "/scan", 10);
+
+            std::function<void(uint32_t, const logScan*)> cb = std::bind(&CrazyflieROS::on_logging_scan, this, std::placeholders::_1, std::placeholders::_2);
+
+            log_block_scan_.reset(new LogBlock<logScan>(
+              &cf_,{
+                {"range", "front"},
+                {"range", "left"},
+                {"range", "back"},
+                {"range", "right"}
+              }, cb));
+            log_block_scan_->start(uint8_t(100.0f / (float)freq)); // this is in tens of milliseconds
+          }
+          else if (i.first.find("custom_topics") == 0
+                   && i.first.rfind(".vars") != std::string::npos) {
+            std::string topic_name = i.first.substr(14, i.first.size() - 14 - 5);
+
+            int freq = log_config_map["custom_topics." + topic_name + ".frequency"].get<int>();
+            auto vars = log_config_map["custom_topics." + topic_name + ".vars"].get<std::vector<std::string>>();
+            
+            RCLCPP_INFO(logger_, "Logging to %s at %d Hz", topic_name.c_str(), freq);
+
+            publishers_generic_.emplace_back(node->create_publisher<crazyflie_interfaces::msg::LogDataGeneric>(name + "/" + topic_name, 10));
+
+            std::function<void(uint32_t, std::vector<double>*, void* userData)> cb = std::bind(
+              &CrazyflieROS::on_logging_custom,
+              this,
+              std::placeholders::_1,
+              std::placeholders::_2,
+              std::placeholders::_3);
+
+            log_blocks_generic_.emplace_back(new LogBlockGeneric(
+              &cf_,
+              vars,
+              (void*)&publishers_generic_.back(),
+              cb));
+            log_blocks_generic_.back()->start(uint8_t(100.0f / (float)freq)); // this is in tens of milliseconds
+          }
         }
       }
     }
@@ -437,6 +546,83 @@ private:
     }
   }
 
+  void on_logging_pose(uint32_t time_in_ms, const logPose* data) {
+    if (publisher_pose_) {
+      geometry_msgs::msg::PoseStamped msg;
+      msg.header.stamp = node_->get_clock()->now();
+      msg.header.frame_id = "world";
+
+      msg.pose.position.x = data->x;
+      msg.pose.position.y = data->y;
+      msg.pose.position.z = data->z;
+
+      float q[4];
+      quatdecompress(data->quatCompressed, q);
+      msg.pose.orientation.x = q[0];
+      msg.pose.orientation.y = q[1];
+      msg.pose.orientation.z = q[2];
+      msg.pose.orientation.w = q[3];
+
+      publisher_pose_->publish(msg);
+
+      // send a transform for this pose
+      geometry_msgs::msg::TransformStamped msg2;
+      msg2.header = msg.header;
+      msg2.child_frame_id = name_;
+      msg2.transform.translation.x = data->x;
+      msg2.transform.translation.y = data->y;
+      msg2.transform.translation.z = data->z;
+      msg2.transform.rotation.x = q[0];
+      msg2.transform.rotation.y = q[1];
+      msg2.transform.rotation.z = q[2];
+      msg2.transform.rotation.w = q[3];
+      tf_broadcaster_.sendTransform(msg2);
+    }
+  }
+
+  void on_logging_scan(uint32_t time_in_ms, const logScan* data) {
+    if (publisher_scan_) {
+      
+      const float max_range = 3.49;
+      float front_range = data->front / 1000.0f;
+      if (front_range > max_range) front_range = std::numeric_limits<float>::infinity();
+      float left_range = data->left / 1000.0f;
+      if (left_range > max_range) left_range = std::numeric_limits<float>::infinity();
+      float back_range = data->back / 1000.0f;
+      if (back_range > max_range) back_range = std::numeric_limits<float>::infinity();
+      float right_range = data->right / 1000.0f;
+      if (right_range > max_range) right_range = std::numeric_limits<float>::infinity();
+
+      sensor_msgs::msg::LaserScan msg;
+      msg.header.stamp = node_->get_clock()->now();
+      msg.header.frame_id = name_;
+      msg.range_min = 0.01;
+      msg.range_max = max_range;
+      msg.ranges.push_back(back_range);
+      msg.ranges.push_back(left_range);
+      msg.ranges.push_back(front_range);
+      msg.ranges.push_back(right_range);
+      msg.angle_min = 0.5 * 2 * M_PI;
+      msg.angle_max = -0.5 * 2 * M_PI;
+      msg.angle_increment = -1.0 * M_PI / 2;
+
+      publisher_scan_->publish(msg);
+    }
+  }
+
+  void on_logging_custom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
+
+    auto pub = reinterpret_cast<rclcpp::Publisher<crazyflie_interfaces::msg::LogDataGeneric>::SharedPtr*>(userData);
+
+    crazyflie_interfaces::msg::LogDataGeneric msg;
+    msg.header.stamp = node_->get_clock()->now();
+    msg.header.frame_id = "world";
+    msg.timestamp = time_in_ms;
+    msg.values = *values;
+
+    (*pub)->publish(msg);
+  }
+
 private:
   rclcpp::Logger logger_;
   CrazyflieLogger cf_logger_;
@@ -444,6 +630,9 @@ private:
   Crazyflie cf_;
   std::string message_buffer_;
   std::string name_;
+
+  rclcpp::Node* node_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   rclcpp::Service<Empty>::SharedPtr service_emergency_;
   rclcpp::Service<StartTrajectory>::SharedPtr service_start_trajectory_;
@@ -460,6 +649,16 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_legacy_;
   rclcpp::Subscription<crazyflie_interfaces::msg::FullState>::SharedPtr subscription_cmd_full_state_;
   rclcpp::Subscription<crazyflie_interfaces::msg::Position>::SharedPtr subscription_cmd_position_;
+
+  // logging
+  std::unique_ptr<LogBlock<logPose>> log_block_pose_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose_;
+
+  std::unique_ptr<LogBlock<logScan>> log_block_scan_;
+  rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr publisher_scan_;
+
+  std::list<std::unique_ptr<LogBlockGeneric>> log_blocks_generic_;
+  std::list<rclcpp::Publisher<crazyflie_interfaces::msg::LogDataGeneric>::SharedPtr> publishers_generic_;
 };
 
 class CrazyflieServer : public rclcpp::Node

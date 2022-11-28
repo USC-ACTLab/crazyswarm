@@ -9,6 +9,7 @@ project(crazyflie)
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -49,6 +50,7 @@ target_link_libraries(crazyflie_server
 )
 ament_target_dependencies(crazyflie_server
   rclcpp
+  tf2_ros
   sensor_msgs
   std_srvs
   crazyflie_interfaces

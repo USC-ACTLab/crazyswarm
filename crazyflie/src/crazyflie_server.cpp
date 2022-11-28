@@ -4,7 +4,8 @@
 
 #include <crazyflie_cpp/Crazyflie.h>
 
-#include "rclcpp/rclcpp.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 #include "std_srvs/srv/empty.hpp"
 #include "crazyflie_interfaces/srv/start_trajectory.hpp"
 #include "crazyflie_interfaces/srv/takeoff.hpp"
@@ -13,6 +14,7 @@
 #include "crazyflie_interfaces/srv/notify_setpoints_stop.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "crazyflie_interfaces/srv/upload_trajectory.hpp"
 #include "motion_capture_tracking_interfaces/msg/named_pose_array.hpp"
@@ -114,6 +116,7 @@ public:
       std::bind(&CrazyflieROS::on_console, this, std::placeholders::_1))
     , name_(name)
     , node_(node)
+    , tf_broadcaster_(node)
   {
     service_emergency_ = node->create_service<Empty>(name + "/emergency", std::bind(&CrazyflieROS::emergency, this, _1, _2));
     service_start_trajectory_ = node->create_service<StartTrajectory>(name + "/start_trajectory", std::bind(&CrazyflieROS::start_trajectory, this, _1, _2));
@@ -561,6 +564,19 @@ private:
       msg.pose.orientation.w = q[3];
 
       publisher_pose_->publish(msg);
+
+      // send a transform for this pose
+      geometry_msgs::msg::TransformStamped msg2;
+      msg2.header = msg.header;
+      msg2.child_frame_id = name_;
+      msg2.transform.translation.x = data->x;
+      msg2.transform.translation.y = data->y;
+      msg2.transform.translation.z = data->z;
+      msg2.transform.rotation.x = q[0];
+      msg2.transform.rotation.y = q[1];
+      msg2.transform.rotation.z = q[2];
+      msg2.transform.rotation.w = q[3];
+      tf_broadcaster_.sendTransform(msg2);
     }
   }
 
@@ -616,6 +632,7 @@ private:
   std::string name_;
 
   rclcpp::Node* node_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   rclcpp::Service<Empty>::SharedPtr service_emergency_;
   rclcpp::Service<StartTrajectory>::SharedPtr service_start_trajectory_;

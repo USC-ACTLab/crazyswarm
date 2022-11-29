@@ -690,17 +690,35 @@ public:
     for (const auto &name : cf_names) {
       bool enabled = parameter_overrides.at("robots." + name + ".enabled").get<bool>();
       if (enabled) {
-        std::string uri = parameter_overrides.at("robots." + name + ".uri").get<std::string>();
-        std::string cftype = parameter_overrides.at("robots." + name + ".type").get<std::string>();
-        crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, cftype, name, this));
-
-        auto broadcastUri = crazyflies_.back()->broadcastUri();
-        RCLCPP_INFO(logger_, "%s", broadcastUri.c_str());
-        if (broadcaster_.count(broadcastUri) == 0) {
-          broadcaster_.emplace(broadcastUri, std::make_unique<CrazyflieBroadcaster>(broadcastUri));
+        // Lookup type
+        std::string cf_type = parameter_overrides.at("robots." + name + ".type").get<std::string>();
+        // Find the connection setting for the given type
+        const auto con = parameter_overrides.find("robot_types." + cf_type + ".connection");
+        std::string constr = "crazyflie";
+        if (con != parameter_overrides.end()) {
+          constr = con->second.get<std::string>();
         }
 
-        name_to_id_.insert(std::make_pair(name, crazyflies_.back()->id()));
+        // if it is a Crazyflie, try to connect
+        if (constr == "crazyflie") {
+          std::string uri = parameter_overrides.at("robots." + name + ".uri").get<std::string>();
+          crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, cf_type, name, this));
+
+          auto broadcastUri = crazyflies_.back()->broadcastUri();
+          RCLCPP_INFO(logger_, "%s", broadcastUri.c_str());
+          if (broadcaster_.count(broadcastUri) == 0) {
+            broadcaster_.emplace(broadcastUri, std::make_unique<CrazyflieBroadcaster>(broadcastUri));
+          }
+
+          update_name_to_id_map(name, crazyflies_.back()->id());
+        }
+        else if (constr == "none") {
+          // we still might want to track this object, so update our map
+          uint8_t id = parameter_overrides.at("robots." + name + ".id").get<uint8_t>();
+          update_name_to_id_map(name, id);
+        } else {
+          RCLCPP_INFO(logger_, "Unknown connection type %s", constr.c_str());
+        }
       }
     }
 
@@ -839,6 +857,16 @@ private:
         auto &cfbc = bc.second;
         cfbc->sendExternalPoses(data_pose);
       }
+    }
+  }
+
+  void update_name_to_id_map(const std::string& name, uint8_t id)
+  {
+    const auto iter = name_to_id_.find(name);
+    if (iter != name_to_id_.end()) {
+      RCLCPP_WARN(logger_, "At least two objects with the same id (%d, %s, %s)", id, name.c_str(), iter->first.c_str());
+    } else {
+      name_to_id_.insert(std::make_pair(name, id));
     }
   }
 

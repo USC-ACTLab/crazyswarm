@@ -100,12 +100,15 @@ class CrazyflieServer(Node):
         # Create easy lookup tables for uri, name and types
         for crazyflie in robot_data:
             if robot_data[crazyflie]["enabled"]:
-                uri = robot_data[crazyflie]["uri"]
-                self.uris.append(uri)
-                self.cf_dict[uri] = crazyflie
-                self.uri_dict[crazyflie] = uri
                 type_cf = robot_data[crazyflie]["type"]
-                self.type_dict[uri] = type_cf
+                # do not include virtual objects
+                connection = self._ros_parameters['robot_types'][type_cf].get("connection", "crazyflie")
+                if connection == "crazyflie":
+                    uri = robot_data[crazyflie]["uri"]
+                    self.uris.append(uri)
+                    self.cf_dict[uri] = crazyflie
+                    self.uri_dict[crazyflie] = uri
+                    self.type_dict[uri] = type_cf
 
         # Setup Swarm class cflib with connection callbacks and open the links
         factory = CachedCfFactory(rw_cache="./cache")

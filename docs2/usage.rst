@@ -28,7 +28,7 @@ All configuration files are in crazyflie/config.
 
 * crazyflies.yaml : setting up everything related to the crazyflie connection server.
 * motion_capture.yaml : configs for the motion capture package.
-* teleop\_\*.yaml : configs for remote controls.
+* teleop.yaml : configs for remote controls.
 
 crazyflies.yaml
 ~~~~~~~~~~~~~~~
@@ -36,72 +36,72 @@ crazyflies.yaml
 Each crazyflie should have an unique URI which can `be changed in Bitcraze's CFclient <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration/>`_.
 They can also be enabled in case you don't want the server to connect with it. 
 
-.. code-block:: bash
+.. code-block:: yaml
 
     robots:
-    cf231:
-        enabled: true
-        uri: radio://0/80/2M/E7E7E7E7E7
-        initial_position: [0, 0, 0]
-        type: cf21  # see robot_types
+        cf231:
+            enabled: true
+            uri: radio://0/80/2M/E7E7E7E7E7
+            initial_position: [0, 0, 0]
+            type: cf21  # see robot_types
 
-    cf5:
-        enabled: false
-        uri: radio://0/80/2M/E7E7E7E705
-        initial_position: [0, -0.5, 0]
-        type: cf21  # see robot_types
+        cf5:
+            enabled: false
+            uri: radio://0/80/2M/E7E7E7E705
+            initial_position: [0, -0.5, 0]
+            type: cf21  # see robot_types
 
 The yaml file also contains different robot_types, to indicate differences between each platform:
 
-.. code-block:: bash
+.. code-block:: yaml
 
     robot_types:
-    cf21:
-        motion_capture:
-        enabled: true
-        # only if enabled; see motion_capture.yaml
-        marker: default_single_marker
-        dynamics: default
-        big_quad: false
-        battery:
-        voltage_warning: 3.8  # V
-        voltage_critical: 3.7 # V
+        cf21:
+            motion_capture:
+                enabled: true
+                # only if enabled; see motion_capture.yaml
+                marker: default_single_marker
+                dynamics: default
+            big_quad: false
+            battery:
+                voltage_warning: 3.8  # V
+                voltage_critical: 3.7 # V
 
-    cf21_mocap_deck:
-        motion_capture:
-        enabled: true
-        # only if enabled; see motion_capture.yaml
-        marker: mocap_deck
-        dynamics: default
-        big_quad: false
-        battery:
-        voltage_warning: 3.8  # V
-        voltage_critical: 3.7 # V
+        cf21_mocap_deck:
+            motion_capture:
+                enabled: true
+                # only if enabled; see motion_capture.yaml
+                marker: mocap_deck
+                dynamics: default
+            big_quad: false
+            battery:
+                voltage_warning: 3.8  # V
+                voltage_critical: 3.7 # V
 
 The yaml file also contain an 'all' field, in case you have parameters or logging that you want enabled for all the connected crazyflies.
 
 
-.. code-block:: bash
+.. code-block:: yaml
 
     all:
-    firmware_logging:
-        enabled: false
-        default_topics:
-            pose:
-            frequency: 10 # Hz
-        #custom_topics:
-        #  topic_name1:
-        #    frequency: 10 # Hz
-        #    vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
-        #  topic_name2:
-        #    frequency: 1 # Hz
-        #    vars: ["stabilizer.roll", "stabilizer.pitch", "stabilizer.yaw"]
-    firmware_params:
-        commander:
-            enHighLevel: 1
-        stabilizer:
-            estimator: 2 # 1: complementary, 2: kalman
-            controller: 2 # 1: PID, 2: mellinger
+        firmware_logging:
+            enabled: false
+            default_topics:
+                pose:
+                frequency: 10 # Hz
+            #custom_topics:
+            #  topic_name1:
+            #    frequency: 10 # Hz
+            #    vars: ["stateEstimateZ.x", "stateEstimateZ.y", "stateEstimateZ.z", "pm.vbat"]
+            #  topic_name2:
+            #    frequency: 1 # Hz
+            #    vars: ["stabilizer.roll", "stabilizer.pitch", "stabilizer.yaw"]
+        firmware_params:
+            commander:
+                enHighLevel: 1
+            stabilizer:
+                estimator: 2 # 1: complementary, 2: kalman
+                controller: 2 # 1: PID, 2: mellinger
 
 The above also contains an example of the firmware_logging field, where default topics can be enabled or custom topics based on the `existing log toc of the crazyflie <https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/api/logs//>`_. 
 Moreover, it also contains the firmware_params field, where parameters can be set at startup. 
@@ -111,9 +111,6 @@ Also see the `parameter list of the crazyflie <https://www.bitcraze.io/documenta
 Mind that you can also place the firmware_params and firmware_logging fields per crazyflie in 'robots'  or the 'robot_types' field.
 The server node will upon initialization, first look at the params/logs from the individual crazyflie's settings, then the robot_types, and then anything in 'all' which has lowest priority.  
 
-
-.. warning::
-    The logging is currently only supported in the CFLIB backend of the server, while Parameters is available in both the cpp backend
 
 Simulation
 ----------
@@ -144,8 +141,11 @@ The following shows an simple take off and land example without any launch files
     ros2 service call cf1/takeoff crazyflie_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
     ros2 service call cf1/land crazyflie_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
 
-Enabling Logblocks in runtime
+Enabling Logblocks at runtime
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning::
+    This is currently only supported in the CFLIB backend of the server.
 
 Above we explained how to enable log blocks at startup, but what if you would like to enable or disable logging blocks in runtime?
 This section will show how to do that by using services

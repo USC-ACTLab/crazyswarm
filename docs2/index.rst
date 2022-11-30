@@ -90,6 +90,7 @@ Contents
    overview
    usage
    tutorials
+   howto
    faq
    :maxdepth: 1
 

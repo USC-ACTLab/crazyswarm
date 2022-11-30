@@ -47,13 +47,17 @@ class CrazyflieServer(Node):
         # initialize backend
         self.backend = BackendRviz(self)
 
-        # Create easy lookup tables for uri, name and types
+        # Create robots
         for cfname in robot_data:
             if robot_data[cfname]["enabled"]:
-                self.cfs[cfname] = CrazyflieSIL(
-                    cfname,
-                    robot_data[cfname]["initial_position"],
-                    self.backend.time)
+                type_cf = robot_data[cfname]["type"]
+                # do not include virtual objects
+                connection = self._ros_parameters['robot_types'][type_cf].get("connection", "crazyflie")
+                if connection == "crazyflie":
+                    self.cfs[cfname] = CrazyflieSIL(
+                        cfname,
+                        robot_data[cfname]["initial_position"],
+                        self.backend.time)
 
         # Create services for the entire swarm and each individual crazyflie
         self.create_service(Empty, "all/emergency", self._emergency_callback)

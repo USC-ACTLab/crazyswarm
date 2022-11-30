@@ -687,14 +687,18 @@ class CrazyflieServer(rclpy.node.Node):
         self.crazyfliesByName = dict()
         for cfname, cfsettings in cfg["robots"].items():
             if cfsettings["enabled"]:
-                initialPosition = np.array(cfsettings["initial_position"])
-                cf = Crazyflie(self, cfname, initialPosition)
-                self.crazyflies.append(cf)
-                self.crazyfliesByName[cfname] = cf
-                # For legacy crazyswarm1 code, also provide crazyfliesById
-                if "uri" in cfsettings:
-                    cfid = int(cfsettings["uri"][-2:], 16)
-                    self.crazyfliesById[cfid] = cf
+                type_cf = cfg["robots"][cfname]["type"]
+                # do not include virtual objects
+                connection = cfg["robot_types"][type_cf].get("connection", "crazyflie")
+                if connection == "crazyflie":
+                    initialPosition = np.array(cfsettings["initial_position"])
+                    cf = Crazyflie(self, cfname, initialPosition)
+                    self.crazyflies.append(cf)
+                    self.crazyfliesByName[cfname] = cf
+                    # For legacy crazyswarm1 code, also provide crazyfliesById
+                    if "uri" in cfsettings:
+                        cfid = int(cfsettings["uri"][-2:], 16)
+                        self.crazyfliesById[cfid] = cf
 
     def emergency(self):
         """Emergency stop. Cuts power; causes future commands to be ignored.

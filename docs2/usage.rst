@@ -145,7 +145,7 @@ Enabling Logblocks at runtime
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. warning::
-    This is currently only supported in the CFLIB backend of the server.
+    Runtime logblock enabling is currently only supported in the CFLIB backend of the server.
 
 Above we explained how to enable log blocks at startup, but what if you would like to enable or disable logging blocks in runtime?
 This section will show how to do that by using services

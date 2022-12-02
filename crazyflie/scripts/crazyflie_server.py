@@ -337,6 +337,7 @@ class CrazyflieServer(Node):
                     callback_fnc = self.default_log_fnc[prefix]
                     self._init_default_logging(prefix, link_uri, callback_fnc)
             
+            # Start logging for costum logging blocks
             cf_handle.l_toc = cf.log.toc.toc
             if len(cf_handle.logging["custom_log_groups"]) != 0 and cf_handle.logging["enabled"]:
 

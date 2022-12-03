@@ -6,6 +6,7 @@ Crazyflie Software-In-The-Loop Wrapper that uses the firmware Python bindings
 
     2022 - Wolfgang Hönig (TU Berlin)
 """
+from __future__ import annotations
 
 import numpy as np
 

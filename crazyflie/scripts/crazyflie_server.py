@@ -22,11 +22,11 @@ from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogg
 from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 from crazyflie_interfaces.msg import Hover
+from crazyflie_interfaces.msg import LogDataGeneric
 
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseStamped, TransformStamped
-from std_msgs.msg import UInt8, UInt16, UInt32, Int8, Int16, Int32, Float32
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
 
@@ -35,16 +35,6 @@ from tf2_ros import TransformBroadcaster
 
 from functools import partial
 from math import degrees, radians, pi, cos, sin
-
-cf_log_to_ros_topic = {
-    "uint8_t": UInt8,
-    "uint16_t": UInt16,
-    "uint32_t": UInt32,
-    "int8_t": Int8,
-    "int16_t": Int16,
-    "int32_t": Int32,
-    "float": Float32,
-}
 
 cf_log_to_ros_param = {
     "uint8_t": ParameterType.PARAMETER_INTEGER,
@@ -192,7 +182,7 @@ class CrazyflieServer(Node):
                     for log_name in custom_log_topics[log_group_name]["vars"]:
                         lg_custom.add_variable(log_name)
                         # Don't know which type this needs to be in until we get the full toc
-                        self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_name] = "empty publisher"
+                    self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_group_name] = "empty publisher"
                     self.swarm._cfs[link_uri].logging["custom_log_groups"][log_group_name] = {
                     }
                     self.swarm._cfs[link_uri].logging["custom_log_groups"][log_group_name]["log_config"] = lg_custom
@@ -340,24 +330,20 @@ class CrazyflieServer(Node):
             cf_handle = self.swarm._cfs[link_uri]
             cf = cf_handle.cf
 
-            # Start logging for Pose
+            # Start logging for predefined logging
             for default_log_name in self.default_log_type:
                 prefix = default_log_name
                 if cf_handle.logging[prefix + "_logging_enabled"] and cf_handle.logging["enabled"]:
                     callback_fnc = self.default_log_fnc[prefix]
                     self._init_default_logging(prefix, link_uri, callback_fnc)
             
+            # Start logging for costum logging blocks
             cf_handle.l_toc = cf.log.toc.toc
             if len(cf_handle.logging["custom_log_groups"]) != 0 and cf_handle.logging["enabled"]:
 
-                for log_name in cf_handle.logging["custom_log_publisher"]:
-
-                    log_type = cf.log.toc.toc[log_name.split(
-                        '.')[0]][log_name.split('.')[1]].ctype
-                    self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_name] = self.create_publisher(
-                        cf_log_to_ros_topic[log_type], self.cf_dict[link_uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
-
                 for log_group_name, log_group_dict in cf_handle.logging["custom_log_groups"].items():
+                    self.swarm._cfs[link_uri].logging["custom_log_publisher"][log_group_name] = self.create_publisher(
+                        LogDataGeneric, self.cf_dict[link_uri] + "/" + log_group_name, 10)
                     lg_custom = log_group_dict['log_config']
                     try:
                         cf.log.add_config(lg_custom)
@@ -366,10 +352,6 @@ class CrazyflieServer(Node):
                         lg_custom.error_cb.add_callback(
                             self._log_error_callback)
                         lg_custom.start()
-                        self.declare_parameter(
-                            self.cf_dict[link_uri] + "/logs/" + log_group_name + "/frequency/", log_group_dict['frequency'])
-                        self.declare_parameter(
-                            self.cf_dict[link_uri] + "/logs/" + log_group_name + "/vars/", log_group_dict['vars'])
                     except KeyError as e:
                         self.get_logger().info(f'{link_uri}: Could not start log configuration,'
                                                '{} not found in TOC'.format(str(e)))
@@ -531,13 +513,14 @@ class CrazyflieServer(Node):
         Once custom log block is retrieved from the Crazyflie, 
             send out the ROS2 topic for that same type of log
         """
+        msg = LogDataGeneric()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.timestamp = timestamp
         for log_name in data:
-            log_type = self.swarm._cfs[uri].l_toc[log_name.split(
-                '.')[0]][log_name.split('.')[1]].ctype
-            msg = cf_log_to_ros_topic[log_type]()
-            msg.data = data.get(log_name)
-            self.swarm._cfs[uri].logging["custom_log_publisher"][log_name].publish(
-                msg)
+            msg.values.append(data.get(log_name))
+
+        self.swarm._cfs[uri].logging["custom_log_publisher"][logconf.name].publish(
+            msg)
 
     def _log_error_callback(self, logconf, msg):
         print('Error when logging %s: %s' % (logconf.name, msg))
@@ -795,13 +778,11 @@ class CrazyflieServer(Node):
                 return response
         else:
             try:
-                self.undeclare_parameter( self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
-                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/vars/")
                 self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["log_config"].stop(
                 )
                 for log_name in self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["vars"]:
                     self.destroy_publisher(
-                        self.swarm._cfs[uri].logging["custom_log_publisher"][log_name])
+                        self.swarm._cfs[uri].logging["custom_log_publisher"][topic_name])
                 self.get_logger().info(f"{uri}: Remove {topic_name} logging")
             except rclpy.exceptions.ParameterNotDeclaredException:
                 self.get_logger().info(
@@ -843,10 +824,9 @@ class CrazyflieServer(Node):
                     name=topic_name, period_in_ms=1000 / frequency)
                 for log_name in variables:
                     lg_custom.add_variable(log_name)
-                    log_type = self.swarm._cfs[uri].cf.log.toc.toc[log_name.split(
-                        '.')[0]][log_name.split('.')[1]].ctype
-                    self.swarm._cfs[uri].logging["custom_log_publisher"][log_name] = self.create_publisher(
-                        cf_log_to_ros_topic[log_type], self.cf_dict[uri] + "/" + log_name.split('.')[0] + "/" + log_name.split('.')[1], 10)
+                self.swarm._cfs[uri].logging["custom_log_publisher"][topic_name] = self.create_publisher(
+                    LogDataGeneric, self.cf_dict[uri] + "/" + topic_name, 10)
+                
                 self.swarm._cfs[uri].cf.log.add_config(lg_custom)
 
                 lg_custom.data_received_cb.add_callback(

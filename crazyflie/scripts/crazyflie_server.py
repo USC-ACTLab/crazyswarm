@@ -513,10 +513,10 @@ class CrazyflieServer(Node):
         Once custom log block is retrieved from the Crazyflie, 
             send out the ROS2 topic for that same type of log
         """
+        msg = LogDataGeneric()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.timestamp = timestamp
         for log_name in data:
-            log_type = self.swarm._cfs[uri].l_toc[log_name.split(
-                '.')[0]][log_name.split('.')[1]].ctype
-            msg = LogDataGeneric() 
             msg.values.append(data.get(log_name))
 
         self.swarm._cfs[uri].logging["custom_log_publisher"][logconf.name].publish(
@@ -778,13 +778,11 @@ class CrazyflieServer(Node):
                 return response
         else:
             try:
-                self.undeclare_parameter( self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
-                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/vars/")
                 self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["log_config"].stop(
                 )
                 for log_name in self.swarm._cfs[uri].logging["custom_log_groups"][topic_name]["vars"]:
                     self.destroy_publisher(
-                        self.swarm._cfs[uri].logging["custom_log_publisher"][log_name])
+                        self.swarm._cfs[uri].logging["custom_log_publisher"][topic_name])
                 self.get_logger().info(f"{uri}: Remove {topic_name} logging")
             except rclpy.exceptions.ParameterNotDeclaredException:
                 self.get_logger().info(
@@ -826,7 +824,7 @@ class CrazyflieServer(Node):
                     name=topic_name, period_in_ms=1000 / frequency)
                 for log_name in variables:
                     lg_custom.add_variable(log_name)
-                self.swarm._cfs[uri].logging["custom_log_publisher"][log_name] = self.create_publisher(
+                self.swarm._cfs[uri].logging["custom_log_publisher"][topic_name] = self.create_publisher(
                     LogDataGeneric, self.cf_dict[uri] + "/" + topic_name, 10)
                 
                 self.swarm._cfs[uri].cf.log.add_config(lg_custom)

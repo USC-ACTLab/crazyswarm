@@ -71,8 +71,10 @@ class CrazyflieServer(Node):
         self.default_log_vars = {"pose": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
                                          'stabilizer.roll', 'stabilizer.pitch', 'stabilizer.yaw'],
                                 "scan": ['range.front', 'range.left', 'range.back', 'range.right'],
-                                "odom": ['stateEstimate.x', 'stateEstimate.y', 'stabilizer.yaw',
-                                         'kalman.statePX', 'kalman.statePY', 'gyro.z']}
+                                "odom": ['stateEstimate.x', 'stateEstimate.y', 'stateEstimate.z',
+                                         'stabilizer.yaw', 'stabilizer.roll', 'stabilizer.pitch',
+                                         'kalman.statePX', 'kalman.statePY', 'kalman.statePZ',
+                                         'gyro.z', 'gyro.x', 'gyro.y']}
         self.default_log_fnc = {"pose": self._log_pose_data_callback,
                                "scan": self._log_scan_data_callback,
                                "odom": self._log_odom_data_callback}
@@ -272,7 +274,11 @@ class CrazyflieServer(Node):
         lg = LogConfig(
             name=prefix, period_in_ms=1000 / logging_freq)
         for logvar in list_logvar:
-            lg.add_variable(logvar)
+            if prefix == "odom":
+                lg.add_variable(logvar, "FP16")
+            else:
+                lg.add_variable(logvar)
+
         self.swarm._cfs[link_uri].logging[prefix + "_logging_enabled"] = logging_enabled
         self.swarm._cfs[link_uri].logging[prefix + "_logging_freq"] = logging_freq
         self.swarm._cfs[link_uri].logging[prefix + "_log_config"] = lg
@@ -420,9 +426,9 @@ class CrazyflieServer(Node):
         msg.range_min = 0.01
         msg.range_max = 3.49
         msg.ranges = self.ranges
-        msg.angle_min = 0.5 * 2* pi
-        msg.angle_max =  -0.5 * 2 * pi
-        msg.angle_increment = -1.0 * pi/2
+        msg.angle_min = -0.5 * 2* pi
+        msg.angle_max =  0.25 * 2 * pi
+        msg.angle_increment = 1.0 * pi/2
         self.swarm._cfs[uri].logging["scan_publisher"].publish(msg)
 
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
@@ -475,24 +481,35 @@ class CrazyflieServer(Node):
 
         x = data.get('stateEstimate.x')
         y = data.get('stateEstimate.y')
+        z = data.get('stateEstimate.z')
         yaw = radians(data.get('stabilizer.yaw'))
+        roll = radians(data.get('stabilizer.roll'))
+        pitch = radians(data.get('stabilizer.pitch'))
         vx = data.get('kalman.statePX')
         vy = data.get('kalman.statePY')
+        vz = data.get('kalman.statePY')
         yawrate = data.get('gyro.z')
-        q = tf_transformations.quaternion_from_euler(0, 0, yaw)
+        rollrate = data.get('gyro.x')
+        pitchrate = data.get('gyro.y')
+
+        q = tf_transformations.quaternion_from_euler(roll, pitch, yaw)
         msg = Odometry()
         msg.child_frame_id = cf_name
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self.world_tf_name
         msg.pose.pose.position.x = x
         msg.pose.pose.position.y = y
+        msg.pose.pose.position.y = z
         msg.pose.pose.orientation.x = q[0]
         msg.pose.pose.orientation.y = q[1]
         msg.pose.pose.orientation.z = q[2]
         msg.pose.pose.orientation.w = q[3]
         msg.twist.twist.linear.x = vx
         msg.twist.twist.linear.y = vy
+        msg.twist.twist.linear.z = vz
         msg.twist.twist.angular.z = yawrate
+        msg.twist.twist.angular.y = pitchrate
+        msg.twist.twist.angular.x = rollrate
 
         self.swarm._cfs[uri].logging["odom_publisher"].publish(msg)
 

@@ -499,7 +499,7 @@ class CrazyflieServer(Node):
         msg.header.frame_id = self.world_tf_name
         msg.pose.pose.position.x = x
         msg.pose.pose.position.y = y
-        msg.pose.pose.position.y = z
+        msg.pose.pose.position.z = z
         msg.pose.pose.orientation.x = q[0]
         msg.pose.pose.orientation.y = q[1]
         msg.pose.pose.orientation.z = q[2]
@@ -519,6 +519,7 @@ class CrazyflieServer(Node):
         t_base.child_frame_id = cf_name
         t_base.transform.translation.x = x
         t_base.transform.translation.y = y
+        t_base.transform.translation.z = z
         t_base.transform.rotation.x = q[0]
         t_base.transform.rotation.y = q[1]
         t_base.transform.rotation.z = q[2]

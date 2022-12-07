@@ -418,7 +418,7 @@ class CrazyflieServer(Node):
             right_range = float("inf")
         if back_range > max_range:
             back_range = float("inf")  
-        self.ranges = [back_range, left_range, front_range, right_range]
+        self.ranges = [back_range, right_range, front_range, left_range]
 
         msg = LaserScan()
         msg.header.stamp = self.get_clock().now().to_msg()

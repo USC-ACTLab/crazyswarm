@@ -599,12 +599,12 @@ private:
       msg.range_min = 0.01;
       msg.range_max = max_range;
       msg.ranges.push_back(back_range);
-      msg.ranges.push_back(left_range);
-      msg.ranges.push_back(front_range);
       msg.ranges.push_back(right_range);
-      msg.angle_min = 0.5 * 2 * M_PI;
-      msg.angle_max = -0.5 * 2 * M_PI;
-      msg.angle_increment = -1.0 * M_PI / 2;
+      msg.ranges.push_back(front_range);
+      msg.ranges.push_back(left_range);
+      msg.angle_min = -0.5 * 2 * M_PI;
+      msg.angle_max = 0.25 * 2 * M_PI;
+      msg.angle_increment = 1.0 * M_PI / 2;
 
       publisher_scan_->publish(msg);
     }

@@ -2,6 +2,7 @@ import argparse
 import atexit
 
 import numpy as np
+import os
 
 from . import genericJoystick
 
@@ -37,7 +38,10 @@ class Crazyswarm:
         args, unknown = parser.parse_known_args(args)
 
         if crazyflies_yaml is None:
-            crazyflies_yaml = "../launch/crazyflies.yaml"
+            folder = os.path.dirname(os.path.abspath(__file__)) # absolute path of this file
+            folder = os.path.dirname(folder) # up folder
+            folder = os.path.dirname(folder) # up folder
+            crazyflies_yaml = folder + "/launch/crazyflies.yaml"
         if crazyflies_yaml.endswith(".yaml"):
             crazyflies_yaml = open(crazyflies_yaml, 'r').read()
 

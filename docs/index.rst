@@ -3,6 +3,11 @@
 Welcome to Crazyswarm's documentation!
 ======================================
 
+.. warning::
+   Crazyswarm1 is not recommended for new projects and has no/minimal maintainance.
+   Please use `Crazyswarm2 <https://imrclab.github.io/crazyswarm2/>`_ instead.
+
+
 The Crazyswarm platform allows you to fly a swarm of
 `Bitcraze Crazyflie 2.x <https://www.bitcraze.io/products/crazyflie-2-1/>`_ and `Bitcraze Crazyflie Bolt-based <https://store.bitcraze.io/products/crazyflie-bolt>`_ 
 quadcopters in tight, synchronized formations.

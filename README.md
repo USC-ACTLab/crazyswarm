@@ -5,6 +5,10 @@
 # Crazyswarm
 A Large Nano-Quadcopter Swarm.
 
+
+> **Warning**
+> This repository is not actively maintained anymore. For new projects, please consider [Crazyswarm2](https://imrclab.github.io/crazyswarm2/)..
+
 The documentation is available here: http://crazyswarm.readthedocs.io/en/latest/.
 
 ## Troubleshooting

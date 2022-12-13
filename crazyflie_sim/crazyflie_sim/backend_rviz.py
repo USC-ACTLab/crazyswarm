@@ -34,10 +34,10 @@ class BackendRviz:
             msg.transform.translation.x = setpoint.pos[0]
             msg.transform.translation.y = setpoint.pos[1]
             msg.transform.translation.z = setpoint.pos[2]
-            msg.transform.rotation.x = 0.0
-            msg.transform.rotation.y = 0.0
-            msg.transform.rotation.z = 0.0
-            msg.transform.rotation.w = 1.0
+            msg.transform.rotation.x = setpoint.quat[1]
+            msg.transform.rotation.y = setpoint.quat[2]
+            msg.transform.rotation.z = setpoint.quat[3]
+            msg.transform.rotation.w = setpoint.quat[0]
             msgs.append(msg)
         self.tfbr.sendTransform(msgs)
 

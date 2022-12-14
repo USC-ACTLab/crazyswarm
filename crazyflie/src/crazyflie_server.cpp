@@ -138,6 +138,15 @@ public:
     const std::map<std::string, rclcpp::ParameterValue> &parameter_overrides =
         node_parameters_iface->get_parameter_overrides();
 
+    // declares lambda, to be used as local function, which re-declares specified parameters for other nodes to query
+    auto declare_param = [&parameter_overrides, node](const std::string& param)
+    {
+      // rclcpp::ParameterValue value(parameter_overridesparam]);
+      node->declare_parameter(param, parameter_overrides.at(param));
+    };
+    declare_param("robots." + name + ".uri");
+    declare_param("robots." + name + ".initial_position");
+
     // declares a lambda, to be used as local function
     auto update_map = [&parameter_overrides](std::map<std::string, rclcpp::ParameterValue>& map, const std::string& pattern)
     {

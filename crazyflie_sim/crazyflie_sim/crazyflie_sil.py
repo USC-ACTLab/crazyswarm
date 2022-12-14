@@ -11,6 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 import cffirmware as firm
+import rowan
 
 
 class CrazyflieState:
@@ -20,6 +21,19 @@ class CrazyflieState:
         self.acc = np.array([fwstate.acc.x, fwstate.acc.y, fwstate.acc.z])
         self.yaw = fwstate.yaw
         self.omega = np.array([fwstate.omega.x, fwstate.omega.y, fwstate.omega.z])
+
+        # compute rotation based on differential flatness
+        thrust = self.acc + np.array([0, 0, 9.81])
+        z_body = thrust / np.linalg.norm(thrust)
+        x_world = np.array([np.cos(self.yaw), np.sin(self.yaw), 0])
+        y_body = np.cross(z_body, x_world)
+        # Mathematically not needed. This addresses numerical issues to ensure R is orthogonal
+        y_body /= np.linalg.norm(y_body)
+        x_body = np.cross(y_body, z_body)
+        # Mathematically not needed. This addresses numerical issues to ensure R is orthogonal
+        x_body /= np.linalg.norm(x_body)
+        R = np.column_stack([x_body, y_body, z_body])
+        self.quat = rowan.from_matrix(R)
 
     def __repr__(self) -> str:
         return "{}".format(self.pos)

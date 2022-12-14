@@ -2,7 +2,6 @@
 
 
 # import sys
-import yaml
 # import rospy
 import numpy as np
 # import time
@@ -19,7 +18,7 @@ import rclpy.node
 import rowan
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Point, Twist
-from rcl_interfaces.srv import SetParameters, ListParameters, GetParameterTypes
+from rcl_interfaces.srv import GetParameters, SetParameters, ListParameters, GetParameterTypes
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
 from crazyflie_interfaces.msg import TrajectoryPolynomialPiece, FullState, Position
@@ -89,20 +88,14 @@ class Crazyflie:
     The bulk of the module's functionality is contained in this class.
     """
 
-    def __init__(self, node, cfname, initialPosition):
+    def __init__(self, node, cfname):
         """Constructor.
 
         Args:
             cfname (string): Name of the robot names[ace]
-            initialPosition (iterable of float): Initial position of the robot:
-                [x, y, z]. Typically on the floor of the experiment space with
-                z == 0.0.
-            tf (tf.TransformListener): ROS TransformListener used to query the
-                robot's current state.
         """
         prefix = "/" + cfname
         self.prefix = prefix
-        self.initialPosition = np.array(initialPosition)
         self.node = node
 
         # self.tf = tf
@@ -125,6 +118,30 @@ class Crazyflie:
         self.notifySetpointsStopService.wait_for_service()
         self.setParamsService = node.create_client(SetParameters, "/crazyflie_server/set_parameters")
         self.setParamsService.wait_for_service()
+
+        # Query some settings
+        getParamsService = node.create_client(GetParameters, "/crazyflie_server/get_parameters")
+        getParamsService.wait_for_service()
+        req = GetParameters.Request()
+        req.names = ["robots.{}.initial_position".format(cfname), "robots.{}.uri".format(cfname)]
+        future = getParamsService.call_async(req)
+        params = []
+        while rclpy.ok():
+            rclpy.spin_once(node)
+            if future.done():
+                response = future.result()
+                # extract initial position
+                if response.values[0].type == ParameterType.PARAMETER_INTEGER_ARRAY:
+                    self.initialPosition = np.array(response.values[0].integer_array_value)
+                elif response.values[0].type == ParameterType.PARAMETER_DOUBLE_ARRAY:
+                    self.initialPosition = np.array(response.values[0].double_array_value)
+                else:
+                    assert(False)
+
+                # extract uri
+                self.uri = response.values[1].string_value
+
+                break
 
         # Query all parameters
         listParamsService = node.create_client(ListParameters, "/crazyflie_server/list_parameters")
@@ -652,14 +669,8 @@ class CrazyflieServer(rclpy.node.Node):
         crazyfliesById (Dict[int, Crazyflie]): Index to the same Crazyflie
             objects by their ID number (last byte of radio address).
     """
-    def __init__(self, crazyflies_yaml="../launch/crazyflies.yaml"):
+    def __init__(self):
         """Initialize the server. Waits for all ROS services before returning.
-
-        Args:
-            timeHelper (TimeHelper): TimeHelper instance.
-            crazyflies_yaml (str): If ends in ".yaml", interpret as a path and load
-                from file. Otherwise, interpret as YAML string and parse
-                directly from string.
         """
         super().__init__("CrazyflieAPI")
         self.emergencyService = self.create_client(Empty, "all/emergency")
@@ -674,31 +685,24 @@ class CrazyflieServer(rclpy.node.Node):
         self.startTrajectoryService = self.create_client(StartTrajectory, "all/start_trajectory")
         self.startTrajectoryService.wait_for_service()
 
-        if crazyflies_yaml.endswith(".yaml"):
-            with open(crazyflies_yaml, 'r') as ymlfile:
-                cfg = yaml.safe_load(ymlfile)
-        else:
-            cfg = yaml.safe_load(crazyflies_yaml)
-
-        # self.tf = TransformListener()
+        cfnames = []
+        for srv_name, srv_types in self.get_service_names_and_types():
+            if "crazyflie_interfaces/srv/StartTrajectory" in srv_types:
+                # remove "/" and "/start_trajectory"
+                cfname = srv_name[1:-17]
+                if cfname != "all":
+                    cfnames.append(cfname)
 
         self.crazyflies = []
         self.crazyfliesById = dict()
         self.crazyfliesByName = dict()
-        for cfname, cfsettings in cfg["robots"].items():
-            if cfsettings["enabled"]:
-                type_cf = cfg["robots"][cfname]["type"]
-                # do not include virtual objects
-                connection = cfg["robot_types"][type_cf].get("connection", "crazyflie")
-                if connection == "crazyflie":
-                    initialPosition = np.array(cfsettings["initial_position"])
-                    cf = Crazyflie(self, cfname, initialPosition)
-                    self.crazyflies.append(cf)
-                    self.crazyfliesByName[cfname] = cf
-                    # For legacy crazyswarm1 code, also provide crazyfliesById
-                    if "uri" in cfsettings:
-                        cfid = int(cfsettings["uri"][-2:], 16)
-                        self.crazyfliesById[cfid] = cf
+        for cfname in cfnames:
+            cf = Crazyflie(self, cfname)
+            self.crazyflies.append(cf)
+            self.crazyfliesByName[cfname] = cf
+            # For legacy crazyswarm1 code, also provide crazyfliesById
+            cfid = int(cf.uri[-2:], 16)
+            self.crazyfliesById[cfid] = cf
 
     def emergency(self):
         """Emergency stop. Cuts power; causes future commands to be ignored.

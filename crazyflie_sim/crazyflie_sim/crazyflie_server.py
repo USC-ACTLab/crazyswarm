@@ -10,6 +10,7 @@ A crazyflie server for simulation.
 import rclpy
 from rclpy.node import Node
 import rowan
+import importlib
 
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo
 from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
@@ -21,7 +22,8 @@ from geometry_msgs.msg import Twist
 from functools import partial
 
 # import BackendRviz from .backend_rviz
-from .backend_rviz import BackendRviz
+# from .backend import *
+# from .backend.none import BackendNone
 from .crazyflie_sil import CrazyflieSIL, TrajectoryPolynomialPiece
 
 
@@ -44,8 +46,19 @@ class CrazyflieServer(Node):
             pass
         robot_data = self._ros_parameters["robots"]
 
-        # initialize backend
-        self.backend = BackendRviz(self)
+        # initialize backend by dynamically loading the module
+        backend_name = self._ros_parameters["sim"]["backend"]
+        module = importlib.import_module(".backend." + backend_name, package="crazyflie_sim")
+        class_ = getattr(module, "Backend")
+        self.backend = class_(self)
+
+        # initialize visualizations by dynamically loading the modules
+        self.visualizations = []
+        for vis_name in self._ros_parameters["sim"]["visualizations"]:
+            module = importlib.import_module(".visualization." + vis_name, package="crazyflie_sim")
+            class_ = getattr(module, "Visualization")
+            vis = class_(self)
+            self.visualizations.append(vis)
 
         # Create robots
         for cfname in robot_data:
@@ -106,13 +119,19 @@ class CrazyflieServer(Node):
         # Initialize backend
         self.backend.init([name for name, _ in self.cfs.items()], [cf.initialPosition for _, cf in self.cfs.items()])
 
+        # Initialize Visualizations
+        for vis in self.visualizations:
+            vis.init([name for name, _ in self.cfs.items()], [cf.initialPosition for _, cf in self.cfs.items()])
+
         # step as fast as possible
-        max_dt = 0.0 if "max_dt" not in self._ros_parameters else self._ros_parameters["max_dt"]
+        max_dt = 0.0 if "max_dt" not in self._ros_parameters["sim"] else self._ros_parameters["sim"]["max_dt"]
         self.timer = self.create_timer(max_dt, self._timer_callback)
 
     def _timer_callback(self):
         states = [cf.getSetpoint() for _, cf in self.cfs.items()]
         self.backend.step(states)
+        for vis in self.visualizations:
+            vis.step(states)
 
     def _param_to_dict(self, param_ros):
         """

@@ -5,6 +5,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch.conditions import LaunchConfigurationEquals
+from launch.conditions import LaunchConfigurationNotEquals
 
 
 def generate_launch_description():
@@ -17,7 +18,16 @@ def generate_launch_description():
     with open(crazyflies_yaml, 'r') as ymlfile:
         crazyflies = yaml.safe_load(ymlfile)
 
-    server_params = crazyflies
+    # server params
+    server_yaml = os.path.join(
+        get_package_share_directory('crazyflie'),
+        'config',
+        'server.yaml')
+
+    with open(server_yaml, 'r') as ymlfile:
+        server_yaml_contents = yaml.safe_load(ymlfile)
+
+    server_params = [crazyflies] + [server_yaml_contents["/crazyflie_server"]["ros__parameters"]]
 
     # construct motion_capture_configuration
     motion_capture_yaml = os.path.join(
@@ -50,6 +60,7 @@ def generate_launch_description():
         Node(
             package='motion_capture_tracking',
             executable='motion_capture_tracking_node',
+            condition=LaunchConfigurationNotEquals('backend','sim'),
             name='motion_capture_tracking',
             output='screen',
             parameters=[motion_capture_params]
@@ -79,7 +90,7 @@ def generate_launch_description():
             condition=LaunchConfigurationEquals('backend','cflib'),
             name='crazyflie_server',
             output='screen',
-            parameters=[server_params]
+            parameters=server_params
         ),
         Node(
             package='crazyflie',
@@ -87,7 +98,7 @@ def generate_launch_description():
             condition=LaunchConfigurationEquals('backend','cpp'),
             name='crazyflie_server',
             output='screen',
-            parameters=[server_params]
+            parameters=server_params
         ),
         Node(
             package='crazyflie_sim',
@@ -96,9 +107,7 @@ def generate_launch_description():
             name='crazyflie_server',
             output='screen',
             emulate_tty=True,
-            parameters=[server_params] + [{
-                "max_dt": 0.1,              # artificially limit the step() function (set to 0 to disable)
-            }]
+            parameters=server_params
         ),
         Node(
             package='rviz2',

@@ -677,11 +677,17 @@ public:
       : Node("crazyflie_server")
       , logger_(rclcpp::get_logger("all"))
   {
+    // topics for "all"
+
+    subscription_cmd_full_state_ = this->create_subscription<crazyflie_interfaces::msg::FullState>("all/cmd_full_state", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieServer::cmd_full_state_changed, this, _1));
+
+    // services for "all"
     service_emergency_ = this->create_service<Empty>("all/emergency", std::bind(&CrazyflieServer::emergency, this, _1, _2));
     service_start_trajectory_ = this->create_service<StartTrajectory>("all/start_trajectory", std::bind(&CrazyflieServer::start_trajectory, this, _1, _2));
     service_takeoff_ = this->create_service<Takeoff>("all/takeoff", std::bind(&CrazyflieServer::takeoff, this, _1, _2));
     service_land_ = this->create_service<Land>("all/land", std::bind(&CrazyflieServer::land, this, _1, _2));
     service_go_to_ = this->create_service<GoTo>("all/go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
+    service_notify_setpoints_stop_ = this->create_service<NotifySetpointsStop>("all/notify_setpoints_stop", std::bind(&CrazyflieServer::notify_setpoints_stop, this, _1, _2));
 
     // declare global commands
     this->declare_parameter("all/broadcasts/num_repeats", 15);
@@ -827,6 +833,54 @@ private:
     }
   }
 
+  void notify_setpoints_stop(const std::shared_ptr<NotifySetpointsStop::Request> request,
+                         std::shared_ptr<NotifySetpointsStop::Response> response)
+  {
+    RCLCPP_INFO(logger_, "notify_setpoints_stop(remain_valid_millisecs%d, group_mask=%d)",
+                request->remain_valid_millisecs,
+                request->group_mask);
+
+    for (int i = 0; i < broadcasts_num_repeats_; ++i) {
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->notifySetpointsStop(request->remain_valid_millisecs);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
+    }
+  }
+
+  void cmd_full_state_changed(const crazyflie_interfaces::msg::FullState::SharedPtr msg)
+  { 
+    float x = msg->pose.position.x;
+    float y = msg->pose.position.y;
+    float z = msg->pose.position.z;
+    float vx = msg->twist.linear.x;
+    float vy = msg->twist.linear.y;
+    float vz = msg->twist.linear.z;
+    float ax = msg->acc.x;
+    float ay = msg->acc.y;
+    float az = msg->acc.z;
+
+    float qx = msg->pose.orientation.x;
+    float qy = msg->pose.orientation.y;
+    float qz = msg->pose.orientation.z;
+    float qw = msg->pose.orientation.w;
+    float rollRate = msg->twist.angular.x;
+    float pitchRate = msg->twist.angular.y;
+    float yawRate = msg->twist.angular.z;
+
+    for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->sendFullStateSetpoint(
+          x, y, z,
+          vx, vy, vz,
+          ax, ay, az,
+          qx, qy, qz, qw,
+          rollRate, pitchRate, yawRate);
+    }
+
+  }
+
   void posesChanged(const NamedPoseArray::SharedPtr msg)
   {
     // Here, we send all the poses to all CFs
@@ -881,13 +935,18 @@ private:
 
   private:
     rclcpp::Logger logger_;
+
+    // subscribers
+    rclcpp::Subscription<crazyflie_interfaces::msg::FullState>::SharedPtr subscription_cmd_full_state_;
+    rclcpp::Subscription<NamedPoseArray>::SharedPtr sub_poses_;
+
+    // services
     rclcpp::Service<Empty>::SharedPtr service_emergency_;
     rclcpp::Service<StartTrajectory>::SharedPtr service_start_trajectory_;
     rclcpp::Service<Takeoff>::SharedPtr service_takeoff_;
     rclcpp::Service<Land>::SharedPtr service_land_;
     rclcpp::Service<GoTo>::SharedPtr service_go_to_;
-
-    rclcpp::Subscription<NamedPoseArray>::SharedPtr sub_poses_;
+    rclcpp::Service<NotifySetpointsStop>::SharedPtr service_notify_setpoints_stop_;
 
     std::vector<std::unique_ptr<CrazyflieROS>> crazyflies_;
 

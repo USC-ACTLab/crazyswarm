@@ -298,7 +298,7 @@ public:
 
             publishers_generic_.emplace_back(node->create_publisher<crazyflie_interfaces::msg::LogDataGeneric>(name + "/" + topic_name, 10));
 
-            std::function<void(uint32_t, std::vector<double>*, void* userData)> cb = std::bind(
+            std::function<void(uint32_t, const std::vector<float>*, void* userData)> cb = std::bind(
               &CrazyflieROS::on_logging_custom,
               this,
               std::placeholders::_1,
@@ -619,7 +619,7 @@ private:
     }
   }
 
-  void on_logging_custom(uint32_t time_in_ms, std::vector<double>* values, void* userData) {
+  void on_logging_custom(uint32_t time_in_ms, const std::vector<float>* values, void* userData) {
 
     auto pub = reinterpret_cast<rclcpp::Publisher<crazyflie_interfaces::msg::LogDataGeneric>::SharedPtr*>(userData);
 

@@ -12,6 +12,7 @@ import numpy as np
 
 import cffirmware as firm
 import rowan
+from . import simtypes
 
 
 class CrazyflieState:
@@ -171,17 +172,39 @@ class CrazyflieSIL:
         if self.mode == CrazyflieSIL.MODE_HIGH_POLY:
             self.setState = firm.plan_current_goal(self.planner, self.time_func())
         # else:
-            # return CrazyflieState(self.setState)
+            # return self._fwstate_to_simtypes_state(self.setState)
         setState = firm.traj_eval(self.setState)
         if not firm.is_traj_eval_valid(setState):
-            return CrazyflieState(self.state)
+            return self._fwstate_to_simtypes_state(self.state)
 
         if self.mode == CrazyflieSIL.MODE_IDLE:
-            return CrazyflieState(self.state)
+            return self._fwstate_to_simtypes_state(self.state)
 
         self.state = setState
-        return CrazyflieState(setState)
+        return self._fwstate_to_simtypes_state(setState)
 
     # "private" methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
+
+    @staticmethod
+    def _fwstate_to_simtypes_state(fwstate):
+        pos = np.array([fwstate.pos.x, fwstate.pos.y, fwstate.pos.z])
+        vel = np.array([fwstate.vel.x, fwstate.vel.y, fwstate.vel.z])
+        acc = np.array([fwstate.acc.x, fwstate.acc.y, fwstate.acc.z])
+        omega = np.array([fwstate.omega.x, fwstate.omega.y, fwstate.omega.z])
+
+        # compute rotation based on differential flatness
+        thrust = acc + np.array([0, 0, 9.81])
+        z_body = thrust / np.linalg.norm(thrust)
+        x_world = np.array([np.cos(fwstate.yaw), np.sin(fwstate.yaw), 0])
+        y_body = np.cross(z_body, x_world)
+        # Mathematically not needed. This addresses numerical issues to ensure R is orthogonal
+        y_body /= np.linalg.norm(y_body)
+        x_body = np.cross(y_body, z_body)
+        # Mathematically not needed. This addresses numerical issues to ensure R is orthogonal
+        x_body /= np.linalg.norm(x_body)
+        R = np.column_stack([x_body, y_body, z_body])
+        quat = rowan.from_matrix(R)
+
+        return simtypes.State(pos, vel, quat, omega)

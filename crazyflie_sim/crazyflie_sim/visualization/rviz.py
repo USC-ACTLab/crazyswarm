@@ -1,32 +1,31 @@
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster
 from rclpy.node import Node
+from ..simtypes import State, Action
 
 
 class Visualization:
 
-    def __init__(self, node: Node):
+    def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node
+        self.names = names
         self.tfbr = TransformBroadcaster(self.node)
 
-    def init(self, names, positions):
-        self.names = names
-
-    def step(self, setpoints):
+    def step(self, states: list[State], states_desired: list[State], actions: list[Action]):
         # publish transformation to visualize in rviz
         msgs = []
-        for name, setpoint in zip(self.names, setpoints):
+        for name, state in zip(self.names, states):
             msg = TransformStamped()
             msg.header.stamp = self.node.get_clock().now().to_msg()
             msg.header.frame_id = "world"
             msg.child_frame_id = name
-            msg.transform.translation.x = setpoint.pos[0]
-            msg.transform.translation.y = setpoint.pos[1]
-            msg.transform.translation.z = setpoint.pos[2]
-            msg.transform.rotation.x = setpoint.quat[1]
-            msg.transform.rotation.y = setpoint.quat[2]
-            msg.transform.rotation.z = setpoint.quat[3]
-            msg.transform.rotation.w = setpoint.quat[0]
+            msg.transform.translation.x = state.pos[0]
+            msg.transform.translation.y = state.pos[1]
+            msg.transform.translation.z = state.pos[2]
+            msg.transform.rotation.x = state.quat[1]
+            msg.transform.rotation.y = state.quat[2]
+            msg.transform.rotation.z = state.quat[3]
+            msg.transform.rotation.w = state.quat[0]
             msgs.append(msg)
         self.tfbr.sendTransform(msgs)
 

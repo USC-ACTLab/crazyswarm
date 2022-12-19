@@ -618,7 +618,7 @@ class CrazyflieServer(Node):
            translates it to ROS2 paraemeters at startup
         """
         for param in params:
-            param_split = param.name.split("/")
+            param_split = param.name.split(".")
 
             if param_split[0] in self.cf_dict.values():
                 cf_name = param_split[0]

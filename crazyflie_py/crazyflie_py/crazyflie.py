@@ -477,8 +477,8 @@ class Crazyflie:
             name (str): The parameter's name.
             value (Any): The parameter's value.
         """
-        param_name = self.prefix[1:] + "/params/" + name.replace(".", "/")
-        param_type = self.paramTypeDict[name.replace(".", "/")]
+        param_name = self.prefix[1:] + ".params." + name
+        param_type = self.paramTypeDict[name]
         if param_type == ParameterType.PARAMETER_INTEGER:
             param_value = ParameterValue(type=param_type, integer_value=int(value))
         elif param_type == ParameterType.PARAMETER_DOUBLE:

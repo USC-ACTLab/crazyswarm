@@ -389,7 +389,7 @@ class CrazyflieServer(Node):
             lg.start()
             frequency = cf_handle.logging[prefix + "_logging_freq"]
             self.declare_parameter(
-                self.cf_dict[link_uri] + "/logs/" + prefix + "/frequency/", frequency)
+                self.cf_dict[link_uri] + ".logs." + prefix + ".frequency.", frequency)
             self.get_logger().info(
                 f"{link_uri} setup logging for {prefix} at freq {frequency}")
         except KeyError as e:
@@ -590,7 +590,7 @@ class CrazyflieServer(Node):
                         )
                         self.declare_parameter(
                             self.cf_dict[link_uri] +
-                            "/params/" + group + "/" + param,
+                            ".params." + group + "." + param,
                             value=set_param_value,
                             descriptor=parameter_descriptor,
                         )
@@ -605,7 +605,7 @@ class CrazyflieServer(Node):
 
                         self.declare_parameter(
                             self.cf_dict[link_uri] +
-                            "/params/" + group + "/" + param,
+                            ".params." + group + "." + param,
                             value=cf_param_value,
                             descriptor=parameter_descriptor,
                         )
@@ -784,7 +784,7 @@ class CrazyflieServer(Node):
         if topic_name in self.default_log_type.keys():
             try:
                 self.undeclare_parameter(
-                    self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
+                    self.cf_dict[uri] + ".logs." + topic_name + ".frequency.")
                 self.swarm._cfs[uri].logging[topic_name + "_log_config"].stop()
                 self.destroy_publisher(
                     self.swarm._cfs[uri].logging[topic_name + "_publisher"])
@@ -821,7 +821,7 @@ class CrazyflieServer(Node):
         if topic_name in self.default_log_type.keys():
             try:
                 self.declare_parameter(
-                    self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/", frequency)
+                    self.cf_dict[uri] + ".logs." + topic_name + ".frequency.", frequency)
                 self.swarm._cfs[uri].logging[topic_name + "_publisher"] = self.create_publisher(
                     self.default_log_type[topic_name], self.cf_dict[uri] + "/" + topic_name, 10)
                 self.swarm._cfs[uri].logging[topic_name + "_log_config"].period_in_ms = 1000 / frequency
@@ -835,9 +835,9 @@ class CrazyflieServer(Node):
         else:
             try:
                 self.declare_parameter(
-                    self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/", frequency)
+                    self.cf_dict[uri] + ".logs." + topic_name + ".frequency.", frequency)
                 self.declare_parameter(
-                    self.cf_dict[uri] + "/logs/" + topic_name + "/vars/", variables)
+                    self.cf_dict[uri] + ".logs." + topic_name + ".vars.", variables)
                 lg_custom = LogConfig(
                     name=topic_name, period_in_ms=1000 / frequency)
                 for log_name in variables:
@@ -862,8 +862,8 @@ class CrazyflieServer(Node):
                 self.get_logger().info(
                     f"{uri}: Failed to add {topic_name} logging")
                 self.get_logger().info(str(e) + "is not in TOC")
-                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/frequency/")
-                self.undeclare_parameter(self.cf_dict[uri] + "/logs/" + topic_name + "/vars/")
+                self.undeclare_parameter(self.cf_dict[uri] + ".logs." + topic_name + ".frequency.")
+                self.undeclare_parameter(self.cf_dict[uri] + ".logs." + topic_name + ".vars.")
                 response.success = False
                 return response
             except rclpy.exceptions.ParameterAlreadyDeclaredException:

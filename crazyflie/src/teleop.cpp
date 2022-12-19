@@ -66,29 +66,29 @@ public:
         this->declare_parameter<float>("initial_position.z");
         this->get_parameter<float>("initial_position.z", state_.z);
 
-        if (mode_ == "cmd_rpy") {
-            declareAndGetAxis(mode_ + ".roll", axes_.x);
-            declareAndGetAxis(mode_ + ".pitch", axes_.y);
-            declareAndGetAxis(mode_ + ".yawrate", axes_.yaw);
-            declareAndGetAxis(mode_ + ".thrust", axes_.z);
-        } else if (mode_ == "cmd_vel_world"){
-            declareAndGetAxis(mode_ + ".x_velocity", axes_.x);
-            declareAndGetAxis(mode_ + ".y_velocity", axes_.y);
-            declareAndGetAxis(mode_ + ".z_velocity", axes_.z);
-            declareAndGetAxis(mode_ + ".yaw_velocity", axes_.yaw);
+        // declare cmd_rpy params
+        declareAxis("cmd_rpy.roll");
+        declareAxis("cmd_rpy.pitch");
+        declareAxis("cmd_rpy.yawrate");
+        declareAxis("cmd_rpy.thrust");
 
-            this->declare_parameter(mode_ + ".x_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
-            this->get_parameter(mode_ + ".x_limit", x_param);
-            x_limit_ = x_param.as_double_array();
-            this->declare_parameter(mode_ + ".y_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
-            this->get_parameter(mode_ + ".y_limit", y_param);
-            y_limit_ = y_param.as_double_array();
-            this->declare_parameter(mode_ + ".z_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
-            this->get_parameter(mode_ + ".z_limit", z_param);
-            z_limit_ = z_param.as_double_array();
-        }
+        // declare cmd_vel_world params
+        declareAxis("cmd_vel_world.x_velocity");
+        declareAxis("cmd_vel_world.y_velocity");
+        declareAxis("cmd_vel_world.z_velocity");
+        declareAxis("cmd_vel_world.yaw_velocity");
+        this->declare_parameter("cmd_vel_world.x_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
+        this->declare_parameter("cmd_vel_world.y_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
+        this->declare_parameter("cmd_vel_world.z_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
+
+        on_mode_switched();
+
         dt_ = 1.0f/frequency_;
         is_low_level_flight_active_ = false;
+
+        // Create a parameter subscriber that can be used to monitor parameter changes
+        param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
+        cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&TeleopNode::on_parameter_event, this, _1));
 
         if (frequency_ > 0) {
             timer_ = this->create_wall_timer(std::chrono::milliseconds(1000/frequency_), std::bind(&TeleopNode::publish, this));
@@ -130,6 +130,19 @@ private:
             a -= 2*M_PI;
         }
         return a;
+    }
+
+    void on_parameter_event(const rcl_interfaces::msg::ParameterEvent &event)
+    {
+        if (event.node == "/teleop") {
+            auto params = param_subscriber_->get_parameters_from_event(event);
+            for (auto &p : params) {
+                if (p.get_name() == "mode") {
+                    mode_ = p.as_string();
+                    on_mode_switched();
+                }
+            }
+        }
     }
 
     void publish() 
@@ -287,15 +300,52 @@ private:
         client_land_->async_send_request(request2);
     }
 
-    void declareAndGetAxis(const std::string& name, Axis& axis)
+    void declareAxis(const std::string& name)
     {
         this->declare_parameter<int>(name + ".axis");
-        this->get_parameter<int>(name + ".axis", axis.axis);
         this->declare_parameter<float>(name + ".max");
-        this->get_parameter<float>(name + ".max", axis.max);
         this->declare_parameter<float>(name + ".deadband");
+    }
+
+    void getAxis(const std::string& name, Axis& axis)
+    {
+        this->get_parameter<int>(name + ".axis", axis.axis);
+        this->get_parameter<float>(name + ".max", axis.max);
         this->get_parameter<float>(name + ".deadband", axis.deadband);
     }
+
+    void on_mode_switched()
+    {
+        if (mode_ == "high_level") {
+            // nothing to do
+        } else if (mode_ == "cmd_rpy") {
+            getAxis(mode_ + ".roll", axes_.x);
+            getAxis(mode_ + ".pitch", axes_.y);
+            getAxis(mode_ + ".yawrate", axes_.yaw);
+            getAxis(mode_ + ".thrust", axes_.z);
+        } else if (mode_ == "cmd_vel_world"){
+            getAxis(mode_ + ".x_velocity", axes_.x);
+            getAxis(mode_ + ".y_velocity", axes_.y);
+            getAxis(mode_ + ".z_velocity", axes_.z);
+            getAxis(mode_ + ".yaw_velocity", axes_.yaw);
+
+            this->get_parameter(mode_ + ".x_limit", x_param);
+            x_limit_ = x_param.as_double_array();
+            this->get_parameter(mode_ + ".y_limit", y_param);
+            y_limit_ = y_param.as_double_array();
+            this->get_parameter(mode_ + ".z_limit", z_param);
+            z_limit_ = z_param.as_double_array();
+        } else {
+            RCLCPP_ERROR(get_logger(), "Unknown mode %s", mode_.c_str());
+            return;
+        }
+
+        RCLCPP_INFO(get_logger(), "Mode changed to %s", mode_.c_str());
+    }
+
+    // monitor parameter changes
+    std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
+    std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr subscription_;
     rclcpp::Client<std_srvs::srv::Empty>::SharedPtr client_emergency_;

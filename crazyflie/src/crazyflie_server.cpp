@@ -165,7 +165,7 @@ public:
       cf_.requestParamToc(/*forceNoCache*/);
       for (auto iter = cf_.paramsBegin(); iter != cf_.paramsEnd(); ++iter) {
         auto entry = *iter;
-        std::string paramName = name + "/params/" + entry.group + "/" + entry.name;
+        std::string paramName = name + ".params." + entry.group + "." + entry.name;
         switch (entry.type)
         {
         case Crazyflie::ParamTypeUint8:
@@ -690,11 +690,11 @@ public:
     service_notify_setpoints_stop_ = this->create_service<NotifySetpointsStop>("all/notify_setpoints_stop", std::bind(&CrazyflieServer::notify_setpoints_stop, this, _1, _2));
 
     // declare global commands
-    this->declare_parameter("all/broadcasts/num_repeats", 15);
-    this->declare_parameter("all/broadcasts/delay_between_repeats_ms", 1);
+    this->declare_parameter("all.broadcasts.num_repeats", 15);
+    this->declare_parameter("all.broadcasts.delay_between_repeats_ms", 1);
 
-    broadcasts_num_repeats_ = this->get_parameter("all/broadcasts/num_repeats").get_parameter_value().get<int>();
-    broadcasts_delay_between_repeats_ms_ = this->get_parameter("all/broadcasts/delay_between_repeats_ms").get_parameter_value().get<int>();
+    broadcasts_num_repeats_ = this->get_parameter("all.broadcasts.num_repeats").get_parameter_value().get<int>();
+    broadcasts_delay_between_repeats_ms_ = this->get_parameter("all.broadcasts.delay_between_repeats_ms").get_parameter_value().get<int>();
 
     // load crazyflies from params
     auto node_parameters_iface = this->get_node_parameters_interface();

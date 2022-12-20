@@ -78,6 +78,13 @@ class CrazyflieSIL:
 
         # current controller output
         self.control = firm.control_t()
+        self.motors_thrust_uncapped = firm.motors_thrust_uncapped_t()
+        self.motors_thrust_pwm = firm.motors_thrust_pwm_t()
+
+        # set up controller
+        firm.controllerPidInit()
+        # firm.controllerMellingerInit()
+
 
 
     def setGroupMask(self, groupMask):
@@ -221,50 +228,60 @@ class CrazyflieSIL:
         self.state.velocity.y = state.vel[1]
         self.state.velocity.z = state.vel[2]
 
-        rpy = np.degrees(rowan.to_euler(state.quat))
+        rpy = np.degrees(rowan.to_euler(state.quat, convention='xyz'))
         # Note, legacy coordinate system, so invert pitch
         self.state.attitude.roll = rpy[0]
         self.state.attitude.pitch = -rpy[1]
-        self.state.attitude.yaw = -rpy[2]
+        self.state.attitude.yaw = rpy[2]
 
+        self.state.attitudeQuaternion.w = state.quat[0]
         self.state.attitudeQuaternion.x = state.quat[1]
         self.state.attitudeQuaternion.y = state.quat[2]
         self.state.attitudeQuaternion.z = state.quat[3]
-        self.state.attitudeQuaternion.w = state.quat[0]
 
         # omega is part of sensors, not of the state
-        # Note that y is inverted here, too
         self.sensors.gyro.x = np.degrees(state.omega[0])
-        self.sensors.gyro.y = -np.degrees(state.omega[1])
+        self.sensors.gyro.y = np.degrees(state.omega[1])
         self.sensors.gyro.z = np.degrees(state.omega[2])
 
         # TODO: state technically also has acceleration, but simtypes does not
+
+    def executeController(self):
+        time_in_seconds = self.time_func()
+        # ticks is essentially the time in milliseconds as an integer
+        tick = int(time_in_seconds * 1000)
+        firm.controllerPid(self.control, self.setpoint, self.sensors, self.state, tick)
+        # firm.controllerMellinger(self.control, self.setpoint, self.sensors, self.state, tick)
+        return self._fwcontrol_to_simtypes_action()
 
     # "private" methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
 
-    @staticmethod
-    def _fwstate_to_simtypes_state(fwstate):
-        pos = np.array([fwstate.pos.x, fwstate.pos.y, fwstate.pos.z])
-        vel = np.array([fwstate.vel.x, fwstate.vel.y, fwstate.vel.z])
-        acc = np.array([fwstate.acc.x, fwstate.acc.y, fwstate.acc.z])
-        omega = np.array([fwstate.omega.x, fwstate.omega.y, fwstate.omega.z])
+    def _fwcontrol_to_simtypes_action(self):
 
-        # compute rotation based on differential flatness
-        thrust = acc + np.array([0, 0, 9.81])
-        z_body = thrust / np.linalg.norm(thrust)
-        x_world = np.array([np.cos(fwstate.yaw), np.sin(fwstate.yaw), 0])
-        y_body = np.cross(z_body, x_world)
-        # Mathematically not needed. This addresses numerical issues to ensure R is orthogonal
-        y_body /= np.linalg.norm(y_body)
-        x_body = np.cross(y_body, z_body)
-        # Mathematically not needed. This addresses numerical issues to ensure R is orthogonal
-        x_body /= np.linalg.norm(x_body)
-        R = np.column_stack([x_body, y_body, z_body])
-        quat = rowan.from_matrix(R)
+        firm.powerDistribution(self.control, self.motors_thrust_uncapped)
+        firm.powerDistributionCap(self.motors_thrust_uncapped, self.motors_thrust_pwm)
 
-        return simtypes.State(pos, vel, quat, omega)
+        # self.motors_thrust_pwm.motors.m{1,4} contain the PWM
+        # convert PWM -> RPM
+        def pwm_to_rpm(pwm):
+            # forester et. al.
+            # return 0.04076521 * pwm + 380.8359
+            # polyfit using Tobias' data
+            # p = [-2.15363199e-06, 4.60330085e-01, 1.94995845e+03]
+            if pwm < 10000:
+                return 0
+            p = [3.26535711e-01, 3.37495115e+03]
+            return np.polyval(p, pwm)
+
+        print(self.motors_thrust_pwm.motors.m1)
+
+        return simtypes.Action([pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
+            pwm_to_rpm(self.motors_thrust_pwm.motors.m2),
+            pwm_to_rpm(self.motors_thrust_pwm.motors.m3),
+            pwm_to_rpm(self.motors_thrust_pwm.motors.m4)])
+
 
     @staticmethod
     def _fwsetpoint_to_simtypes_state(fwsetpoint):

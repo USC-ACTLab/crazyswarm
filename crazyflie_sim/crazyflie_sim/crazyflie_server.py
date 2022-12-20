@@ -128,13 +128,34 @@ class CrazyflieServer(Node):
         # step as fast as possible
         max_dt = 0.0 if "max_dt" not in self._ros_parameters["sim"] else self._ros_parameters["sim"]["max_dt"]
         self.timer = self.create_timer(max_dt, self._timer_callback)
+        self.is_shutdown = False
+
+    def on_shutdown_callback(self):
+        if not self.is_shutdown:
+            # call finalizer for backend
+            # del self.backend
+            # call finalizer fo visualizations
+            for visualization in self.visualizations:
+                visualization.shutdown()
+
+            self.is_shutdown = True
 
     def _timer_callback(self):
+        # update setpoint
         states_desired = [cf.getSetpoint() for _, cf in self.cfs.items()]
-        actions = None
+
+        # execute the control loop
+        actions = [cf.executeController()  for _, cf in self.cfs.items()]
+
+        # execute the physics simulator
         states_next = self.backend.step(states_desired, actions)
+
+        # update the resulting state
+        for state, (_, cf) in zip(states_next, self.cfs.items()):
+            cf.setState(state)
+
         for vis in self.visualizations:
-            vis.step(states_next, states_desired, actions)
+            vis.step(self.backend.time(), states_next, states_desired, actions)
 
     def _param_to_dict(self, param_ros):
         """
@@ -289,11 +310,18 @@ def main(args=None):
 
     rclpy.init(args=args)
     crazyflie_server = CrazyflieServer()
+    rclpy.get_default_context().on_shutdown(crazyflie_server.on_shutdown_callback)
 
-    rclpy.spin(crazyflie_server)
+    try:
+        rclpy.spin(crazyflie_server)
+    except KeyboardInterrupt:
+        crazyflie_server.on_shutdown_callback()
+    finally:
+        rclpy.try_shutdown()
+        crazyflie_server.destroy_node()
+        # del crazyflie_server
 
-    crazyflie_server.destroy_node()
-    rclpy.shutdown()
+    # rclpy.shutdown()
 
 
 if __name__ == "__main__":

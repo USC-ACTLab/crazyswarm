@@ -2,7 +2,8 @@
   ros__parameters:
     # simulation related
     sim:
-      max_dt: 0.1              # artificially limit the step() function (set to 0 to disable)
-      backend: none
+      max_dt: 0 #0.1              # artificially limit the step() function (set to 0 to disable)
+      backend: basicnumpy
       visualizations:
-        - rviz
+        # - rviz
+        - pdf

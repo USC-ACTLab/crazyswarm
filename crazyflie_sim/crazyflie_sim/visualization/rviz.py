@@ -11,7 +11,7 @@ class Visualization:
         self.names = names
         self.tfbr = TransformBroadcaster(self.node)
 
-    def step(self, states: list[State], states_desired: list[State], actions: list[Action]):
+    def step(self, t, states: list[State], states_desired: list[State], actions: list[Action]):
         # publish transformation to visualize in rviz
         msgs = []
         for name, state in zip(self.names, states):
@@ -28,4 +28,7 @@ class Visualization:
             msg.transform.rotation.w = state.quat[0]
             msgs.append(msg)
         self.tfbr.sendTransform(msgs)
+
+    def shutdown(self):
+        pass
 

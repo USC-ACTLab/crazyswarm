@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from rclpy.node import Node
 from ..simtypes import State, Action
 

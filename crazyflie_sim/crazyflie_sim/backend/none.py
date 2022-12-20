@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from rclpy.node import Node
 from rosgraph_msgs.msg import Clock
 from rclpy.time import Time

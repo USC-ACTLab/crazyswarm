@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster
 from rclpy.node import Node

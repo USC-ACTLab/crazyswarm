@@ -13,6 +13,7 @@ def build_argparser(parent_parsers=[]):
         parents=parent_parsers
     )
     parser.add_argument("--sim", help="Run using simulation.", action="store_true")
+    parser.add_argument("--gaz", help="Run using simulation.", action="store_true")
 
     group = parser.add_argument_group("Simulation-only", "")
     group.add_argument("--vis", help="Visualization backend.", choices=['mpl', 'vispy', 'null'], default="mpl")
@@ -46,6 +47,12 @@ class Crazyswarm:
             self.timeHelper = TimeHelper(args.vis, args.dt, args.writecsv, disturbanceSize=args.disturbance, maxVel=args.maxvel, videopath=args.video)
             self.allcfs = CrazyflieServer(self.timeHelper, crazyflies_yaml)
             atexit.register(self.timeHelper._atexit)
+
+        elif args.gaz:
+            from .crazyflieGaz import TimeHelper, CrazyflieServer
+            self.allcfs = CrazyflieServer(crazyflies_yaml)
+            self.timeHelper = TimeHelper()
+
         else:
             from .crazyflie import TimeHelper, CrazyflieServer
             self.allcfs = CrazyflieServer(crazyflies_yaml)

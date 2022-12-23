@@ -135,9 +135,7 @@ class CrazyflieServer(Node):
 
     def on_shutdown_callback(self):
         if not self.is_shutdown:
-            # call finalizer for backend
-            # del self.backend
-            # call finalizer fo visualizations
+            self.backend.shutdown()
             for visualization in self.visualizations:
                 visualization.shutdown()
 
@@ -322,9 +320,6 @@ def main(args=None):
     finally:
         rclpy.try_shutdown()
         crazyflie_server.destroy_node()
-        # del crazyflie_server
-
-    # rclpy.shutdown()
 
 
 if __name__ == "__main__":

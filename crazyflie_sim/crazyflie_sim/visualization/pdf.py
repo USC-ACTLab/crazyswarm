@@ -33,10 +33,6 @@ class Visualization:
             cf_states_desired = np.array([s[k]._state for s in self.all_states_desired])
             cf_actions = np.array([s[k]._action for s in self.all_actions])
 
-            # print(self.all_states)
-            # print(cf_states.shape)
-            # return
-
             with PdfPages('result.pdf') as pdf:
 
                 # position
@@ -114,9 +110,6 @@ class Visualization:
                 axs[1,0].plot(self.ts, cf_actions[:,2], label="M3")
                 axs[1,0].set_title("M3")
 
-                # for d in range(4):
-                    # ax.plot(self.ts, cf_actions[:,d], label="M{}".format(d+1))
-                # ax.legend()
                 pdf.savefig(fig)
                 plt.close()
 

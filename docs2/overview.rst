@@ -47,7 +47,7 @@ Simulation
 
 The simulator uses the Crazyflie firmware as a software-in-the-loop (SIL). It provides the same ROS interface as the server and therefore can be used with C++ or Python user code.
 
-Currently, the desired setpoint is visualized in rviz (see :ref:`usage`). However, the code is prepared to support physics-based simulation in the future as well.
+It is possible to just visualize the setpoint (for fast operation), or to use a physics-based simulator (see :ref:`usage`).
 
 
 Support functionality with backends

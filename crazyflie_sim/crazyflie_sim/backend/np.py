@@ -7,15 +7,10 @@ from ..simtypes import State, Action
 
 
 import numpy as np
-from rowan.calculus import integrate as quat_integrate
-from rowan.functions import _promote_vec, _validate_unit, exp, multiply
 import rowan
-from rowan import from_matrix, to_matrix, to_euler, from_euler
-from scipy import  integrate, linalg
-from numpy.polynomial import Polynomial as poly
-import sys
 
 class Backend:
+    """Backend that uses newton-euler rigid-body dynamics implemented in numpy"""
 
     def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node
@@ -26,7 +21,6 @@ class Backend:
 
         self.uavs = []
         for state in states:
-            # uav = UavModel(state)
             uav = Quadrotor(state)
             self.uavs.append(uav)
 
@@ -51,8 +45,12 @@ class Backend:
 
         return next_states
 
+    def shutdown(self):
+        pass
+
 
 class Quadrotor:
+    """Basic rigid body quadrotor model (no drag) using numpy and rowan"""
 
     def __init__(self, state):
         # parameters (Crazyflie 2.0 quadrotor)
@@ -80,7 +78,6 @@ class Quadrotor:
             self.inv_J = np.linalg.pinv(self.J) # full matrix -> pseudo inverse
         else:
             self.inv_J = 1 / self.J # diagonal matrix -> division
-
 
         self.state = state
 

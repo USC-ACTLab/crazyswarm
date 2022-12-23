@@ -43,7 +43,7 @@ Crazyswarm2 was forked from Crazyswarm. However, there is also heavy re-design o
 
 - **Simulation.**
   In Crazyswarm1, a simple visualization of the setpoints for high-level Python scripts is supported. There is no support for simulation of ROS code that does not use the high-level Python scripts and no support for physics-based simulation.
-  In contrast, Crazyswarm2 implements the simulation as an alternative backend. This will support multiple physics/visualization backends (optionally with physics and aerodynamic interaction).
+  In contrast, Crazyswarm2 implements the simulation as an alternative backend server. This backend relies on a users choice of physics simulation and supports multiple visualization tools.
 
 - **Support of Distributed Swarm Monitoring (Planned).**
   In Crazyswarm1, a common swarm monitoring tool is the chooser.py (to enable/disable CFs, check the battery voltage etc.). However, this tool was not functioning while the swarm is operational.

@@ -30,3 +30,6 @@ class Backend:
         # pretend we were able to follow desired states perfectly
         return states_desired
 
+    def shutdown(self):
+        pass
+

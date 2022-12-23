@@ -74,11 +74,14 @@ class CrazyflieServer(Node):
             vis = class_(self, names, initial_states)
             self.visualizations.append(vis)
 
+        controller_name = backend_name = self._ros_parameters["sim"]["controller"]
+
         # create robot SIL objects
         for name, initial_state in zip(names, initial_states):
             self.cfs[name] = CrazyflieSIL(
                 name,
                 initial_state.pos,
+                controller_name,
                 self.backend.time)
 
         # Create services for the entire swarm and each individual crazyflie

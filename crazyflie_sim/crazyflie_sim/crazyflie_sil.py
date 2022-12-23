@@ -37,7 +37,7 @@ class CrazyflieSIL:
     MODE_LOW_VELOCITY = 4
 
 
-    def __init__(self, name, initialPosition, time_func):
+    def __init__(self, name, initialPosition, controller_name, time_func):
 
         # Core.
         self.name = name
@@ -82,10 +82,19 @@ class CrazyflieSIL:
         self.motors_thrust_pwm = firm.motors_thrust_pwm_t()
 
         # set up controller
-        # firm.controllerPidInit()
-        firm.controllerMellingerInit()
-
-
+        if controller_name == "none":
+            self.controller = None
+        elif controller_name == "pid":
+            firm.controllerPidInit()
+            self.controller = firm.controllerPid
+        elif controller_name == "mellinger":
+            firm.controllerMellingerInit()
+            self.controller = firm.controllerMellinger
+        elif controller_name == "brescianini":
+            firm.controllerBrescianiniInit()
+            self.controller = firm.controllerBrescianini
+        else:
+            raise ValueError("Unknown controller {}".format(controller_name))
 
     def setGroupMask(self, groupMask):
         self.groupMask = groupMask
@@ -247,15 +256,16 @@ class CrazyflieSIL:
         # TODO: state technically also has acceleration, but simtypes does not
 
     def executeController(self):
+        if self.controller is None:
+            return None
+
         if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
             return simtypes.Action([0,0,0,0])
 
         time_in_seconds = self.time_func()
         # ticks is essentially the time in milliseconds as an integer
         tick = int(time_in_seconds * 1000)
-        # firm.controllerPid(self.control, self.setpoint, self.sensors, self.state, tick)
-        firm.controllerMellinger(self.control, self.setpoint, self.sensors, self.state, tick)
-        print(tick, self.control.roll, self.control.pitch, self.control.yaw, self.control.thrust)
+        self.controller(self.control, self.setpoint, self.sensors, self.state, tick)
         return self._fwcontrol_to_simtypes_action()
 
     # "private" methods
@@ -285,16 +295,10 @@ class CrazyflieSIL:
             force_in_newton = force_in_grams * 9.81 / 1000.0
             return np.maximum(force_in_newton, 0)
 
-        # # print(self.motors_thrust_pwm.motors.m1)
-        # self.motors_thrust_pwm.motors.m1 = 40000
-        # self.motors_thrust_pwm.motors.m2 = 30000
-        # self.motors_thrust_pwm.motors.m3 = 30000
-        # self.motors_thrust_pwm.motors.m4 = 40000
-
-        return simtypes.Action([pwm_to_force(self.motors_thrust_pwm.motors.m1),
-            pwm_to_force(self.motors_thrust_pwm.motors.m2),
-            pwm_to_force(self.motors_thrust_pwm.motors.m3),
-            pwm_to_force(self.motors_thrust_pwm.motors.m4)])
+        return simtypes.Action([pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
+            pwm_to_rpm(self.motors_thrust_pwm.motors.m2),
+            pwm_to_rpm(self.motors_thrust_pwm.motors.m3),
+            pwm_to_rpm(self.motors_thrust_pwm.motors.m4)])
 
 
     @staticmethod

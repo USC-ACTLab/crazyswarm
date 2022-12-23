@@ -99,13 +99,24 @@ class Visualization:
                 plt.close()
 
                 # actions
-                fig, ax = plt.subplots(1, 1, sharex=True)
-                ax.set_ylabel("rpm")
-                ax.set_xlabel("Time [s]")
+                fig, axs = plt.subplots(2, 2, sharex=True, sharey=True)
+                axs[0,0].set_ylabel("rpm")
+                axs[1,0].set_ylabel("rpm")
+                axs[1,0].set_xlabel("Time [s]")
+                axs[1,1].set_xlabel("Time [s]")
 
-                for d in range(4):
-                    ax.plot(self.ts, cf_actions[:,d], label="M{}".format(d+1))
-                ax.legend()
+                axs[0,0].plot(self.ts, cf_actions[:,3], label="M4")
+                axs[0,0].set_title("M4")
+                axs[0,1].plot(self.ts, cf_actions[:,0], label="M1")
+                axs[0,1].set_title("M1")
+                axs[1,1].plot(self.ts, cf_actions[:,1], label="M2")
+                axs[1,1].set_title("M2")
+                axs[1,0].plot(self.ts, cf_actions[:,2], label="M3")
+                axs[1,0].set_title("M3")
+
+                # for d in range(4):
+                    # ax.plot(self.ts, cf_actions[:,d], label="M{}".format(d+1))
+                # ax.legend()
                 pdf.savefig(fig)
                 plt.close()
 

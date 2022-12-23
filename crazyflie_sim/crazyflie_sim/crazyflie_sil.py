@@ -82,8 +82,8 @@ class CrazyflieSIL:
         self.motors_thrust_pwm = firm.motors_thrust_pwm_t()
 
         # set up controller
-        firm.controllerPidInit()
-        # firm.controllerMellingerInit()
+        # firm.controllerPidInit()
+        firm.controllerMellingerInit()
 
 
 
@@ -195,7 +195,7 @@ class CrazyflieSIL:
                 self.setpoint.mode.z = firm.modeAbs
                 self.setpoint.mode.roll = firm.modeDisable
                 self.setpoint.mode.pitch = firm.modeDisable
-                self.setpoint.mode.yaw = firm.modeDisable
+                self.setpoint.mode.yaw = firm.modeAbs
                 self.setpoint.mode.quat = firm.modeDisable
                 self.setpoint.acceleration.x = ev.acc.x
                 self.setpoint.acceleration.y = ev.acc.y
@@ -247,11 +247,14 @@ class CrazyflieSIL:
         # TODO: state technically also has acceleration, but simtypes does not
 
     def executeController(self):
+        if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
+            return simtypes.Action([0,0,0,0])
+
         time_in_seconds = self.time_func()
         # ticks is essentially the time in milliseconds as an integer
         tick = int(time_in_seconds * 1000)
-        firm.controllerPid(self.control, self.setpoint, self.sensors, self.state, tick)
-        # firm.controllerMellinger(self.control, self.setpoint, self.sensors, self.state, tick)
+        # firm.controllerPid(self.control, self.setpoint, self.sensors, self.state, tick)
+        firm.controllerMellinger(self.control, self.setpoint, self.sensors, self.state, tick)
         return self._fwcontrol_to_simtypes_action()
 
     # "private" methods
@@ -275,12 +278,22 @@ class CrazyflieSIL:
             p = [3.26535711e-01, 3.37495115e+03]
             return np.polyval(p, pwm)
 
-        print(self.motors_thrust_pwm.motors.m1)
+        def pwm_to_force(pwm):
+            p = [ 1.71479058e-09,  8.80284482e-05, -2.21152097e-01]
+            force_in_grams = np.polyval(p, pwm)
+            force_in_newton = force_in_grams * 9.81 / 1000.0
+            return np.maximum(force_in_newton, 0)
 
-        return simtypes.Action([pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
-            pwm_to_rpm(self.motors_thrust_pwm.motors.m2),
-            pwm_to_rpm(self.motors_thrust_pwm.motors.m3),
-            pwm_to_rpm(self.motors_thrust_pwm.motors.m4)])
+        # # print(self.motors_thrust_pwm.motors.m1)
+        # self.motors_thrust_pwm.motors.m1 = 40000
+        # self.motors_thrust_pwm.motors.m2 = 30000
+        # self.motors_thrust_pwm.motors.m3 = 30000
+        # self.motors_thrust_pwm.motors.m4 = 40000
+
+        return simtypes.Action([pwm_to_force(self.motors_thrust_pwm.motors.m1),
+            pwm_to_force(self.motors_thrust_pwm.motors.m2),
+            pwm_to_force(self.motors_thrust_pwm.motors.m3),
+            pwm_to_force(self.motors_thrust_pwm.motors.m4)])
 
 
     @staticmethod

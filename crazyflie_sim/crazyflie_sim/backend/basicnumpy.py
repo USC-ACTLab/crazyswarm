@@ -81,10 +81,10 @@ class UavModel:
         self.cft       = 0.006
         arm           = 0.707106781*self.d
         self.invAll = np.array([
-            [0.25, -(0.25 / arm), -(0.25 / arm), -(0.25 / self.cft)],
-            [0.25, -(0.25 / arm),  (0.25 / arm),  (0.25 / self.cft)],
-            [0.25,  (0.25 / arm),  (0.25 / arm), -(0.25 / self.cft)],
-            [0.25,  (0.25 / arm), -(0.25 / arm),  (0.25 / self.cft)]
+            [0.25, -(0.25 / arm), -(0.25 / arm), -(0.25 / self.cft)], #M2
+            [0.25, -(0.25 / arm),  (0.25 / arm),  (0.25 / self.cft)], #M3
+            [0.25,  (0.25 / arm),  (0.25 / arm), -(0.25 / self.cft)], #M4
+            [0.25,  (0.25 / arm), -(0.25 / arm),  (0.25 / self.cft)],  #M1
         ])     
         self.ctrlAll   = linalg.inv(self.invAll)
         self.grav     = np.array([0,0,-self.m*9.81])
@@ -122,7 +122,8 @@ class UavModel:
             force_in_newton = force_in_grams * 9.81 / 1000.0
             return np.maximum(force_in_newton, 0)
 
-        force = rpm_to_force(action.rpm)
+        # force = rpm_to_force(action.rpm)
+        force = action.rpm
         print("force ", force)
 
         # # while motors are off, we assume we are on the ground and don't update the state
@@ -132,6 +133,23 @@ class UavModel:
 
         # compute total trust
         eta = self.ctrlAll @ force
+
+
+        # Note: we assume here that our control is forces
+        arm_length = 0.046 # m
+        arm = 0.707106781 * arm_length
+        t2t = 0.006 # thrust-to-torque ratio
+        B0 = np.array([
+            [1, 1, 1, 1],
+            [-arm, -arm, arm, arm],
+            [-arm, arm, arm, -arm],
+            [-t2t, t2t, -t2t, t2t]
+            ])
+        eta = B0 @ force
+
+        print("eta ", eta)
+
+
         fz = eta[0]
         tau_i = eta[1:]
 

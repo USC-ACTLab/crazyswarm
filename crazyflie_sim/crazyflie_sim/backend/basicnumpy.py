@@ -9,6 +9,7 @@ from ..simtypes import State, Action
 import numpy as np
 from rowan.calculus import integrate as quat_integrate
 from rowan.functions import _promote_vec, _validate_unit, exp, multiply
+import rowan
 from rowan import from_matrix, to_matrix, to_euler, from_euler
 from scipy import  integrate, linalg
 from numpy.polynomial import Polynomial as poly
@@ -21,11 +22,12 @@ class Backend:
         self.names = names
         self.clock_publisher = node.create_publisher(Clock, 'clock', 10)
         self.t = 0
-        self.dt = 1e-3
+        self.dt = 0.0005
 
         self.uavs = []
         for state in states:
-            uav = UavModel(state)
+            # uav = UavModel(state)
+            uav = Quadrotor(state)
             self.uavs.append(uav)
 
     def time(self) -> float:
@@ -41,13 +43,12 @@ class Backend:
             uav.step(action)
             next_states.append(uav.state)
 
-        print(states_desired, actions, next_states)
+        # print(states_desired, actions, next_states)
         # publish the current clock
         clock_message = Clock()
         clock_message.clock = Time(seconds=self.time()).to_msg()
         self.clock_publisher.publish(clock_message)
 
-        # pretend we were able to follow desired states perfectly
         return next_states
 
 
@@ -174,3 +175,79 @@ class UavModel:
     
         return self.state
 
+
+class Quadrotor:
+
+    def __init__(self, state):
+        self.dt = 0.0005
+        
+        # parameters (Crazyflie 2.0 quadrotor)
+        self.mass = 0.034 # kg
+        # self.J = np.array([
+        # 	[16.56,0.83,0.71],
+        # 	[0.83,16.66,1.8],
+        # 	[0.72,1.8,29.26]
+        # 	]) * 1e-6  # kg m^2
+        self.J = np.array([16.571710e-6, 16.655602e-6, 29.261652e-6])
+
+        # Note: we assume here that our control is forces
+        arm_length = 0.046 # m
+        arm = 0.707106781 * arm_length
+        t2t = 0.006 # thrust-to-torque ratio
+        self.B0 = np.array([
+            [1, 1, 1, 1],
+            [-arm, -arm, arm, arm],
+            [-arm, arm, arm, -arm],
+            [-t2t, t2t, -t2t, t2t]
+            ])
+        self.g = 9.81 # not signed
+
+        if self.J.shape == (3,3):
+            self.inv_J = np.linalg.pinv(self.J) # full matrix -> pseudo inverse
+        else:
+            self.inv_J = 1 / self.J # diagonal matrix -> division
+
+
+        self.state = state
+
+    def step(self, action):
+        force = action.rpm
+        # compute next state
+        # q = state[6:10]
+        # omega = state[10:]
+
+        eta = np.dot(self.B0, force)
+        f_u = np.array([0,0,eta[0]])
+        tau_u = np.array([eta[1],eta[2],eta[3]])
+
+        for _ in range(1):
+
+            # dynamics 
+            # dot{p} = v 
+            pos_next = self.state.pos + self.state.vel * self.dt
+            # mv = mg + R f_u 
+            vel_next = self.state.vel + (np.array([0,0,-self.g]) + rowan.rotate(self.state.quat,f_u) / self.mass) * self.dt
+
+            # dot{R} = R S(w)
+            # to integrate the dynamics, see
+            # https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/, and
+            # https://arxiv.org/pdf/1604.08139.pdf
+            q_next = rowan.normalize(rowan.calculus.integrate(self.state.quat, self.state.omega, self.dt))
+
+            # mJ = Jw x w + tau_u 
+            omega_next = self.state.omega + (self.inv_J * (np.cross(self.J * self.state.omega, self.state.omega) + tau_u)) * self.dt
+
+            self.state.pos = pos_next
+            self.state.vel = vel_next
+            self.state.quat = q_next
+            self.state.omega = omega_next
+
+        # if we fall below the ground, set velocities to 0
+        if self.state.pos[2] < 0:
+            self.state.pos[2] = 0
+            self.state.vel = [0,0,0]
+            self.state.omega = [0,0,0]
+
+        return self.state
+
+        # return np.concatenate((pos_next, vel_next, q_next, omega_next))

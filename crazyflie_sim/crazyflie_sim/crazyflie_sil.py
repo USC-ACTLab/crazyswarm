@@ -255,6 +255,7 @@ class CrazyflieSIL:
         tick = int(time_in_seconds * 1000)
         # firm.controllerPid(self.control, self.setpoint, self.sensors, self.state, tick)
         firm.controllerMellinger(self.control, self.setpoint, self.sensors, self.state, tick)
+        print(tick, self.control.roll, self.control.pitch, self.control.yaw, self.control.thrust)
         return self._fwcontrol_to_simtypes_action()
 
     # "private" methods

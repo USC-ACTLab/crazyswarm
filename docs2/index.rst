@@ -12,6 +12,7 @@ Crazyswarm2 is primarily made for researchers that want to operate or simulate a
 .. warning::
   Crazyswarm2 is already usable for basic tasks (teleoperation, flying in a motion capture space, data collection), however the API and configuration file formats might still change. While many features of Crazyswarm1 are ported, there are currently still some important limitations:
   
+  - Limited support for real-time logging (logging on uSD-card is supported)
   - Tested only for small team sizes (less than 10 robots)
   - Limited Python API and only a few example scripts
 

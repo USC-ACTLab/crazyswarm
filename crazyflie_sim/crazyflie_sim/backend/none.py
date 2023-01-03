@@ -7,6 +7,7 @@ from ..simtypes import State, Action
 
 
 class Backend:
+    """Tracks the desired state perfectly (no physics simulation)"""
 
     def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node

@@ -7,6 +7,7 @@ from ..simtypes import State, Action
 
 
 class Visualization:
+    """Publishes ROS2 transforms of the states, so that they can be visualized in RVIZ"""
 
     def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node

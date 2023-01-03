@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 class Visualization:
+    """Plots current and desired states into a PDF"""
 
     def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node

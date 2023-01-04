@@ -3,7 +3,7 @@ from __future__ import annotations
 from rclpy.node import Node
 from rosgraph_msgs.msg import Clock
 from rclpy.time import Time
-from ..simtypes import State, Action
+from ..sim_data_types import State, Action
 
 
 import numpy as np

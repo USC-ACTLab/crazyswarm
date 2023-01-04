@@ -3,7 +3,7 @@ from __future__ import annotations
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import TransformBroadcaster
 from rclpy.node import Node
-from ..simtypes import State, Action
+from ..sim_data_types import State, Action
 
 
 class Visualization:

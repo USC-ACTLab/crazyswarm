@@ -25,7 +25,7 @@ from functools import partial
 # from .backend import *
 # from .backend.none import BackendNone
 from .crazyflie_sil import CrazyflieSIL, TrajectoryPolynomialPiece
-from .simtypes import State, Action
+from .sim_data_types import State, Action
 
 
 class CrazyflieServer(Node):

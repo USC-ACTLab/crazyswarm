@@ -12,7 +12,7 @@ import numpy as np
 
 import cffirmware as firm
 import rowan
-from . import simtypes
+from . import sim_data_types
 
 
 class TrajectoryPolynomialPiece:
@@ -214,21 +214,21 @@ class CrazyflieSIL:
                 self.cmdHl_vel = copy_svec(ev.vel)
                 self.cmdHl_yaw = ev.yaw
 
-        return self._fwsetpoint_to_simtypes_state(self.setpoint)
+        return self._fwsetpoint_to_sim_data_types_state(self.setpoint)
 
         # # else:
-        #     # return self._fwstate_to_simtypes_state(self.setState)
+        #     # return self._fwstate_to_sim_data_types_state(self.setState)
         # setState = firm.traj_eval(self.setState)
         # if not firm.is_traj_eval_valid(setState):
-        #     return self._fwstate_to_simtypes_state(self.state)
+        #     return self._fwstate_to_sim_data_types_state(self.state)
 
         # if self.mode == CrazyflieSIL.MODE_IDLE:
-        #     return self._fwstate_to_simtypes_state(self.state)
+        #     return self._fwstate_to_sim_data_types_state(self.state)
 
         # self.state = setState
-        # return self._fwstate_to_simtypes_state(setState)
+        # return self._fwstate_to_sim_data_types_state(setState)
 
-    def setState(self, state: simtypes.State):
+    def setState(self, state: sim_data_types.State):
         self.state.position.x = state.pos[0]
         self.state.position.y = state.pos[1]
         self.state.position.z = state.pos[2]
@@ -253,26 +253,26 @@ class CrazyflieSIL:
         self.sensors.gyro.y = np.degrees(state.omega[1])
         self.sensors.gyro.z = np.degrees(state.omega[2])
 
-        # TODO: state technically also has acceleration, but simtypes does not
+        # TODO: state technically also has acceleration, but sim_data_types does not
 
     def executeController(self):
         if self.controller is None:
             return None
 
         if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
-            return simtypes.Action([0,0,0,0])
+            return sim_data_types.Action([0,0,0,0])
 
         time_in_seconds = self.time_func()
         # ticks is essentially the time in milliseconds as an integer
         tick = int(time_in_seconds * 1000)
         self.controller(self.control, self.setpoint, self.sensors, self.state, tick)
-        return self._fwcontrol_to_simtypes_action()
+        return self._fwcontrol_to_sim_data_types_action()
 
     # "private" methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
 
-    def _fwcontrol_to_simtypes_action(self):
+    def _fwcontrol_to_sim_data_types_action(self):
 
         firm.powerDistribution(self.control, self.motors_thrust_uncapped)
         firm.powerDistributionCap(self.motors_thrust_uncapped, self.motors_thrust_pwm)
@@ -293,14 +293,14 @@ class CrazyflieSIL:
             force_in_newton = force_in_grams * 9.81 / 1000.0
             return np.maximum(force_in_newton, 0)
 
-        return simtypes.Action([pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
+        return sim_data_types.Action([pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
             pwm_to_rpm(self.motors_thrust_pwm.motors.m2),
             pwm_to_rpm(self.motors_thrust_pwm.motors.m3),
             pwm_to_rpm(self.motors_thrust_pwm.motors.m4)])
 
 
     @staticmethod
-    def _fwsetpoint_to_simtypes_state(fwsetpoint):
+    def _fwsetpoint_to_sim_data_types_state(fwsetpoint):
         pos = np.array([fwsetpoint.position.x, fwsetpoint.position.y, fwsetpoint.position.z])
         vel = np.array([fwsetpoint.velocity.x, fwsetpoint.velocity.y, fwsetpoint.velocity.z])
         acc = np.array([fwsetpoint.acceleration.x, fwsetpoint.acceleration.y, fwsetpoint.acceleration.z])
@@ -323,4 +323,4 @@ class CrazyflieSIL:
         else:
             quat = fwsetpoint.attitudeQuaternion
 
-        return simtypes.State(pos, vel, quat, omega)
+        return sim_data_types.State(pos, vel, quat, omega)

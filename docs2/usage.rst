@@ -26,7 +26,8 @@ Configuration
 
 All configuration files are in crazyflie/config. 
 
-* crazyflies.yaml : setting up everything related to the crazyflie connection server.
+* crazyflies.yaml : setting up everything related to the robots.
+* server.yaml : setting up everything related to the server.
 * motion_capture.yaml : configs for the motion capture package.
 * teleop.yaml : configs for remote controls.
 
@@ -116,7 +117,8 @@ Simulation
 ----------
 
 Any usage of the ROS API, including high-level Python scripts, can be visualized before execution. The initial position and number of robots is taken from the crazyflies.yaml configuration file.
-The simulation uses the firmware code as software-in-the-loop, but (currently) does not include any robot dynamics.
+The simulation uses the firmware code as software-in-the-loop, and can optionally include the robot dynamics.
+The configuration of the simulation (physics simulator, controller, etc.) can be changed in server.yaml.
 
 Example:
 
@@ -131,7 +133,7 @@ Physical Experiments
 ROS2 terminal
 ~~~~~~~~~~~~~
 
-The following shows an simple take off and land example without any launch files or yaml files
+The following shows a simple take off and land example without any launch files or yaml files
 
 .. code-block:: bash
 
@@ -163,7 +165,7 @@ In another terminal after sourcing the right setup.bash files, run:
     ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'topic_test', frequency: 10, vars: ['stateEstimate.x','stateEstimate.y','stateEstimate.z']}"
     ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'pose', frequency: 10}
 
-With ROS2's rqt you can checkout the topics, or with 'ROS2 topics echo /cf2/pose'
+With ROS2's rqt you can look at the topics, or with 'ROS2 topics echo /cf2/pose'
 
 To close the logblocks again, run:
 

@@ -25,6 +25,7 @@ from functools import partial
 # from .backend import *
 # from .backend.none import BackendNone
 from .crazyflie_sil import CrazyflieSIL, TrajectoryPolynomialPiece
+from .sim_data_types import State, Action
 
 
 class CrazyflieServer(Node):
@@ -46,31 +47,42 @@ class CrazyflieServer(Node):
             pass
         robot_data = self._ros_parameters["robots"]
 
-        # initialize backend by dynamically loading the module
-        backend_name = self._ros_parameters["sim"]["backend"]
-        module = importlib.import_module(".backend." + backend_name, package="crazyflie_sim")
-        class_ = getattr(module, "Backend")
-        self.backend = class_(self)
-
-        # initialize visualizations by dynamically loading the modules
-        self.visualizations = []
-        for vis_name in self._ros_parameters["sim"]["visualizations"]:
-            module = importlib.import_module(".visualization." + vis_name, package="crazyflie_sim")
-            class_ = getattr(module, "Visualization")
-            vis = class_(self)
-            self.visualizations.append(vis)
-
-        # Create robots
+        # Parse robots
+        names = []
+        initial_states = []
         for cfname in robot_data:
             if robot_data[cfname]["enabled"]:
                 type_cf = robot_data[cfname]["type"]
                 # do not include virtual objects
                 connection = self._ros_parameters['robot_types'][type_cf].get("connection", "crazyflie")
                 if connection == "crazyflie":
-                    self.cfs[cfname] = CrazyflieSIL(
-                        cfname,
-                        robot_data[cfname]["initial_position"],
-                        self.backend.time)
+                    names.append(cfname)
+                    pos = robot_data[cfname]["initial_position"]
+                    initial_states.append(State(pos))
+
+        # initialize backend by dynamically loading the module
+        backend_name = self._ros_parameters["sim"]["backend"]
+        module = importlib.import_module(".backend." + backend_name, package="crazyflie_sim")
+        class_ = getattr(module, "Backend")
+        self.backend = class_(self, names, initial_states)
+
+        # initialize visualizations by dynamically loading the modules
+        self.visualizations = []
+        for vis_name in self._ros_parameters["sim"]["visualizations"]:
+            module = importlib.import_module(".visualization." + vis_name, package="crazyflie_sim")
+            class_ = getattr(module, "Visualization")
+            vis = class_(self, names, initial_states)
+            self.visualizations.append(vis)
+
+        controller_name = backend_name = self._ros_parameters["sim"]["controller"]
+
+        # create robot SIL objects
+        for name, initial_state in zip(names, initial_states):
+            self.cfs[name] = CrazyflieSIL(
+                name,
+                initial_state.pos,
+                controller_name,
+                self.backend.time)
 
         # Create services for the entire swarm and each individual crazyflie
         self.create_service(Empty, "all/emergency", self._emergency_callback)
@@ -116,22 +128,35 @@ class CrazyflieServer(Node):
                 "/cmd_full_state", partial(self._cmd_full_state_changed, name=name), 10
             )
 
-        # Initialize backend
-        self.backend.init([name for name, _ in self.cfs.items()], [cf.initialPosition for _, cf in self.cfs.items()])
-
-        # Initialize Visualizations
-        for vis in self.visualizations:
-            vis.init([name for name, _ in self.cfs.items()], [cf.initialPosition for _, cf in self.cfs.items()])
-
         # step as fast as possible
         max_dt = 0.0 if "max_dt" not in self._ros_parameters["sim"] else self._ros_parameters["sim"]["max_dt"]
         self.timer = self.create_timer(max_dt, self._timer_callback)
+        self.is_shutdown = False
+
+    def on_shutdown_callback(self):
+        if not self.is_shutdown:
+            self.backend.shutdown()
+            for visualization in self.visualizations:
+                visualization.shutdown()
+
+            self.is_shutdown = True
 
     def _timer_callback(self):
-        states = [cf.getSetpoint() for _, cf in self.cfs.items()]
-        self.backend.step(states)
+        # update setpoint
+        states_desired = [cf.getSetpoint() for _, cf in self.cfs.items()]
+
+        # execute the control loop
+        actions = [cf.executeController()  for _, cf in self.cfs.items()]
+
+        # execute the physics simulator
+        states_next = self.backend.step(states_desired, actions)
+
+        # update the resulting state
+        for state, (_, cf) in zip(states_next, self.cfs.items()):
+            cf.setState(state)
+
         for vis in self.visualizations:
-            vis.step(states)
+            vis.step(self.backend.time(), states_next, states_desired, actions)
 
     def _param_to_dict(self, param_ros):
         """
@@ -286,11 +311,15 @@ def main(args=None):
 
     rclpy.init(args=args)
     crazyflie_server = CrazyflieServer()
+    rclpy.get_default_context().on_shutdown(crazyflie_server.on_shutdown_callback)
 
-    rclpy.spin(crazyflie_server)
-
-    crazyflie_server.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(crazyflie_server)
+    except KeyboardInterrupt:
+        crazyflie_server.on_shutdown_callback()
+    finally:
+        rclpy.try_shutdown()
+        crazyflie_server.destroy_node()
 
 
 if __name__ == "__main__":

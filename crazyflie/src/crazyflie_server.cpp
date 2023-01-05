@@ -508,9 +508,9 @@ private:
     if (event.node == "/crazyflie_server") {
       auto params = param_subscriber_->get_parameters_from_event(event);
       for (auto &p : params) {
-        std::string prefix = name_ + "/params/";
+        std::string prefix = name_ + ".params.";
         if (p.get_name().find(prefix) == 0) {
-          size_t pos = p.get_name().find("/", prefix.size());
+          size_t pos = p.get_name().find(".", prefix.size());
           std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
           std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
 

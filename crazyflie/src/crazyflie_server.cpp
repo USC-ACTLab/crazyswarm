@@ -222,7 +222,7 @@ public:
 
       // Update parameters
       for (const auto&i : set_param_map) {
-        std::string paramName = name + "/params/" + std::regex_replace(i.first, std::regex("\\."), "/");
+        std::string paramName = name + ".params." + std::regex_replace(i.first, std::regex("\\."), ".");
         auto result = node->set_parameter(rclcpp::Parameter(paramName, i.second));
         if (!result.successful) {
             RCLCPP_ERROR(logger_, "Could not set param %s (%s)", i.first.c_str(), result.reason.c_str());

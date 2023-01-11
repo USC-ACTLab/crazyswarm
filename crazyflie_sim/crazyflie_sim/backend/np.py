@@ -85,7 +85,7 @@ class Quadrotor:
 
         # convert RPM -> Force
         def rpm_to_force(rpm):
-            # polyfit using Tobias' data
+            # polyfit using data and scripts from https://github.com/IMRCLab/crazyflie-system-id
             p = [2.55077341e-08, -4.92422570e-05, -1.51910248e-01]
             force_in_grams = np.polyval(p, rpm)
             force_in_newton = force_in_grams * 9.81 / 1000.0

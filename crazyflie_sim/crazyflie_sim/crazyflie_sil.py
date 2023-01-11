@@ -280,14 +280,14 @@ class CrazyflieSIL:
         # self.motors_thrust_pwm.motors.m{1,4} contain the PWM
         # convert PWM -> RPM
         def pwm_to_rpm(pwm):
-            # polyfit using Tobias' data
+            # polyfit using data and scripts from https://github.com/IMRCLab/crazyflie-system-id
             if pwm < 10000:
                 return 0
             p = [3.26535711e-01, 3.37495115e+03]
             return np.polyval(p, pwm)
 
         def pwm_to_force(pwm):
-            # polyfit using Tobias' data
+            # polyfit using data and scripts from https://github.com/IMRCLab/crazyflie-system-id
             p = [ 1.71479058e-09,  8.80284482e-05, -2.21152097e-01]
             force_in_grams = np.polyval(p, pwm)
             force_in_newton = force_in_grams * 9.81 / 1000.0

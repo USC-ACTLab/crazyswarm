@@ -157,7 +157,7 @@ class Crazyflie:
                 # Filter the parameters that belong to this Crazyflie
                 response = future.result()
                 for p in response.result.names:
-                    param_prefix = "{}/params/".format(prefix[1:])
+                    param_prefix = "{}.params.".format(prefix[1:])
                     if p.startswith(param_prefix):
                         # params.append(p[len(param_prefix):])
                         params.append(p)

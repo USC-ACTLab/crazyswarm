@@ -193,6 +193,15 @@ public:
           RCLCPP_WARN(logger_, "Unknown param type for %s/%s", entry.group.c_str(), entry.name.c_str());
           break;
         }
+        // If there is no such parameter in all, add it
+        std::string allParamName = "all.params." + entry.group + "." + entry.name;
+        if (!node->has_parameter(allParamName)) {
+          if (entry.type == Crazyflie::ParamTypeFloat) {
+            node->declare_parameter(allParamName, rclcpp::PARAMETER_DOUBLE);
+          } else {
+            node->declare_parameter(allParamName, rclcpp::PARAMETER_INTEGER);
+          }
+        }
         ++numParams;
         // cb_handles_.emplace_back(param_subscriber_->add_parameter_callback(paramName, std::bind(&CrazyflieROS::on_parameter_changed, this, _1)));
       }
@@ -335,7 +344,10 @@ public:
     return cf_.address() & 0xFF;
   }
 
-  // CrazyflieROS(CrazyflieROS &&) = default;
+  const Crazyflie::ParamTocEntry* paramTocEntry(const std::string& group, const std::string& name)
+  {
+    return cf_.getParamTocEntry(group, name);
+  }
 
 private:
 
@@ -739,6 +751,12 @@ public:
 
     sub_poses_ = this->create_subscription<NamedPoseArray>(
         "poses", 1, std::bind(&CrazyflieServer::posesChanged, this, _1));
+
+    // support for all.params
+
+    // Create a parameter subscriber that can be used to monitor parameter changes
+    param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
+    cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieServer::on_parameter_event, this, _1));
   }
 
   void spin_some()
@@ -923,6 +941,77 @@ private:
     }
   }
 
+  void on_parameter_event(const rcl_interfaces::msg::ParameterEvent &event)
+  {
+    if (event.node == "/crazyflie_server") {
+      auto params = param_subscriber_->get_parameters_from_event(event);
+      for (auto &p : params) {
+        std::string prefix = "all.params.";
+        if (p.get_name().find(prefix) == 0) {
+          size_t pos = p.get_name().find(".", prefix.size());
+          std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
+          std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
+
+          RCLCPP_INFO(
+              logger_,
+              "Update parameter \"%s.%s\" to %s",
+              group.c_str(),
+              name.c_str(),
+              p.value_to_string().c_str());
+
+          Crazyflie::ParamType paramType;
+          for (auto& cf : crazyflies_) {
+            const auto entry = cf->paramTocEntry(group, name);
+            if (entry) {
+              RCLCPP_INFO(
+              logger_, "%d", entry->type);
+              switch (entry->type)
+              {
+              case Crazyflie::ParamTypeUint8:
+                broadcast_set_param<uint8_t>(group, name, p.as_int());
+                break;
+              case Crazyflie::ParamTypeInt8:
+                broadcast_set_param<int8_t>(group, name, p.as_int());
+                break;
+              case Crazyflie::ParamTypeUint16:
+                broadcast_set_param<uint16_t>(group, name, p.as_int());
+                break;
+              case Crazyflie::ParamTypeInt16:
+                broadcast_set_param<int16_t>(group, name, p.as_int());
+                break;
+              case Crazyflie::ParamTypeUint32:
+                broadcast_set_param<uint32_t>(group, name, p.as_int());
+                break;
+              case Crazyflie::ParamTypeInt32:
+                broadcast_set_param<int32_t>(group, name, p.as_int());
+                break;
+              case Crazyflie::ParamTypeFloat:
+                broadcast_set_param<float>(group, name, p.as_double());
+                break;
+              }
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  template<class T>
+  void broadcast_set_param(
+    const std::string& group,
+    const std::string& name,
+    const T& value)
+  {
+    for (int i = 0; i < broadcasts_num_repeats_; ++i) {
+      for (auto &bc : broadcaster_) {
+        auto &cfbc = bc.second;
+        cfbc->setParam<T>(group.c_str(), name.c_str(), value);
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(broadcasts_delay_between_repeats_ms_));
+    }
+  }
+
   void update_name_to_id_map(const std::string& name, uint8_t id)
   {
     const auto iter = name_to_id_.find(name);
@@ -959,6 +1048,10 @@ private:
     // global params
     int broadcasts_num_repeats_;
     int broadcasts_delay_between_repeats_ms_;
+
+    // parameter updates
+    std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
+    std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
   };
 
 int main(int argc, char *argv[])

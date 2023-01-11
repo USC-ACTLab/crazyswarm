@@ -684,6 +684,8 @@ class CrazyflieServer(rclpy.node.Node):
         self.goToService.wait_for_service()
         self.startTrajectoryService = self.create_client(StartTrajectory, "all/start_trajectory")
         self.startTrajectoryService.wait_for_service()
+        self.setParamsService = self.create_client(SetParameters, "/crazyflie_server/set_parameters")
+        self.setParamsService.wait_for_service()
 
         cfnames = []
         for srv_name, srv_types in self.get_service_names_and_types():
@@ -810,7 +812,21 @@ class CrazyflieServer(rclpy.node.Node):
         req.relative = relative
         self.startTrajectoryService.call_async(req)
 
-    # def setParam(self, name, value):
-    #     """Broadcasted setParam. See Crazyflie.setParam() for details."""
-    #     rospy.set_param("/allcfs/" + name, value)
-    #     self.updateParamsService([name])
+    def setParam(self, name, value):
+        """Broadcasted setParam. See Crazyflie.setParam() for details."""
+        param_name = "all.params." + name
+        param_type = None
+        for cf in self.crazyflies:
+            if name in cf.paramTypeDict:
+                param_type = cf.paramTypeDict[name]
+                break
+        if param_type is None:
+            self.node.get_logger().error("Unknown param type!")
+            return
+        if param_type == ParameterType.PARAMETER_INTEGER:
+            param_value = ParameterValue(type=param_type, integer_value=int(value))
+        elif param_type == ParameterType.PARAMETER_DOUBLE:
+            param_value = ParameterValue(type=param_type, double_value=float(value))
+        req = SetParameters.Request()
+        req.parameters = [Parameter(name=param_name, value=param_value)]
+        self.setParamsService.call_async(req)

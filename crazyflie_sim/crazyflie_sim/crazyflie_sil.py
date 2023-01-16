@@ -81,7 +81,6 @@ class CrazyflieSIL:
         self.motors_thrust_uncapped = firm.motors_thrust_uncapped_t()
         self.motors_thrust_pwm = firm.motors_thrust_pwm_t()
 
-        self.mellinger_control = firm.controllerMellinger_t()
         self.controller_name = controller_name
 
         # set up controller
@@ -91,6 +90,7 @@ class CrazyflieSIL:
             firm.controllerPidInit()
             self.controller = firm.controllerPid
         elif controller_name == "mellinger":
+            self.mellinger_control = firm.controllerMellinger_t()
             firm.controllerMellingerInit(self.mellinger_control)
             self.controller = firm.controllerMellinger
         elif controller_name == "brescianini":

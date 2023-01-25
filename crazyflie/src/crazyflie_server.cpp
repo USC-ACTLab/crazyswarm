@@ -203,16 +203,11 @@ public:
           }
         }
         ++numParams;
-        // cb_handles_.emplace_back(param_subscriber_->add_parameter_callback(paramName, std::bind(&CrazyflieROS::on_parameter_changed, this, _1)));
       }
       auto end1 = std::chrono::system_clock::now();
       std::chrono::duration<double> elapsedSeconds1 = end1 - start;
       RCLCPP_INFO(logger_, "reqParamTOC: %f s (%d params)", elapsedSeconds1.count(), numParams);
       
-      // Create a parameter subscriber that can be used to monitor parameter changes
-      param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(node);
-      cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieROS::on_parameter_event, this, _1));
-
       // Set parameters as specified in the configuration files, as in the following order
       // 1.) check all/firmware_params
       // 2.) check robot_types/<type_name>/firmware_params
@@ -232,10 +227,7 @@ public:
       // Update parameters
       for (const auto&i : set_param_map) {
         std::string paramName = name + ".params." + std::regex_replace(i.first, std::regex("\\."), ".");
-        auto result = node->set_parameter(rclcpp::Parameter(paramName, i.second));
-        if (!result.successful) {
-            RCLCPP_ERROR(logger_, "Could not set param %s (%s)", i.first.c_str(), result.reason.c_str());
-        }
+        change_parameter(rclcpp::Parameter(paramName, i.second));
       }
     }
 
@@ -347,6 +339,62 @@ public:
   const Crazyflie::ParamTocEntry* paramTocEntry(const std::string& group, const std::string& name)
   {
     return cf_.getParamTocEntry(group, name);
+  }
+
+  const std::string& name() const
+  {
+    return name_;
+  }
+
+  void change_parameter(const rclcpp::Parameter& p)
+  {
+    std::string prefix = name_ + ".params.";
+    if (p.get_name().find(prefix) != 0) {
+      RCLCPP_ERROR(
+              logger_,
+              "Incorrect parameter update request for param \"%s\"", p.get_name().c_str());
+      return;
+    }
+    size_t pos = p.get_name().find(".", prefix.size());
+    std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
+    std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
+
+    RCLCPP_INFO(
+        logger_,
+        "Update parameter \"%s.%s\" to %s",
+        group.c_str(),
+        name.c_str(),
+        p.value_to_string().c_str());
+
+    auto entry = cf_.getParamTocEntry(group, name);
+    if (entry) {
+      switch (entry->type)
+      {
+      case Crazyflie::ParamTypeUint8:
+        cf_.setParam<uint8_t>(entry->id, p.as_int());
+        break;
+      case Crazyflie::ParamTypeInt8:
+        cf_.setParam<int8_t>(entry->id, p.as_int());
+        break;
+      case Crazyflie::ParamTypeUint16:
+        cf_.setParam<uint16_t>(entry->id, p.as_int());
+        break;
+      case Crazyflie::ParamTypeInt16:
+        cf_.setParam<int16_t>(entry->id, p.as_int());
+        break;
+      case Crazyflie::ParamTypeUint32:
+        cf_.setParam<uint32_t>(entry->id, p.as_int());
+        break;
+      case Crazyflie::ParamTypeInt32:
+        cf_.setParam<int32_t>(entry->id, p.as_int());
+        break;
+      case Crazyflie::ParamTypeFloat:
+        cf_.setParam<float>(entry->id, p.as_double());
+        break;
+      }
+    } else {
+      RCLCPP_ERROR(logger_, "Could not find param %s/%s", group.c_str(), name.c_str());
+    }
   }
 
 private:
@@ -505,68 +553,6 @@ private:
     cf_.notifySetpointsStop(request->remain_valid_millisecs);
   }
 
-  // void on_parameter_changed(const rclcpp::Parameter &p)
-  // {
-  //   RCLCPP_INFO(
-  //       logger_,
-  //       "Received an update to parameter \"%s\" of type: %s: \"%s\"",
-  //       p.get_name().c_str(),
-  //       p.get_type_name().c_str(),
-  //       p.value_to_string().c_str());
-  // }
-
-  void on_parameter_event(const rcl_interfaces::msg::ParameterEvent &event)
-  {
-    if (event.node == "/crazyflie_server") {
-      auto params = param_subscriber_->get_parameters_from_event(event);
-      for (auto &p : params) {
-        std::string prefix = name_ + ".params.";
-        if (p.get_name().find(prefix) == 0) {
-          size_t pos = p.get_name().find(".", prefix.size());
-          std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
-          std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
-
-          RCLCPP_INFO(
-              logger_,
-              "Update parameter \"%s.%s\" to %s",
-              group.c_str(),
-              name.c_str(),
-              p.value_to_string().c_str());
-
-          auto entry = cf_.getParamTocEntry(group, name);
-          if (entry) {
-            switch (entry->type)
-            {
-            case Crazyflie::ParamTypeUint8:
-              cf_.setParam<uint8_t>(entry->id, p.as_int());
-              break;
-            case Crazyflie::ParamTypeInt8:
-              cf_.setParam<int8_t>(entry->id, p.as_int());
-              break;
-            case Crazyflie::ParamTypeUint16:
-              cf_.setParam<uint16_t>(entry->id, p.as_int());
-              break;
-            case Crazyflie::ParamTypeInt16:
-              cf_.setParam<int16_t>(entry->id, p.as_int());
-              break;
-            case Crazyflie::ParamTypeUint32:
-              cf_.setParam<uint32_t>(entry->id, p.as_int());
-              break;
-            case Crazyflie::ParamTypeInt32:
-              cf_.setParam<int32_t>(entry->id, p.as_int());
-              break;
-            case Crazyflie::ParamTypeFloat:
-              cf_.setParam<float>(entry->id, p.as_double());
-              break;
-            }
-          } else {
-            RCLCPP_ERROR(logger_, "Could not find param %s/%s", group.c_str(), name.c_str());
-          }
-        }
-      }
-    }
-  }
-
   void on_logging_pose(uint32_t time_in_ms, const logPose* data) {
     if (publisher_pose_) {
       geometry_msgs::msg::PoseStamped msg;
@@ -663,10 +649,6 @@ private:
   rclcpp::Service<UploadTrajectory>::SharedPtr service_upload_trajectory_;
   rclcpp::Service<NotifySetpointsStop>::SharedPtr service_notify_setpoints_stop_;
 
-  std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
-  std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
-  // std::vector<std::shared_ptr<rclcpp::ParameterCallbackHandle>> cb_handles_;
-
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_cmd_vel_legacy_;
   rclcpp::Subscription<crazyflie_interfaces::msg::FullState>::SharedPtr subscription_cmd_full_state_;
   rclcpp::Subscription<crazyflie_interfaces::msg::Position>::SharedPtr subscription_cmd_position_;
@@ -701,7 +683,7 @@ public:
     service_go_to_ = this->create_service<GoTo>("all/go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
     service_notify_setpoints_stop_ = this->create_service<NotifySetpointsStop>("all/notify_setpoints_stop", std::bind(&CrazyflieServer::notify_setpoints_stop, this, _1, _2));
 
-    // declare global commands
+       // declare global commands
     this->declare_parameter("all.broadcasts.num_repeats", 15);
     this->declare_parameter("all.broadcasts.delay_between_repeats_ms", 1);
 
@@ -729,15 +711,15 @@ public:
         // if it is a Crazyflie, try to connect
         if (constr == "crazyflie") {
           std::string uri = parameter_overrides.at("robots." + name + ".uri").get<std::string>();
-          crazyflies_.push_back(std::make_unique<CrazyflieROS>(uri, cf_type, name, this));
+          crazyflies_.emplace(name, std::make_unique<CrazyflieROS>(uri, cf_type, name, this));
 
-          auto broadcastUri = crazyflies_.back()->broadcastUri();
+          auto broadcastUri = crazyflies_[name]->broadcastUri();
           RCLCPP_INFO(logger_, "%s", broadcastUri.c_str());
           if (broadcaster_.count(broadcastUri) == 0) {
             broadcaster_.emplace(broadcastUri, std::make_unique<CrazyflieBroadcaster>(broadcastUri));
           }
 
-          update_name_to_id_map(name, crazyflies_.back()->id());
+          update_name_to_id_map(name, crazyflies_[name]->id());
         }
         else if (constr == "none") {
           // we still might want to track this object, so update our map
@@ -757,12 +739,13 @@ public:
     // Create a parameter subscriber that can be used to monitor parameter changes
     param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
     cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieServer::on_parameter_event, this, _1));
+
   }
 
   void spin_some()
   {
     for (auto& cf : crazyflies_) {
-      cf->spin_some();
+      cf.second->spin_some();
     }
   }
 
@@ -946,10 +929,15 @@ private:
     if (event.node == "/crazyflie_server") {
       auto params = param_subscriber_->get_parameters_from_event(event);
       for (auto &p : params) {
-        std::string prefix = "all.params.";
-        if (p.get_name().find(prefix) == 0) {
-          size_t pos = p.get_name().find(".", prefix.size());
-          std::string group(p.get_name().begin() + prefix.size(), p.get_name().begin() + pos);
+        size_t params_pos = p.get_name().find(".params.");
+        if (params_pos == std::string::npos) {
+          continue;
+        }
+        std::string cfname(p.get_name().begin(), p.get_name().begin() + params_pos);
+        size_t prefixsize = params_pos + 8;
+        if (cfname == "all") {
+          size_t pos = p.get_name().find(".", prefixsize);
+          std::string group(p.get_name().begin() + prefixsize, p.get_name().begin() + pos);
           std::string name(p.get_name().begin() + pos + 1, p.get_name().end());
 
           RCLCPP_INFO(
@@ -961,10 +949,8 @@ private:
 
           Crazyflie::ParamType paramType;
           for (auto& cf : crazyflies_) {
-            const auto entry = cf->paramTocEntry(group, name);
+            const auto entry = cf.second->paramTocEntry(group, name);
             if (entry) {
-              RCLCPP_INFO(
-              logger_, "%d", entry->type);
               switch (entry->type)
               {
               case Crazyflie::ParamTypeUint8:
@@ -991,6 +977,11 @@ private:
               }
               break;
             }
+          }
+        } else {
+          auto iter = crazyflies_.find(cfname);
+          if (iter != crazyflies_.end()) {
+            iter->second->change_parameter(p);
           }
         }
       }
@@ -1037,7 +1028,7 @@ private:
     rclcpp::Service<GoTo>::SharedPtr service_go_to_;
     rclcpp::Service<NotifySetpointsStop>::SharedPtr service_notify_setpoints_stop_;
 
-    std::vector<std::unique_ptr<CrazyflieROS>> crazyflies_;
+    std::map<std::string, std::unique_ptr<CrazyflieROS>> crazyflies_;
 
     // broadcastUri -> broadcast object
     std::map<std::string, std::unique_ptr<CrazyflieBroadcaster>> broadcaster_;

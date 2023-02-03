@@ -63,7 +63,7 @@ First Installation
 
     .. code-block:: bash
 
-        git clone https://github.com/bitcraze/crazyflie-firmware.git
+        git clone --recursive https://github.com/bitcraze/crazyflie-firmware.git
 
     First follow `the instructions to build the python bindings <https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/building-and-flashing/build/#build-python-bindings>`_ from the bitcraze website. Afterwards, make sure that the bindings can be found in the python path:
 

@@ -5,6 +5,9 @@
       max_dt: 0 #0.1              # artificially limit the step() function (set to 0 to disable)
       backend: np                 # see backend folder for a list 
       visualizations:             # see visualization folder for a list
-        - rviz
-        # - pdf
+        rviz:
+          enabled: true
+        pdf:
+          enabled: false
+          output_file: "result.pdf"
       controller: mellinger # none, pid, mellinger

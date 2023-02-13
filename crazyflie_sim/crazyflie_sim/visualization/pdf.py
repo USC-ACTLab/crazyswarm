@@ -12,13 +12,14 @@ from matplotlib.backends.backend_pdf import PdfPages
 class Visualization:
     """Plots current and desired states into a PDF"""
 
-    def __init__(self, node: Node, names: list[str], states: list[State]):
+    def __init__(self, node: Node, params: dict, names: list[str], states: list[State]):
         self.node = node
         self.names = names
         self.ts = []
         self.all_states = []
         self.all_states_desired = []
         self.all_actions = []
+        self.filename = params["output_file"]
 
     def step(self, t, states: list[State], states_desired: list[State], actions: list[Action]):
         self.ts.append(t)
@@ -34,7 +35,7 @@ class Visualization:
             cf_states_desired = np.array([s[k]._state for s in self.all_states_desired])
             cf_actions = np.array([s[k]._action for s in self.all_actions])
 
-            with PdfPages('result.pdf') as pdf:
+            with PdfPages(self.filename) as pdf:
 
                 # position
                 fig, axs = plt.subplots(3, 1, sharex=True)

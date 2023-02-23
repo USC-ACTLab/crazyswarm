@@ -69,7 +69,9 @@ First Installation
 
     .. code-block:: bash
 
-        export PYTHONPATH=<replace-with-path-to>/crazyflie-firmware:$PYTHONPATH
+        export PYTHONPATH=<replace-with-path-to>/crazyflie-firmware/build:$PYTHONPATH
+        
+   If you are working from an older version of the crazyflie-firmware (before tag 2023.02), then you will need to point to main folder of the repo (so remove the '/build' part. 
 
 
 Updating

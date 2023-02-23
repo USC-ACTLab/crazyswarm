@@ -3,7 +3,7 @@
 <package format="3">
   <name>crazyflie</name>
   <version>2.0.0</version>
-  <description>ROS2 Package for Bitcraze Crazyflie robots</description>
+  <description>ROS 2 Package for Bitcraze Crazyflie robots</description>
   <maintainer email="hoenig@tu-berlin.de">Wolfgang Hönig, Kimberly McGuire</maintainer>
   <license>MIT</license>
 

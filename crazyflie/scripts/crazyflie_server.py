@@ -142,7 +142,7 @@ class CrazyflieServer(Node):
 
             self.swarm._cfs[link_uri].logging["enabled"] = logging_enabled
 
-            # check if predefine log blocks can be logged and setup crazyflie logblocks and ROS2 publishers
+            # check if predefine log blocks can be logged and setup crazyflie logblocks and ROS 2 publishers
             for default_log_name in self.default_log_type:
                 prefix = default_log_name
                 topic_type = self.default_log_type[default_log_name]
@@ -175,7 +175,7 @@ class CrazyflieServer(Node):
             self.swarm._cfs[link_uri].logging["custom_log_groups"] = {}
             self.swarm._cfs[link_uri].logging["custom_log_publisher"] = {}
 
-            # Setup log blocks for each custom log and ROS2 publisher topics
+            # Setup log blocks for each custom log and ROS 2 publisher topics
             if custom_logging_enabled:
                 for log_group_name in custom_log_topics:
                     frequency = custom_log_topics[log_group_name]["frequency"]
@@ -290,7 +290,7 @@ class CrazyflieServer(Node):
 
     def _param_to_dict(self, param_ros):
         """
-        Turn ROS2 parameters from the node into a dict
+        Turn ROS 2 parameters from the node into a dict
         """
         tree = {}
         for item in param_ros:
@@ -329,7 +329,7 @@ class CrazyflieServer(Node):
     def _init_logging(self):
         """
         Sets up all the log blocks for the crazyflie and
-           all the ROS2 publisher and parameters for logging
+           all the ROS 2 publisher and parameters for logging
            at startup
         """
         for link_uri in self.uris:
@@ -376,7 +376,7 @@ class CrazyflieServer(Node):
 
     def _init_default_logging(self, prefix, link_uri, callback_fnc):
         """
-        Sets up all the default log blocks and ROS2 publishers for the crazyflie
+        Sets up all the default log blocks and ROS 2 publishers for the crazyflie
         """
         cf_handle = self.swarm._cfs[link_uri]
         cf = cf_handle.cf
@@ -402,7 +402,7 @@ class CrazyflieServer(Node):
     def _log_scan_data_callback(self, timestamp, data, logconf, uri):
         """
         Once multiranger range is retrieved from the Crazyflie, 
-            send out the ROS2 topic for Scan
+            send out the ROS 2 topic for Scan
         """
         cf_name = self.cf_dict[uri]
         max_range = 3.49
@@ -434,7 +434,7 @@ class CrazyflieServer(Node):
     def _log_pose_data_callback(self, timestamp, data, logconf, uri):
         """
         Once pose data is retrieved from the Crazyflie, 
-            send out the ROS2 topic for Pose
+            send out the ROS 2 topic for Pose
         """
 
         cf_name = self.cf_dict[uri]
@@ -475,7 +475,7 @@ class CrazyflieServer(Node):
     def _log_odom_data_callback(self, timestamp, data, logconf, uri):
         """
         Once pose and velocity data is retrieved from the Crazyflie, 
-            send out the ROS2 topic for Odometry in 2D (no z-axis)
+            send out the ROS 2 topic for Odometry in 2D (no z-axis)
         """
         cf_name = self.cf_dict[uri]
 
@@ -529,7 +529,7 @@ class CrazyflieServer(Node):
     def _log_custom_data_callback(self, timestamp, data, logconf, uri):
         """
         Once custom log block is retrieved from the Crazyflie, 
-            send out the ROS2 topic for that same type of log
+            send out the ROS 2 topic for that same type of log
         """
         msg = LogDataGeneric()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -546,7 +546,7 @@ class CrazyflieServer(Node):
     def _init_parameters(self):
         """
         Once custom log block is retrieved from the Crazyflie, 
-            send out the ROS2 topic for that same type of log
+            send out the ROS 2 topic for that same type of log
         """
         for link_uri in self.uris:
             cf = self.swarm._cfs[link_uri].cf
@@ -581,7 +581,7 @@ class CrazyflieServer(Node):
 
                     if set_param_value is not None:
                         # If value is found in initial parameters,
-                        # set crazyflie firmware value and declare value in ROS2 parameter
+                        # set crazyflie firmware value and declare value in ROS 2 parameter
                         # Note: currently this is not possible to get the most recent from the
                         #       crazyflie with get_value due to threading.
                         cf.param.set_value(name, set_param_value)
@@ -596,7 +596,7 @@ class CrazyflieServer(Node):
                         )
                     else:
                         # If value is not found in initial parameter set
-                        # get crazyflie paramter value and declare that value in ROS2 parameter
+                        # get crazyflie paramter value and declare that value in ROS 2 parameter
 
                         if cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_INTEGER:
                             cf_param_value = int(cf.param.get_value(name))
@@ -615,7 +615,7 @@ class CrazyflieServer(Node):
     def _parameters_callback(self, params):
         """
         Sets up all the parameters for the crazyflie and
-           translates it to ROS2 paraemeters at startup
+           translates it to ROS 2 paraemeters at startup
         """
         for param in params:
             param_split = param.name.split(".")

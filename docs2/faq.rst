@@ -30,7 +30,7 @@ Crazyswarm2 was forked from Crazyswarm. However, there is also heavy re-design o
 - **Motion capture integration.**
   In Crazyswarm1, the motion capture integration is part of the crazyswarm_server, due to limitations in the ROS1 pub/sub system.
   In contrast, Crazyswarm2 now follows a better ROS-style design, where our motion capture abstraction layer and custom
-  frame-by-frame tracking is available as a `separate ROS2 package <https://github.com/IMRCLab/motion_capture_tracking>`_.
+  frame-by-frame tracking is available as a `separate ROS 2 package <https://github.com/IMRCLab/motion_capture_tracking>`_.
   In addition, Crazyswarm2 is designed to support other localization methods (lighthouse, or on-board only localization) from the start.
 
 - **Communication backend.**
@@ -57,7 +57,7 @@ Both can be used to control several Crazyflies from a Python script.
 Here are some differences:
 
 - **Motion capture integration.**
-  Crazyswarm2 supports common motion capture systems using the ROS2 package `motion_capture_tracking <https://github.com/IMRCLab/motion_capture_tracking/tree/ros2>`_.
+  Crazyswarm2 supports common motion capture systems using the ROS 2 package `motion_capture_tracking <https://github.com/IMRCLab/motion_capture_tracking/tree/ROS 2>`_.
   The Bitcraze API can *send* position measurements to the Crazyflie,
   but does not know how to *get* position measurements from mocap hardware.
   Moreover, the use of motion_capture_tracking allows to use identical or single motion capture markers.
@@ -71,6 +71,6 @@ Here are some differences:
   for certain modules in the Crazyflie firmware.
   The binding system can be helpful when developing new firmware modules,
   especially when they are mathematically complex and hard to debug.
-- **ROS2 foundation.**
-  The Crazyswarm2 server program is a ROS2 node.
-  Our Python API is a thin wrapper around the ROS2 interface.
+- **ROS 2 foundation.**
+  The Crazyswarm2 server program is a ROS 2 node.
+  Our Python API is a thin wrapper around the ROS 2 interface.

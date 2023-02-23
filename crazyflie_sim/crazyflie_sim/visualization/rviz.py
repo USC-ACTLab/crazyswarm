@@ -7,7 +7,7 @@ from ..sim_data_types import State, Action
 
 
 class Visualization:
-    """Publishes ROS2 transforms of the states, so that they can be visualized in RVIZ"""
+    """Publishes ROS 2 transforms of the states, so that they can be visualized in RVIZ"""
 
     def __init__(self, node: Node, params: dict, names: list[str], states: list[State]):
         self.node = node

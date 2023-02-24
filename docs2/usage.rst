@@ -131,7 +131,7 @@ Physical Experiments
 --------------------
 
 ROS 2 terminal
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 The following shows a simple take off and land example without any launch files or yaml files
 

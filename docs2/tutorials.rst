@@ -1,7 +1,7 @@
 .. _tutorials:
 
 ROS 2 Tutorials
-==============
+===============
 
 This page shows tutorials which connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
 

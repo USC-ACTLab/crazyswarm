@@ -3,7 +3,7 @@
 Overview
 ========
 
-This page will explain the overview of the crazyflie ROS2 nodes:
+This page will explain the overview of the crazyflie ROS 2 nodes:
 
 .. image:: images/overview_nodes.jpg
 
@@ -11,13 +11,13 @@ This page will explain the overview of the crazyflie ROS2 nodes:
 Explanation per node
 --------------------
 
-In the `source code of the Crazyswarm2 (Crazyflie ROS2) project <https://github.com/IMRCLab/crazyswarm2>`_, there are several packages that we will explain here:
+In the `source code of the Crazyswarm2 (Crazyflie ROS 2) project <https://github.com/IMRCLab/crazyswarm2>`_, there are several packages that we will explain here:
 
 
 - **crazyflie/**: The package that contains the crazyflie server nodes and the crazyflies.yaml.
-- **crazyflie_py/**: The package that contains the python library that wraps around the ROS2 services and topics that connects with the crazyflie server nodes.
-- **crazyflie_examples/**:  The package that contains examples of using the crazyflie ros2 package. See :ref:`tutorials`.
-- **crazyflie_interfaces/**: The package that contain all msgs and srvs for the crazyflie ROS2 project.
+- **crazyflie_py/**: The package that contains the python library that wraps around the ROS 2 services and topics that connects with the crazyflie server nodes.
+- **crazyflie_examples/**:  The package that contains examples of using the crazyflie ROS 2 package. See :ref:`tutorials`.
+- **crazyflie_interfaces/**: The package that contain all msgs and srvs for the crazyflie ROS 2 project.
 
 Crazyflie server
 ----------------
@@ -31,8 +31,8 @@ It has two backends that you can choose from:
 
 It handles several low level communication aspects with the Crazyflies:
 
-- **Parameter to ROS2 parameters handling**: It receives the parameter ToC from the Crazyflie, transforms it into ROS2 parameters, and sets the CF2 parameters based on the *crazyflies.yaml* input.
-- **Logging to ROS2 topics handling**: The server sets up logblocks for data streaming in the crazyflie, and transforms the received variables into ROS2 topics.
+- **Parameter to ROS 2 parameters handling**: It receives the parameter ToC from the Crazyflie, transforms it into ROS 2 parameters, and sets the CF2 parameters based on the *crazyflies.yaml* input.
+- **Logging to ROS 2 topics handling**: The server sets up logblocks for data streaming in the crazyflie, and transforms the received variables into ROS 2 topics.
 - **Run-time configuration**: Both parameters and logging can be configured in run-time while the server is connected with the Crazyflies. Please check :ref:`usage`.
 
 It also setups several flight command services:

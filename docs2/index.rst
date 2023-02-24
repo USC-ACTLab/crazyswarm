@@ -1,9 +1,9 @@
 .. _introduction:
 
-Crazyswarm2: A ROS2 testbed for Aerial Robot Teams
+Crazyswarm2: A ROS 2 testbed for Aerial Robot Teams
 ==================================================
 
-Crazyswarm2 is a **work-in-progress** port of the original `Crazyswarm <https://crazyswarm.readthedocs.io>`_ to ROS2.
+Crazyswarm2 is a **work-in-progress** port of the original `Crazyswarm <https://crazyswarm.readthedocs.io>`_ to ROS 2.
 It is fully open-source and available on `github <https://github.com/IMRCLab/crazyswarm2>`_.
 
 Crazyswarm2 is primarily made for researchers that want to operate or simulate a team of unmanned aerial vehicles (UAVs) that uses the

@@ -1,6 +1,6 @@
 .. _tutorials:
 
-ROS2 Tutorials
+ROS 2 Tutorials
 ==============
 
 This page shows tutorials which connects the Crazyflie through Crazyswarm2 to with external packages like RVIZ2, teleop_twist_keyboard, SLAM toolbox and NAV2 bringup. Have fun!
@@ -84,7 +84,7 @@ Here you can see an example of 5 crazyflies with the Pose default topic enabled,
 Mapping with the SLAM toolbox
 -----------------------------
 
-You can connect the Crazyflie through ROS2 with existing packages like the `SLAM toolbox <https://github.com/SteveMacenski/slam_toolbox/>`_. 
+You can connect the Crazyflie through ROS 2 with existing packages like the `SLAM toolbox <https://github.com/SteveMacenski/slam_toolbox/>`_. 
 With a `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ and `Multi-ranger <https://www.bitcraze.io/products/multi-ranger-deck/>`_
 ) a simple map can be created.
 
@@ -94,7 +94,7 @@ With a `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ and `Multi-
 Preperation
 ~~~~~~~~~~~
 
-Assuming you have installed ROS2 and Crazyswarm2 according to the instructions and went through the guides on Usage, now install the slam toolbox:
+Assuming you have installed ROS 2 and Crazyswarm2 according to the instructions and went through the guides on Usage, now install the slam toolbox:
 
 .. code-block:: bash
 
@@ -361,7 +361,7 @@ The next two nodes are new, which are included IncludeLaunchDescription to inclu
 Navigate the Crazyflie
 ~~~~~~~~~~~~~~~~~~~~~~
 
-In a terminal run the following from the ros2 workspace. 
+In a terminal run the following from the ROS 2 workspace. 
 
 .. code-block:: bash
 

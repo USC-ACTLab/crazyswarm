@@ -63,7 +63,7 @@ class TimeHelper:
 
     def sleepForRate(self, rateHz):
         """Sleeps so that, if called in a loop, executes at specified rate."""
-        # Note: The following ROS2 construct cannot easily be used, because in ROS2
+        # Note: The following ROS 2 construct cannot easily be used, because in ROS 2
         #       there is no implicit threading anymore. Thus, the rosRate.sleep() call
         #       is blocking. Instead, we simulate the rate behavior ourselves.
         # if self.rosRate is None or self.rateHz != rateHz:

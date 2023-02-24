@@ -161,7 +161,7 @@ class CrazyflieServer(Node):
 
     def _param_to_dict(self, param_ros):
         """
-        Turn ROS2 parameters from the node into a dict
+        Turn ROS 2 parameters from the node into a dict
         """
         tree = {}
         for item in param_ros:

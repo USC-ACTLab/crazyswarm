@@ -10,4 +10,17 @@
         pdf:
           enabled: false
           output_file: "result.pdf"
+        blender:
+          enabled: false
+          fps: 1           # frames per second
+          cycle_bg: false  # if true, pictures will cycle through different environemt background images (useful for synthetic image generation). Otherwise a single environment background image will be used
+          cf_cameras:      # names of crazyflies with cameras on them if enabled in `crazyflies.yaml`
+            cf231:
+              calibration:
+                tvec: [0,0,0]
+                rvec: [1.2092,-1.2092,1.2092]   # 0 deg tilt (cameras looks in front of crazyflie)
+            cf5:
+              calibration:
+                tvec: [0,0,0]
+                rvec: [ 0.61394313, -0.61394313,  1.48218982]   # 45 deg tilt
       controller: mellinger # none, pid, mellinger

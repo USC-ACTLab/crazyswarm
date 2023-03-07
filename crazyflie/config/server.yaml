@@ -10,6 +10,11 @@
         pdf:
           enabled: false
           output_file: "result.pdf"
+        record_states:
+          enabled: false
+          output_dir: "state_info"
+          logging_time: 0.2  # how many seconds to leave between logs
+          file_formats: ["csv", "np"] # csv, np
         blender:
           enabled: false
           fps: 1           # frames per second

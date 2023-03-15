@@ -102,6 +102,8 @@ class Crazyflie:
 
         # rospy.wait_for_service(prefix + "/set_group_mask")
         # self.setGroupMaskService = rospy.ServiceProxy(prefix + "/set_group_mask", SetGroupMask)
+        self.emergencyService = node.create_client(Empty, prefix + "/emergency")
+        self.emergencyService.wait_for_service()
         self.takeoffService = node.create_client(Takeoff, prefix + "/takeoff")
         self.takeoffService.wait_for_service()
         self.landService = node.create_client(Land, prefix + "/land")
@@ -261,6 +263,21 @@ class Crazyflie:
     # def disableCollisionAvoidance(self):
     #     """Disables onboard collision avoidance."""
     #     self.setParam("colAv/enable", 0)
+
+    def emergency(self):
+        """Emergency stop. Cuts power; causes future commands to be ignored.
+
+        This command is useful if the operator determines that the control
+        script is flawed, and that continuing to follow it will cause wrong/
+        self-destructive behavior from the robots. In addition to cutting
+        power to the motors, it ensures that any future commands, both high-
+        level and streaming, will have no effect.
+
+        The only ways to reset the firmware after an emergency stop has occurred
+        are a physical hard reset or an nRF51 Reboot command.
+        """
+        req = Empty.Request()
+        self.emergencyService.call_async(req)
 
     def takeoff(self, targetHeight, duration, groupMask = 0):
         """Execute a takeoff - fly straight up, then hover indefinitely.

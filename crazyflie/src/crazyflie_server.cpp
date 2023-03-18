@@ -689,6 +689,7 @@ public:
 
     broadcasts_num_repeats_ = this->get_parameter("all.broadcasts.num_repeats").get_parameter_value().get<int>();
     broadcasts_delay_between_repeats_ms_ = this->get_parameter("all.broadcasts.delay_between_repeats_ms").get_parameter_value().get<int>();
+    mocap_enabled_ = false;
 
     // load crazyflies from params
     auto node_parameters_iface = this->get_node_parameters_interface();
@@ -706,6 +707,13 @@ public:
         std::string constr = "crazyflie";
         if (con != parameter_overrides.end()) {
           constr = con->second.get<std::string>();
+        }
+        // Find the mocap setting
+        const auto mocap_en = parameter_overrides.find("robot_types." + cf_type + ".motion_capture.enabled");
+        if (mocap_en != parameter_overrides.end()) {
+          if (mocap_en->second.get<bool>()) {
+            mocap_enabled_ = true;
+          }
         }
 
         // if it is a Crazyflie, try to connect
@@ -740,6 +748,16 @@ public:
     param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
     cb_handle_ = param_subscriber_->add_parameter_event_callback(std::bind(&CrazyflieServer::on_parameter_event, this, _1));
 
+    // Warnings
+    this->declare_parameter("warnings.frequency", 1.0);
+    float freq = this->get_parameter("warnings.frequency").get_parameter_value().get<float>();
+    if (freq >= 0.0) {
+      watchdog_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000.0/freq)), std::bind(&CrazyflieServer::on_watchdog_timer, this));
+    }
+    this->declare_parameter("warnings.motion_capture.warning_if_rate_outside", std::vector<float>({80.0, 120.0}));
+    auto rate_range = this->get_parameter("warnings.motion_capture.warning_if_rate_outside").get_parameter_value().get<std::vector<float>>();
+    mocap_min_rate_ = rate_range[0];
+    mocap_max_rate_ = rate_range[1];
   }
 
   void spin_some()
@@ -884,6 +902,8 @@ private:
 
   void posesChanged(const NamedPoseArray::SharedPtr msg)
   {
+    mocap_data_received_timepoints_.emplace_back(std::chrono::steady_clock::now());
+
     // Here, we send all the poses to all CFs
     // In Crazyswarm1, we only sent the poses of the same group (i.e. channel)
 
@@ -988,6 +1008,36 @@ private:
     }
   }
 
+  void on_watchdog_timer()
+  {
+    auto now = std::chrono::steady_clock::now();
+
+    // motion capture
+    // a) check if the rate was within specified bounds
+    if (mocap_data_received_timepoints_.size() >= 2) {
+      double mean_rate = 0;
+      int num_rates_wrong = 0;
+      for (size_t i = 0; i < mocap_data_received_timepoints_.size() - 1; ++i) {
+        std::chrono::duration<double> diff = mocap_data_received_timepoints_[i+1] - mocap_data_received_timepoints_[i];
+        double rate = 1.0 / diff.count();
+        mean_rate += rate;
+        if (rate <= mocap_min_rate_ || rate >= mocap_max_rate_) {
+          num_rates_wrong++;
+        }
+      }
+      mean_rate /= (mocap_data_received_timepoints_.size() - 1);
+
+      if (num_rates_wrong > 0) {
+        RCLCPP_WARN(logger_, "Motion capture rate off (#: %d, Avg: %f)", num_rates_wrong, mean_rate);
+      }
+    } else if (mocap_enabled_) {
+      // b) warn if no data was received
+      RCLCPP_WARN(logger_, "Motion capture did not receive data!");
+    }
+
+    mocap_data_received_timepoints_.clear();
+  }
+
   template<class T>
   void broadcast_set_param(
     const std::string& group,
@@ -1043,6 +1093,13 @@ private:
     // parameter updates
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
     std::shared_ptr<rclcpp::ParameterEventCallbackHandle> cb_handle_;
+
+    // sanity checks
+    rclcpp::TimerBase::SharedPtr watchdog_timer_;
+    bool mocap_enabled_;
+    float mocap_min_rate_;
+    float mocap_max_rate_;
+    std::vector<std::chrono::time_point<std::chrono::steady_clock>> mocap_data_received_timepoints_;
   };
 
 int main(int argc, char *argv[])

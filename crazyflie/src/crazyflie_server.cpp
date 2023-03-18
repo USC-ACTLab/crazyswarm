@@ -754,8 +754,8 @@ public:
     if (freq >= 0.0) {
       watchdog_timer_ = this->create_wall_timer(std::chrono::milliseconds((int)(1000.0/freq)), std::bind(&CrazyflieServer::on_watchdog_timer, this));
     }
-    this->declare_parameter("warnings.motion_capture.warning_if_rate_outside", std::vector<float>({80.0, 120.0}));
-    auto rate_range = this->get_parameter("warnings.motion_capture.warning_if_rate_outside").get_parameter_value().get<std::vector<float>>();
+    this->declare_parameter("warnings.motion_capture.warning_if_rate_outside", std::vector<double>({80.0, 120.0}));
+    auto rate_range = this->get_parameter("warnings.motion_capture.warning_if_rate_outside").get_parameter_value().get<std::vector<double>>();
     mocap_min_rate_ = rate_range[0];
     mocap_max_rate_ = rate_range[1];
   }

@@ -18,7 +18,7 @@ import rclpy.node
 import rowan
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Point, Twist
-from rcl_interfaces.srv import GetParameters, SetParameters, ListParameters, GetParameterTypes
+from rcl_interfaces.srv import GetParameters, SetParameters, ListParameters, DescribeParameters
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, UploadTrajectory, StartTrajectory, NotifySetpointsStop
 from crazyflie_interfaces.msg import TrajectoryPolynomialPiece, FullState, Position
@@ -88,7 +88,7 @@ class Crazyflie:
     The bulk of the module's functionality is contained in this class.
     """
 
-    def __init__(self, node, cfname):
+    def __init__(self, node, cfname, paramTypeDict):
         """Constructor.
 
         Args:
@@ -127,7 +127,6 @@ class Crazyflie:
         req = GetParameters.Request()
         req.names = ["robots.{}.initial_position".format(cfname), "robots.{}.uri".format(cfname)]
         future = getParamsService.call_async(req)
-        params = []
         while rclpy.ok():
             rclpy.spin_once(node)
             if future.done():
@@ -145,43 +144,7 @@ class Crazyflie:
 
                 break
 
-        # Query all parameters
-        listParamsService = node.create_client(ListParameters, "/crazyflie_server/list_parameters")
-        listParamsService.wait_for_service()
-        req = ListParameters.Request()
-        req.depth = ListParameters.Request.DEPTH_RECURSIVE
-        req.prefixes = []
-        future = listParamsService.call_async(req)
-        params = []
-        while rclpy.ok():
-            rclpy.spin_once(node)
-            if future.done():
-                # Filter the parameters that belong to this Crazyflie
-                response = future.result()
-                for p in response.result.names:
-                    param_prefix = "{}.params.".format(prefix[1:])
-                    if p.startswith(param_prefix):
-                        # params.append(p[len(param_prefix):])
-                        params.append(p)
-                break
-
-        # Find the types for the parameters and store them
-        getParamTypesService = node.create_client(GetParameterTypes, "/crazyflie_server/get_parameter_types")
-        getParamTypesService.wait_for_service()
-        req = GetParameterTypes.Request()
-        req.names = params
-        future = getParamTypesService.call_async(req)
-        self.paramTypeDict = dict()
-        while rclpy.ok():
-            rclpy.spin_once(node)
-            if future.done():
-                # Filter the parameters that belong to this Crazyflie
-                response = future.result()
-                for p, t in zip(params, response.types):
-                    self.paramTypeDict[p[len(param_prefix):]] = t
-                break
-
-        # print(params)
+        self.paramTypeDict = paramTypeDict
 
         self.cmdFullStatePublisher = node.create_publisher(FullState, prefix + "/cmd_full_state", 1)
         self.cmdFullStateMsg = FullState()
@@ -712,11 +675,53 @@ class CrazyflieServer(rclpy.node.Node):
                 if cfname != "all":
                     cfnames.append(cfname)
 
+        # Query all parameters
+        listParamsService = self.create_client(ListParameters, "/crazyflie_server/list_parameters")
+        listParamsService.wait_for_service()
+        req = ListParameters.Request()
+        req.depth = ListParameters.Request.DEPTH_RECURSIVE
+        req.prefixes = []
+        future = listParamsService.call_async(req)
+        params = []
+        while rclpy.ok():
+            rclpy.spin_once(self)
+            if future.done():
+                # Filter the parameters that belong to this Crazyflie
+                response = future.result()
+                for p in response.result.names:
+                    if ".params." in p:
+                        params.append(p)
+                break
+
+        # Find the types for the parameters and store them
+        describeParametersService = self.create_client(DescribeParameters, "/crazyflie_server/describe_parameters")
+        describeParametersService.wait_for_service()
+        req = DescribeParameters.Request()
+        req.names = params
+        future = describeParametersService.call_async(req)
+        allParamTypeDicts = dict()
+        while rclpy.ok():
+            rclpy.spin_once(self)
+            if future.done():
+                # Filter the parameters that belong to this Crazyflie
+                response = future.result()
+                for p, d in zip(params, response.descriptors):
+                    idx = p.index(".params.")
+                    cf_name = p[0:idx]
+                    param_name = p[idx+8:]
+                    t = d.type
+                    if cf_name in allParamTypeDicts:
+                        allParamTypeDicts[cf_name][param_name] = t
+                    else:
+                        allParamTypeDicts[cf_name] = {param_name: t}
+                break
+        self.paramTypeDict = allParamTypeDicts["all"]
+
         self.crazyflies = []
         self.crazyfliesById = dict()
         self.crazyfliesByName = dict()
         for cfname in cfnames:
-            cf = Crazyflie(self, cfname)
+            cf = Crazyflie(self, cfname, allParamTypeDicts[cfname])
             self.crazyflies.append(cf)
             self.crazyfliesByName[cfname] = cf
             # For legacy crazyswarm1 code, also provide crazyfliesById
@@ -832,14 +837,7 @@ class CrazyflieServer(rclpy.node.Node):
     def setParam(self, name, value):
         """Broadcasted setParam. See Crazyflie.setParam() for details."""
         param_name = "all.params." + name
-        param_type = None
-        for cf in self.crazyflies:
-            if name in cf.paramTypeDict:
-                param_type = cf.paramTypeDict[name]
-                break
-        if param_type is None:
-            self.node.get_logger().error("Unknown param type!")
-            return
+        param_type = self.paramTypeDict[name]
         if param_type == ParameterType.PARAMETER_INTEGER:
             param_value = ParameterValue(type=param_type, integer_value=int(value))
         elif param_type == ParameterType.PARAMETER_DOUBLE:

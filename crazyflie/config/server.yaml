@@ -4,6 +4,8 @@
       frequency: 1.0 # report/run checks once per second
       motion_capture:
         warning_if_rate_outside: [80.0, 120.0]
+    firmware_params:
+      query_all_values_on_connect: False
     # simulation related
     sim:
       max_dt: 0 #0.1              # artificially limit the step() function (set to 0 to disable)

@@ -160,34 +160,64 @@ public:
     };
 
     if (enable_parameters) {
+      bool query_all_values_on_connect = node->get_parameter("firmware_params.query_all_values_on_connect").get_parameter_value().get<bool>();
+
       int numParams = 0;
       RCLCPP_INFO(logger_, "Requesting parameters...");
-      cf_.requestParamToc(/*forceNoCache*/);
+      cf_.requestParamToc(/*forceNoCache*/false, /*requestValues*/query_all_values_on_connect);
       for (auto iter = cf_.paramsBegin(); iter != cf_.paramsEnd(); ++iter) {
         auto entry = *iter;
         std::string paramName = name + ".params." + entry.group + "." + entry.name;
         switch (entry.type)
         {
         case Crazyflie::ParamTypeUint8:
-          node->declare_parameter(paramName, cf_.getParam<uint8_t>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter(paramName, cf_.getParam<uint8_t>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_INTEGER);
+          }
           break;
         case Crazyflie::ParamTypeInt8:
-          node->declare_parameter(paramName, cf_.getParam<int8_t>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter(paramName, cf_.getParam<int8_t>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_INTEGER);
+          }
           break;
         case Crazyflie::ParamTypeUint16:
-          node->declare_parameter(paramName, cf_.getParam<uint16_t>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter(paramName, cf_.getParam<uint16_t>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_INTEGER);
+          }
           break;
         case Crazyflie::ParamTypeInt16:
-          node->declare_parameter(paramName, cf_.getParam<int16_t>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter(paramName, cf_.getParam<int16_t>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_INTEGER);
+          }
           break;
         case Crazyflie::ParamTypeUint32:
-          node->declare_parameter<int64_t>(paramName, cf_.getParam<uint32_t>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter<int64_t>(paramName, cf_.getParam<uint32_t>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_INTEGER);
+          }
           break;
         case Crazyflie::ParamTypeInt32:
-          node->declare_parameter(paramName, cf_.getParam<int32_t>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter(paramName, cf_.getParam<int32_t>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_INTEGER);
+          }
           break;
         case Crazyflie::ParamTypeFloat:
-          node->declare_parameter(paramName, cf_.getParam<float>(entry.id));
+          if (query_all_values_on_connect) {
+            node->declare_parameter(paramName, cf_.getParam<float>(entry.id));
+          } else {
+            node->declare_parameter(paramName, rclcpp::PARAMETER_DOUBLE);
+          }
           break;
         default:
           RCLCPP_WARN(logger_, "Unknown param type for %s/%s", entry.group.c_str(), entry.name.c_str());
@@ -389,7 +419,12 @@ public:
         cf_.setParam<int32_t>(entry->id, p.as_int());
         break;
       case Crazyflie::ParamTypeFloat:
-        cf_.setParam<float>(entry->id, p.as_double());
+        if (p.get_type() == rclcpp::PARAMETER_INTEGER) {
+          cf_.setParam<float>(entry->id, (float)p.as_int());
+        } else {
+          cf_.setParam<float>(entry->id, p.as_double());
+        }
+
         break;
       }
     } else {
@@ -683,9 +718,10 @@ public:
     service_go_to_ = this->create_service<GoTo>("all/go_to", std::bind(&CrazyflieServer::go_to, this, _1, _2));
     service_notify_setpoints_stop_ = this->create_service<NotifySetpointsStop>("all/notify_setpoints_stop", std::bind(&CrazyflieServer::notify_setpoints_stop, this, _1, _2));
 
-       // declare global commands
+    // declare global params
     this->declare_parameter("all.broadcasts.num_repeats", 15);
     this->declare_parameter("all.broadcasts.delay_between_repeats_ms", 1);
+    this->declare_parameter("firmware_params.query_all_values_on_connect", false);
 
     broadcasts_num_repeats_ = this->get_parameter("all.broadcasts.num_repeats").get_parameter_value().get<int>();
     broadcasts_delay_between_repeats_ms_ = this->get_parameter("all.broadcasts.delay_between_repeats_ms").get_parameter_value().get<int>();
@@ -992,7 +1028,11 @@ private:
                 broadcast_set_param<int32_t>(group, name, p.as_int());
                 break;
               case Crazyflie::ParamTypeFloat:
-                broadcast_set_param<float>(group, name, p.as_double());
+                if (p.get_type() == rclcpp::PARAMETER_INTEGER) {
+                  broadcast_set_param<float>(group, name, (float)p.as_int());
+                } else {
+                  broadcast_set_param<float>(group, name, p.as_double());
+                }
                 break;
               }
               break;

@@ -5,6 +5,12 @@
 
     mode: "libobjecttracker" # one of motionCapture,libRigidBodyTracker
 
+    topics:
+      poses:
+        qos:
+          mode: "sensor"
+          deadline: 100.0 # Hz
+
     marker_configurations:
       default: # for standard Crazyflie
         offset: [0.0, 0.0, 0.0]

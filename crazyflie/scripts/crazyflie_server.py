@@ -11,6 +11,8 @@ A crazyflie server for communicating with several crazyflies
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
+
 import time
 
 import cflib.crtp
@@ -23,6 +25,7 @@ from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySe
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 from crazyflie_interfaces.msg import Hover
 from crazyflie_interfaces.msg import LogDataGeneric
+from motion_capture_tracking_interfaces.msg import NamedPoseArray
 
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
@@ -241,6 +244,9 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Hover, name +
                 "/cmd_hover", partial(self._cmd_hover_changed, uri=uri), 10
+            )
+            self.create_subscription(NamedPoseArray, "poses", 
+                self._pose_changed, qos_profile_sensor_data
             )
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
@@ -751,6 +757,25 @@ class CrazyflieServer(Node):
     def _start_trajectory_callback(self, request, response, uri="all"):
         self.get_logger().info("Start trajectory not yet implemented")
         return response
+    
+    def _poses_changed(self, msg):
+        """
+        Topic update callback to the motion capture lib's
+           poses topic to send through the external position
+           to the crazyflie 
+        """
+        poses = msg.poses
+        for pose in poses:
+            name = pose.name
+            x = pose.pose.position.x
+            y = pose.pose.position.y
+            z = pose.pose.position.z
+            quat = pose.pose.orientation
+            if name in self.name_dict:
+                uri = self.name_dict[name]
+                self.swarm._cfs[uri].cf.extpos.send_extpos(
+                    x, y, z, quat.x, quat.y, quat.z, quat.w)
+
 
     def _cmd_vel_legacy_changed(self, msg, uri=""):
         """

@@ -37,7 +37,7 @@ import tf_transformations
 from tf2_ros import TransformBroadcaster
 
 from functools import partial
-from math import degrees, radians, pi, cos, sin
+from math import degrees, radians, pi, isnan
 
 cf_log_to_ros_param = {
     "uint8_t": ParameterType.PARAMETER_INTEGER,
@@ -245,8 +245,10 @@ class CrazyflieServer(Node):
                 Hover, name +
                 "/cmd_hover", partial(self._cmd_hover_changed, uri=uri), 10
             )
-            self.create_subscription(NamedPoseArray, "poses", 
-                self._pose_changed, qos_profile_sensor_data
+
+            self.create_subscription(
+                NamedPoseArray, "/poses", 
+                self._poses_changed, qos_profile_sensor_data
             )
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
@@ -764,6 +766,7 @@ class CrazyflieServer(Node):
            poses topic to send through the external position
            to the crazyflie 
         """
+
         poses = msg.poses
         for pose in poses:
             name = pose.name
@@ -771,10 +774,16 @@ class CrazyflieServer(Node):
             y = pose.pose.position.y
             z = pose.pose.position.z
             quat = pose.pose.orientation
+
             if name in self.name_dict:
                 uri = self.name_dict[name]
-                self.swarm._cfs[uri].cf.extpos.send_extpos(
-                    x, y, z, quat.x, quat.y, quat.z, quat.w)
+                self.get_logger().info(f"{uri}: send extpos {x}, {y}, {z} to {name}")
+                if isnan(quat.x):
+                    self.swarm._cfs[uri].cf.extpos.send_extpos(
+                        x, y, z)
+                else:
+                    self.swarm._cfs[uri].cf.extpos.send_extpos(
+                        x, y, z, quat.x, quat.y, quat.z, quat.w)
 
 
     def _cmd_vel_legacy_changed(self, msg, uri=""):

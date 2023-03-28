@@ -11,7 +11,8 @@ A crazyflie server for communicating with several crazyflies
 
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from rclpy.duration import Duration
 
 import time
 
@@ -245,10 +246,13 @@ class CrazyflieServer(Node):
                 Hover, name +
                 "/cmd_hover", partial(self._cmd_hover_changed, uri=uri), 10
             )
-
+            qos_profile = QoSProfile(reliability =QoSReliabilityPolicy.BEST_EFFORT,
+                history=QoSHistoryPolicy.KEEP_LAST,
+                depth=1,
+                deadline = Duration(seconds=0, nanoseconds=1e9/100.0))
             self.create_subscription(
                 NamedPoseArray, "/poses", 
-                self._poses_changed, qos_profile_sensor_data
+                self._poses_changed, qos_profile
             )
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
@@ -775,14 +779,14 @@ class CrazyflieServer(Node):
             z = pose.pose.position.z
             quat = pose.pose.orientation
 
-            if name in self.name_dict:
-                uri = self.name_dict[name]
-                self.get_logger().info(f"{uri}: send extpos {x}, {y}, {z} to {name}")
+            if name in self.uri_dict.keys():
+                uri = self.uri_dict[name]
+                #self.get_logger().info(f"{uri}: send extpos {x}, {y}, {z} to {name}")
                 if isnan(quat.x):
                     self.swarm._cfs[uri].cf.extpos.send_extpos(
                         x, y, z)
                 else:
-                    self.swarm._cfs[uri].cf.extpos.send_extpos(
+                    self.swarm._cfs[uri].cf.extpos.send_extpose(
                         x, y, z, quat.x, quat.y, quat.z, quat.w)
 
 

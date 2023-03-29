@@ -11,6 +11,9 @@ A crazyflie server for communicating with several crazyflies
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
+from rclpy.duration import Duration
+
 import time
 
 import cflib.crtp
@@ -23,6 +26,7 @@ from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySe
 from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult, ParameterType
 from crazyflie_interfaces.msg import Hover
 from crazyflie_interfaces.msg import LogDataGeneric
+from motion_capture_tracking_interfaces.msg import NamedPoseArray
 
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Twist
@@ -34,7 +38,7 @@ import tf_transformations
 from tf2_ros import TransformBroadcaster
 
 from functools import partial
-from math import degrees, radians, pi, cos, sin
+from math import degrees, radians, pi, isnan
 
 cf_log_to_ros_param = {
     "uint8_t": ParameterType.PARAMETER_INTEGER,
@@ -241,6 +245,14 @@ class CrazyflieServer(Node):
             self.create_subscription(
                 Hover, name +
                 "/cmd_hover", partial(self._cmd_hover_changed, uri=uri), 10
+            )
+            qos_profile = QoSProfile(reliability =QoSReliabilityPolicy.BEST_EFFORT,
+                history=QoSHistoryPolicy.KEEP_LAST,
+                depth=1,
+                deadline = Duration(seconds=0, nanoseconds=1e9/100.0))
+            self.create_subscription(
+                NamedPoseArray, "/poses", 
+                self._poses_changed, qos_profile
             )
 
     def _init_default_logblocks(self, prefix, link_uri, list_logvar, global_logging_enabled, topic_type):
@@ -751,6 +763,32 @@ class CrazyflieServer(Node):
     def _start_trajectory_callback(self, request, response, uri="all"):
         self.get_logger().info("Start trajectory not yet implemented")
         return response
+    
+    def _poses_changed(self, msg):
+        """
+        Topic update callback to the motion capture lib's
+           poses topic to send through the external position
+           to the crazyflie 
+        """
+
+        poses = msg.poses
+        for pose in poses:
+            name = pose.name
+            x = pose.pose.position.x
+            y = pose.pose.position.y
+            z = pose.pose.position.z
+            quat = pose.pose.orientation
+
+            if name in self.uri_dict.keys():
+                uri = self.uri_dict[name]
+                #self.get_logger().info(f"{uri}: send extpos {x}, {y}, {z} to {name}")
+                if isnan(quat.x):
+                    self.swarm._cfs[uri].cf.extpos.send_extpos(
+                        x, y, z)
+                else:
+                    self.swarm._cfs[uri].cf.extpos.send_extpose(
+                        x, y, z, quat.x, quat.y, quat.z, quat.w)
+
 
     def _cmd_vel_legacy_changed(self, msg, uri=""):
         """

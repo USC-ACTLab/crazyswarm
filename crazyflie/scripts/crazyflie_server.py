@@ -607,13 +607,7 @@ class CrazyflieServer(Node):
                             value=set_param_value,
                             descriptor=parameter_descriptor,
                         )
-                        # Use set_param_all to set a parameter based on the first crazyflie
-                        if set_param_all is False:
-                            self.declare_parameter(
-                                "all.params." + group + "." + param,
-                                value=set_param_value,
-                                descriptor=parameter_descriptor,
-                            )
+
                     else:
                         # If value is not found in initial parameter set
                         # get crazyflie paramter value and declare that value in ROS 2 parameter
@@ -629,14 +623,17 @@ class CrazyflieServer(Node):
                             value=cf_param_value,
                             descriptor=parameter_descriptor,
                         )
-
-                        # Use set_param_all to set a parameter based on the first crazyflie
-                        if set_param_all is False:
-                            self.declare_parameter(
-                                "all.params." + group + "." + param,
-                                value=cf_param_value,
-                                descriptor=parameter_descriptor,
-                            )
+                    # Use set_param_all to set a parameter based on the toc of the first crazyflie
+                    if cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_INTEGER:
+                        cf_param_value = int(cf.param.get_value(name))
+                    elif cf_log_to_ros_param[type_cf_param] is ParameterType.PARAMETER_DOUBLE:
+                        cf_param_value = float(cf.param.get_value(name))
+                    if set_param_all is False:
+                        self.declare_parameter(
+                            "all.params." + group + "." + param,
+                            value=cf_param_value,
+                            descriptor=parameter_descriptor,
+                        )
 
             # Now all parameters are set        
             set_param_all = True
@@ -668,6 +665,22 @@ class CrazyflieServer(Node):
                         return SetParametersResult(successful=False)
                 if param_split[1] == "logs":
                     return SetParametersResult(successful=True)
+            elif param_split[0] == "all":
+                if param_split[1] == "params":
+                    name_param = param_split[2] + "." + param_split[3]
+                    try:
+                        for link_uri in self.uris:
+                            cf = self.swarm._cfs[link_uri].cf.param.set_value(
+                            name_param, param.value
+                        )
+                        self.get_logger().info(
+                            f" {link_uri}: {name_param} is set to {param.value}"
+                        )
+                        return SetParametersResult(successful=True)
+                    except Exception as e:
+                        self.get_logger().info(str(e))
+                        return SetParametersResult(successful=False)
+                    
         return SetParametersResult(successful=False)
     
     def _emergency_callback(self, request, response, uri="all"):

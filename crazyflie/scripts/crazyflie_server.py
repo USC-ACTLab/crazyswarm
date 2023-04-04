@@ -560,6 +560,7 @@ class CrazyflieServer(Node):
         Once custom log block is retrieved from the Crazyflie, 
             send out the ROS 2 topic for that same type of log
         """
+        set_param_all = False
         for link_uri in self.uris:
             cf = self.swarm._cfs[link_uri].cf
 
@@ -606,6 +607,13 @@ class CrazyflieServer(Node):
                             value=set_param_value,
                             descriptor=parameter_descriptor,
                         )
+                        # Use set_param_all to set a parameter based on the first crazyflie
+                        if set_param_all is False:
+                            self.declare_parameter(
+                                "all.params." + group + "." + param,
+                                value=set_param_value,
+                                descriptor=parameter_descriptor,
+                            )
                     else:
                         # If value is not found in initial parameter set
                         # get crazyflie paramter value and declare that value in ROS 2 parameter
@@ -621,6 +629,17 @@ class CrazyflieServer(Node):
                             value=cf_param_value,
                             descriptor=parameter_descriptor,
                         )
+
+                        # Use set_param_all to set a parameter based on the first crazyflie
+                        if set_param_all is False:
+                            self.declare_parameter(
+                                "all.params." + group + "." + param,
+                                value=cf_param_value,
+                                descriptor=parameter_descriptor,
+                            )
+
+            # Now all parameters are set        
+            set_param_all = True
 
         self.get_logger().info("All Crazyflies parameters are initialized")
 

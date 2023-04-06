@@ -13,6 +13,8 @@ import numpy as np
 # from tf import TransformListener
 # from .visualizer import visNull
 
+from collections import defaultdict
+
 import rclpy
 import rclpy.node
 import rowan
@@ -703,7 +705,7 @@ class CrazyflieServer(rclpy.node.Node):
         req = DescribeParameters.Request()
         req.names = params
         future = describeParametersService.call_async(req)
-        allParamTypeDicts = dict()
+        allParamTypeDicts = defaultdict(dict)
         while rclpy.ok():
             rclpy.spin_once(self)
             if future.done():

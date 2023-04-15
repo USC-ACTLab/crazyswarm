@@ -40,6 +40,7 @@ Debugging
 
 If there is a crash (e.g., segmentation fault) in the crazyflie_server (C++ backend), you can find the stacktrace by using gdb.
 First, compile your code in debug mode, then run the launch file with the debug flag, which will open an xterm window.
+If you don't have xterm installed, you can do so using `sudo apt install xterm`.
 
 .. code-block:: bash
 

@@ -35,3 +35,15 @@ the position of an obstacle. In that case, a "virtual" robot can be defined in c
 Here, the position of the obstacle will be tracked using the motion_capture_tracking ROS package. The resulting pose will be
 available via TF (named "obstacle") and send to the firmware of the actual robots with id 255.
 
+Debugging
+---------
+
+If there is a crash (e.g., segmentation fault) in the crazyflie_server (C++ backend), you can find the stacktrace by using gdb.
+First, compile your code in debug mode, then run the launch file with the debug flag, which will open an xterm window.
+If you don't have xterm installed, you can do so using `sudo apt install xterm`.
+
+.. code-block:: bash
+
+    colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Debug
+    ros2 launch crazyflie launch.py debug:=True
+

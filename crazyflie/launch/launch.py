@@ -6,6 +6,7 @@ from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from launch.conditions import LaunchConfigurationEquals
 from launch.conditions import LaunchConfigurationNotEquals
+from launch.substitutions import LaunchConfiguration, PythonExpression
 
 
 def generate_launch_description():
@@ -60,6 +61,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('backend', default_value='cpp'),
+        DeclareLaunchArgument('debug', default_value='False'),
         Node(
             package='motion_capture_tracking',
             executable='motion_capture_tracking_node',
@@ -101,7 +103,8 @@ def generate_launch_description():
             condition=LaunchConfigurationEquals('backend','cpp'),
             name='crazyflie_server',
             output='screen',
-            parameters=server_params
+            parameters=server_params,
+            prefix=PythonExpression(['"xterm -e gdb -ex run --args" if ', LaunchConfiguration('debug'), ' else ""']),
         ),
         Node(
             package='crazyflie_sim',

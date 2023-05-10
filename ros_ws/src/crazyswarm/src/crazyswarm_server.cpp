@@ -589,7 +589,7 @@ public:
           logBlock.variables,
           (void*)&m_pubLogDataGeneric[i],
           cb));
-        m_logBlocksGeneric[i]->start(logBlock.frequency / 10);
+        m_logBlocksGeneric[i]->start(100 / logBlock.frequency); // start needs a period in increments of 10ms 
         ++i;
       }
       auto end3 = std::chrono::system_clock::now();

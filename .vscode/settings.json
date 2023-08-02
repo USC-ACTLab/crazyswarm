@@ -1,0 +1,30 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/nan/crazyflie-firmware/build",
+        "/home/nan/ros2_ws/build/my_robot_controller",
+        "/home/nan/ros2_ws/install/my_robot_controller/lib/python3.10/site-packages",
+        "/home/nan/ros2_ws/install/motion_capture_tracking_interfaces/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/install/figure_trajectory/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/install/crazyflie_sim/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/install/crazyflie_examples/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/build/crazyflie_py",
+        "/home/nan/ros2_ws/install/crazyflie_py/lib/python3.10/site-packages",
+        "/home/nan/ros2_ws/install/crazyflie_interfaces/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/nan/crazyflie-firmware/build",
+        "/home/nan/ros2_ws/build/my_robot_controller",
+        "/home/nan/ros2_ws/install/my_robot_controller/lib/python3.10/site-packages",
+        "/home/nan/ros2_ws/install/motion_capture_tracking_interfaces/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/install/figure_trajectory/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/install/crazyflie_sim/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/install/crazyflie_examples/local/lib/python3.10/dist-packages",
+        "/home/nan/ros2_ws/build/crazyflie_py",
+        "/home/nan/ros2_ws/install/crazyflie_py/lib/python3.10/site-packages",
+        "/home/nan/ros2_ws/install/crazyflie_interfaces/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

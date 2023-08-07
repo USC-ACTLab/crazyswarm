@@ -217,15 +217,17 @@ private:
     {
 
         static std::vector<int> lastButtonState(Xbox360Buttons::COUNT);
-
+        
+        std::cout << "takeoff_paras_.button: " << takeoff_paras_.button << std::endl;
         if (msg->buttons.size() >= Xbox360Buttons::COUNT && lastButtonState.size() >= Xbox360Buttons::COUNT) {
-            if (msg->buttons[Xbox360Buttons::Red] == 1 && lastButtonState[Xbox360Buttons::Red] == 0) {
+            if (msg->buttons[emergency_button] == 1 && lastButtonState[emergency_button] == 0) {
                 emergency();
             }
-            if (msg->buttons[Xbox360Buttons::Start] == 1 && lastButtonState[Xbox360Buttons::Start] == 0) {
+
+            if (msg->buttons[takeoff_paras_.button] == 1 && lastButtonState[takeoff_paras_.button] == 0) {
                 takeoff();
             }
-            if (msg->buttons[Xbox360Buttons::Back] == 1 && lastButtonState[Xbox360Buttons::Back] == 0) {
+            if (msg->buttons[land_button] == 1 && lastButtonState[land_button] == 0) {
                 land();
             }
         }

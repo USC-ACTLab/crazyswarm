@@ -81,6 +81,18 @@ public:
         this->declare_parameter("cmd_vel_world.y_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
         this->declare_parameter("cmd_vel_world.z_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
 
+        this->declare_parameter<float>("takeoff_paras.duration");
+        this->get_parameter<float>("takeoff_paras.duration", takeoff_paras_.duration);
+        this->declare_parameter<float>("takeoff_paras.height");
+        this->get_parameter<float>("takeoff_paras.height", takeoff_paras_.height);
+        this->declare_parameter<int>("takeoff_paras.button");
+        this->get_parameter<int>("takeoff_paras.button", takeoff_paras_.button);
+
+        this->declare_parameter<int>("land_paras.button");
+        this->get_parameter<int>("land_paras.button", land_button);
+        this->declare_parameter<int>("emergency_paras.button");
+        this->get_parameter<int>("emergency_paras.button", emergency_button);
+
         on_mode_switched();
 
         dt_ = 1.0f/frequency_;
@@ -131,6 +143,16 @@ private:
         }
         return a;
     }
+
+    struct 
+    { 
+        float duration;
+        float height;
+        int button;
+    } takeoff_paras_;
+
+    int land_button;
+    int emergency_button;
 
     void on_parameter_event(const rcl_interfaces::msg::ParameterEvent &event)
     {
@@ -262,12 +284,12 @@ private:
         }
         auto request = std::make_shared<Takeoff::Request>();
         request->group_mask = 0;
-        request->height = 0.5;
-        request->duration = rclcpp::Duration::from_seconds(2);
+        request->height = takeoff_paras_.height;
+        request->duration = rclcpp::Duration::from_seconds(takeoff_paras_.duration);
         client_takeoff_->async_send_request(request);
 
         timer_takeoff_ = this->create_wall_timer(2s, [this]() {
-            state_.z = 0.5;
+            state_.z = takeoff_paras_.height;  // Is here right? should i change teh 2s above
             is_low_level_flight_active_ = true;
             this->timer_takeoff_->cancel();
         });

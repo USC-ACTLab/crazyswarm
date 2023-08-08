@@ -291,7 +291,7 @@ private:
         client_takeoff_->async_send_request(request);
 
         timer_takeoff_ = this->create_wall_timer(2s, [this]() {
-            state_.z = takeoff_paras_.height;  // Is here right? should i change teh 2s above
+            state_.z = takeoff_paras_.height;  // Is here right? should I change the 2s in line 293
             is_low_level_flight_active_ = true;
             this->timer_takeoff_->cancel();
         });

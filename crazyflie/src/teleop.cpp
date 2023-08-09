@@ -81,17 +81,17 @@ public:
         this->declare_parameter("cmd_vel_world.y_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
         this->declare_parameter("cmd_vel_world.z_limit", rclcpp::PARAMETER_DOUBLE_ARRAY);
 
-        this->declare_parameter<float>("takeoff_paras.duration");
-        this->get_parameter<float>("takeoff_paras.duration", takeoff_paras_.duration);
-        this->declare_parameter<float>("takeoff_paras.height");
-        this->get_parameter<float>("takeoff_paras.height", takeoff_paras_.height);
-        this->declare_parameter<int>("takeoff_paras.button");
-        this->get_parameter<int>("takeoff_paras.button", takeoff_paras_.button);
+        this->declare_parameter<float>("takeoff.duration");
+        this->get_parameter<float>("takeoff.duration", takeoff_paras_.duration);
+        this->declare_parameter<float>("takeoff.height");
+        this->get_parameter<float>("takeoff.height", takeoff_paras_.height);
+        this->declare_parameter<int>("takeoff.button");
+        this->get_parameter<int>("takeoff.button", takeoff_paras_.button);
 
-        this->declare_parameter<int>("land_paras.button");
-        this->get_parameter<int>("land_paras.button", land_button);
-        this->declare_parameter<int>("emergency_paras.button");
-        this->get_parameter<int>("emergency_paras.button", emergency_button);
+        this->declare_parameter<int>("land.button");
+        this->get_parameter<int>("land.button", land_button);
+        this->declare_parameter<int>("emergency.button");
+        this->get_parameter<int>("emergency.button", emergency_button);
 
         on_mode_switched();
 
@@ -290,8 +290,8 @@ private:
         request->duration = rclcpp::Duration::from_seconds(takeoff_paras_.duration);
         client_takeoff_->async_send_request(request);
 
-        timer_takeoff_ = this->create_wall_timer(2s, [this]() {
-            state_.z = takeoff_paras_.height;  // Is here right? should I change the 2s in line 293
+        timer_takeoff_ = this->create_wall_timer(takeoff_paras_.duration, [this]() {
+            state_.z = takeoff_paras_.height;  
             is_low_level_flight_active_ = true;
             this->timer_takeoff_->cancel();
         });

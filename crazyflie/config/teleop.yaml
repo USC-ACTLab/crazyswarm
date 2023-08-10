@@ -48,9 +48,9 @@
     takeoff:
       duration: 1.0
       height: 0.25
-      button: 6  # 7 start
+      button: 7  # 7 start
     land:
-      button: 7 # 6 back
+      button: 6 # 6 back
     emergency:
-      button: 2 # 1 red
+      button: 1 # 1 red
 

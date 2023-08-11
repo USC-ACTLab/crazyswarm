@@ -7,7 +7,7 @@ This page shows tutorials which connects the Crazyflie through Crazyswarm2 to wi
 
 
 .. warning::
-  These tutorials are for advanced use and still under development. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions.
+  These tutorials are for advanced use and still under development. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions. Also this requires a bit of knowledge for ROS2 so we highly recommend following [their beginner tutorials](https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools.html).
 
 
 

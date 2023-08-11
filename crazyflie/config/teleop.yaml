@@ -45,5 +45,12 @@
       y: 0.0
       z: 0.10
     auto_yaw_rate: 0.0 # rad/s, use 0.0 for manual yaw control
-
+    takeoff:
+      duration: 2.0
+      height: 0.5
+      button: 7  # 7 start
+    land:
+      button: 6 # 6 back
+    emergency:
+      button: 1 # 1 red
 

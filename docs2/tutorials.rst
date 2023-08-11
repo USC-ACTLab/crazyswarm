@@ -19,6 +19,12 @@ We have an example of the telop_twist_keyboard package working together with the
 First, make sure that the crazyflies.yaml has the right URI and if you are using the `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie.  
 set the controller to 1 (PID)
 
+And if you  have not already, install the teleop package for the keyboard. (replace DISTRO with humble or galactic):
+
+.. code-block:: bash
+
+    sudo apt-get install ros-DISTRO-teleop-twist-keyboard
+
 Then, run the following launch file to start up the crazyflie server (CFlib):
 
 .. code-block:: bash

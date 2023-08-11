@@ -290,7 +290,7 @@ private:
         request->duration = rclcpp::Duration::from_seconds(takeoff_paras_.duration);
         client_takeoff_->async_send_request(request);
 
-        timer_takeoff_ = this->create_wall_timer(takeoff_paras_.duration, [this]() {
+        timer_takeoff_ = this->create_wall_timer(std::chrono::duration<float>(takeoff_paras_.duration), [this]() {
             state_.z = takeoff_paras_.height;  
             is_low_level_flight_active_ = true;
             this->timer_takeoff_->cancel();

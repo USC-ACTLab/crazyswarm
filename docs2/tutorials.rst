@@ -7,7 +7,7 @@ This page shows tutorials which connects the Crazyflie through Crazyswarm2 to wi
 
 
 .. warning::
-  These tutorials are for advanced use and still under development. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions.
+  These tutorials are for advanced use and still under development. Beware of errors and bugs and be sure to use https://github.com/IMRCLab/crazyswarm2/discussions for any support questions. Also this requires a bit of knowledge for ROS 2 so we highly recommend following `their beginner tutorials <https://docs.ros.org/en/humble/Tutorials/Beginner-CLI-Tools.html>`_.
 
 
 
@@ -18,6 +18,12 @@ We have an example of the telop_twist_keyboard package working together with the
 
 First, make sure that the crazyflies.yaml has the right URI and if you are using the `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie.  
 set the controller to 1 (PID)
+
+And if you  have not already, install the teleop package for the keyboard. (replace DISTRO with humble or galactic):
+
+.. code-block:: bash
+
+    sudo apt-get install ros-DISTRO-teleop-twist-keyboard
 
 Then, run the following launch file to start up the crazyflie server (CFlib):
 

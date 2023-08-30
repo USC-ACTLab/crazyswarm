@@ -186,8 +186,8 @@ class CrazyflieSIL:
         self.setpoint.acceleration.y = acc[1]
         self.setpoint.acceleration.z = acc[2]
                 
-        self.cmdHl_pos = copy_svec(self.setpoint.pos)
-        self.cmdHl_vel = copy_svec(self.setpoint.vel)
+        self.cmdHl_pos = copy_svec(self.setpoint.position)
+        self.cmdHl_vel = copy_svec(self.setpoint.velocity)
         self.cmdHl_yaw = yaw
 
     # def cmdPosition(self, pos, yaw = 0):

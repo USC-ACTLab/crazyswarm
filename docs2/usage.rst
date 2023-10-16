@@ -124,56 +124,11 @@ Example:
 
 .. code-block:: bash
 
-    ros2 launch crazyflie launch.py backend:=sim
-    ros2 run crazyflie_examples hello_world --ros-args -p use_sim_time:=True
+    [terminal1]$ ros2 launch crazyflie launch.py backend:=sim
+    [terminal2]$ ros2 run crazyflie_examples hello_world --ros-args -p use_sim_time:=True
 
 Physical Experiments
 --------------------
-
-ROS 2 terminal
-~~~~~~~~~~~~~~
-
-The following shows a simple take off and land example without any launch files or yaml files
-
-.. code-block:: bash
-
-    ros2 run crazyflie reboot --uri radio://0/80/2M/E7E7E7E706 --mode sysoff
-    ros2 param set crazyflie_server cf1.params.commander.enHighLevel 1
-    ros2 param set crazyflie_server cf1.params.stabilizer.estimator 2
-    ros2 service call cf1/takeoff crazyflie_interfaces/srv/Takeoff "{height: 0.5, duration: {sec: 2}}"
-    ros2 service call cf1/land crazyflie_interfaces/srv/Land "{height: 0.0, duration: {sec: 2}}"
-
-Enabling Logblocks at runtime
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. warning::
-    Runtime logblock enabling is currently only supported in the CFLIB backend of the server.
-
-Above we explained how to enable log blocks at startup, but what if you would like to enable or disable logging blocks in runtime?
-This section will show how to do that by using services
-
-In one terminal run
-
-.. code-block:: bash
-
-    ros2 launch crazyflie launch.py backend:=cflib
-
-In another terminal after sourcing the right setup.bash files, run:
-
-.. code-block:: bash
-
-    ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'topic_test', frequency: 10, vars: ['stateEstimate.x','stateEstimate.y','stateEstimate.z']}"
-    ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'pose', frequency: 10}"
-
-With ROS 2's rqt you can look at the topics, or with 'ROS 2 topics echo /cf2/pose'
-
-To close the logblocks again, run:
-
-.. code-block:: bash
-
-    ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'topic_test'}"
-    ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'pose'}"
-
 
 Teleoperation controller
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -188,14 +143,10 @@ We currently assume an XBox controller (the button mapping can be changed in tel
 Python scripts
 ~~~~~~~~~~~~~~
 
-In the first terminal, launch
+In the first terminal run the server, in the second the desired script.
+You may run the script multiple times or different scripts while leaving the server running.
 
 .. code-block:: bash
 
-    ros2 launch crazyflie launch.py
-
-In the second terminal
-
-.. code-block:: bash
-
-    ros2 run crazyflie_examples hello_world
+    [terminal1]$ ros2 launch crazyflie launch.py
+    [terminal2]$ ros2 run crazyflie_examples hello_world

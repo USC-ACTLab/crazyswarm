@@ -163,7 +163,7 @@ In another terminal after sourcing the right setup.bash files, run:
 .. code-block:: bash
 
     ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'topic_test', frequency: 10, vars: ['stateEstimate.x','stateEstimate.y','stateEstimate.z']}"
-    ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'pose', frequency: 10}
+    ros2 service call /cf2/add_logging crazyflie_interfaces/srv/AddLogging "{topic_name: 'pose', frequency: 10}"
 
 With ROS 2's rqt you can look at the topics, or with 'ROS 2 topics echo /cf2/pose'
 

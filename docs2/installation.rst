@@ -85,7 +85,7 @@ You can update your local copy using the following commands:
     git pull
     git submodule sync
     git submodule update --init --recursive
-    cd ../
+    cd ../../
     colcon build --symlink-install
 
 

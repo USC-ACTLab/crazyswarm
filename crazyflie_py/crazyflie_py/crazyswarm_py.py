@@ -7,7 +7,7 @@ from .crazyflie import TimeHelper, CrazyflieServer
 class Crazyswarm:
     def __init__(self):
         rclpy.init()
-        
+
         self.allcfs = CrazyflieServer()
         self.timeHelper = TimeHelper(self.allcfs)
 

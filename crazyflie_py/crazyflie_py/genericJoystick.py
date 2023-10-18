@@ -1,4 +1,3 @@
-import time
 import copy
 # import pyglet
 from . import keyboard
@@ -19,6 +18,7 @@ from . import keyboard
 
 #     def on_joyhat_motion(joystick, hat_x, hat_y):
 #         pass
+
 
 class Joystick:
     def __init__(self, timeHelper):
@@ -76,7 +76,6 @@ class Joystick:
                 # Wait until the key is released.
                 while keyPoller.poll() is not None:
                     self.timeHelper.sleep(0.01)
-
 
     def checkIfAnyButtonIsPressed(self):
         if self.joyID is not None:

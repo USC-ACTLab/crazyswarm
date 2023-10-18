@@ -20,7 +20,7 @@ class KeyPoller():
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
 
     def poll(self):
-        dr,dw,de = select.select([sys.stdin], [], [], 0)
+        dr, dw, de = select.select([sys.stdin], [], [], 0)
         if not dr == []:
             return sys.stdin.read(1)
         return None

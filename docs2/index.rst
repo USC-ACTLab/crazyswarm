@@ -12,43 +12,8 @@ Crazyswarm2 is primarily made for researchers that want to operate or simulate a
 .. warning::
   Crazyswarm2 is already usable for basic tasks (teleoperation, flying in a motion capture space, data collection), however the API and configuration file formats might still change. While many features of Crazyswarm1 are ported, there are currently still some important limitations:
   
-  - Limited support for real-time logging (logging on uSD-card is supported)
   - Tested only for small team sizes (less than 10 robots)
   - Limited Python API and only a few example scripts
-
-
-
-
-.. Both can be used to control several Crazyflies from a Python script.
-.. Here are some differences:
-
-.. - **Motion capture integration.**
-..   Crazyswarm contains drivers for common motion capture systems.
-..   The Bitcraze API can *send* position measurements to the Crazyflie,
-..   but does not know how to *get* position measurements from mocap hardware.
-.. - **Identical or single motion capture markers.**
-..   Via `libobjecttracker <https://github.com/USC-ACTLab/libobjecttracker>`_,
-..   Crazyswarm can track multiple quadrotors with identical motion capture marker arrangements,
-..   or quadrotors with only one marker each.
-..   Most motion capture devices do not support this natively.
-..   To make it possible, the user must supply the quadrotors' initial positions in a configuration file
-..   at startup to establish the mapping from radio addresses to positions.
-.. - **Broadcasts.**
-..   Crazyswarm uses broadcast communication whenever possible to require fewer radios per Crazyflie. In contrast, the official SDK uses unicast communication instead.
-.. - **Simulation.**
-..   Crazyswarm has a simulation mode with 3D graphics,
-..   which makes it easy to validate complex scripts before running them on real hardware.
-.. - **Python firmware bindings.**
-..   Crazyswarm's simulator is built upon automatically generated Python bindings
-..   for certain modules in the Crazyflie firmware.
-..   The binding system can be helpful when developing new firmware modules,
-..   especially when they are mathematically complex and hard to debug.
-.. - **ROS foundation.**
-..   The Crazyswarm server program is a ROS node.
-..   The :ref:`api` is a thin wrapper around the ROS interface.
-..   While we recommend the Python API for most applications,
-..   the ROS interface is fully supported.
-
 
 .. Crazyswarm's academic origins
 .. -----------------------------

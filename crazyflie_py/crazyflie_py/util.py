@@ -10,12 +10,10 @@ def check_ellipsoid_collisions(positions, radii):
     Check for collisions between a set of ellipsoids at given positions.
 
     Args:
-    ----
         positions (array float[n, 3]): The ellipsoid centers.
         radii (array float[3]): The radii of the axis-aligned ellipsoids.
 
-    Returns
-    -------
+    Returns:
         colliding (array bool[n]): True at index i if the i'th ellipsoid
             intersects any of the other ellipsoids.
 
@@ -38,13 +36,11 @@ def poisson_disk_sample(n, dim, mindist):
     TODO(jpreiss): find/implement a library with a fast algorithm.
 
     Args:
-    ----
         n (int): Number of points.
         dim (int): Dimensionality of points.
         mindist (float): Minimum Euclidean distance between any two points.
 
-    Returns
-    -------
+    Returns:
         pts (array float[n, dim]): The sampled points.
 
     """

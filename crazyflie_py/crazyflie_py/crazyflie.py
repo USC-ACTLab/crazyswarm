@@ -45,8 +45,7 @@ class TimeHelper:
     When running on real hardware, this class uses ROS time functions.
     The simulation equivalent does not depend on ROS.
 
-    Attributes
-    ----------
+    Attributes:
         visualizer: No-op object conforming to the Visualizer API used in
             simulation scripts. Maintains the property that scripts should not
             know/care if they are running in simulation or not.
@@ -104,10 +103,9 @@ class Crazyflie:
         Construct Crazyflie.
 
         Args:
-        ----
-            node: ROS node reference
-            cfname (string): Name of the robot names[ace]
-            paramTypeDict: dictionary of the parameter types
+            node: ROS node reference.
+            cfname (string): Name of the robot names[ace].
+            paramTypeDict: dictionary of the parameter types.
 
         """
         prefix = '/' + cfname
@@ -345,7 +343,6 @@ class Crazyflie:
         controller to become unstable.
 
         Args:
-        ----
             goal (iterable of 3 floats): The goal position. Meters.
             yaw (float): The goal yaw angle (heading). Radians.
             duration (float): How long until the goal is reached. Seconds.
@@ -444,7 +441,6 @@ class Crazyflie:
         streaming setpoint modes.
 
         Args:
-        ----
             remainValidMillisecs (int): Number of milliseconds that the last
                 streaming setpoint should be followed before reverting to the
                 onboard-determined behavior. May be longer e.g. if one radio
@@ -503,7 +499,6 @@ class Crazyflie:
         See :meth:`getParam()` docs for overview of the parameter system.
 
         Args:
-        ----
             name (str): The parameter's name.
             value (Any): The parameter's value.
 
@@ -547,7 +542,6 @@ class Crazyflie:
         :meth:`goTo()` after a streaming setpoint has been sent.
 
         Args:
-        ----
             pos (array-like of float[3]): Position. Meters.
             vel (array-like of float[3]): Velocity. Meters / second.
             acc (array-like of float[3]): Acceleration. Meters / second^2.
@@ -702,8 +696,7 @@ class CrazyflieServer(rclpy.node.Node):
 
     Also is the container for the individual :obj:`Crazyflie` objects.
 
-    Attributes
-    ----------
+    Attributes:
         crazyfiles (List[Crazyflie]): List of one Crazyflie object per robot,
             as determined by the crazyflies.yaml config file.
         crazyfliesById (Dict[int, Crazyflie]): Index to the same Crazyflie
@@ -873,7 +866,6 @@ class CrazyflieServer(rclpy.node.Node):
         See docstring of :meth:`Crazyflie.goTo()` for additional details.
 
         Args:
-        ----
             goal (iterable of 3 floats): The goal offset. Meters.
             yaw (float): The goal yaw angle (heading). Radians.
             duration (float): How long until the goal is reached. Seconds.
@@ -898,7 +890,6 @@ class CrazyflieServer(rclpy.node.Node):
         Asynchronous command; returns immediately.
 
         Args:
-        ----
             trajectoryId (int): ID number as given to :meth:`Crazyflie.uploadTrajectory()`.
             timescale (float): Scales the trajectory duration by this factor.
                 For example if timescale == 2.0, the trajectory will take twice
@@ -946,7 +937,6 @@ class CrazyflieServer(rclpy.node.Node):
         :meth:`goTo()` after a streaming setpoint has been sent.
 
         Args:
-        ----
             pos (array-like of float[3]): Position. Meters.
             vel (array-like of float[3]): Velocity. Meters / second.
             acc (array-like of float[3]): Acceleration. Meters / second^2.

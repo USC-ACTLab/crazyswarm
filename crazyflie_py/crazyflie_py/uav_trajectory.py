@@ -10,11 +10,12 @@ def normalize(v):
 
 
 class Polynomial:
+
     def __init__(self, p):
         self.p = p
 
     # evaluate a polynomial using horner's rule
-    def eval(self, t):
+    def eval(self, t):  # noqa: A003
         assert t >= 0
         x = 0.0
         for i in range(0, len(self.p)):
@@ -27,6 +28,7 @@ class Polynomial:
 
 
 class TrajectoryOutput:
+
     def __init__(self):
         self.pos = None    # position [m]
         self.vel = None    # velocity [m/s]
@@ -37,6 +39,7 @@ class TrajectoryOutput:
 
 # 4d single polynomial piece for x-y-z-yaw, includes duration.
 class Polynomial4D:
+
     def __init__(self, duration, px, py, pz, pyaw):
         self.duration = duration
         self.px = Polynomial(px)
@@ -53,7 +56,7 @@ class Polynomial4D:
             self.pz.derivative().p,
             self.pyaw.derivative().p)
 
-    def eval(self, t):
+    def eval(self, t):  # noqa: A003
         result = TrajectoryOutput()
         # flat variables
         result.pos = np.array([self.px.eval(t), self.py.eval(t), self.pz.eval(t)])
@@ -93,6 +96,7 @@ class Polynomial4D:
 
 
 class Trajectory:
+
     def __init__(self):
         self.polynomials = None
         self.duration = None
@@ -101,12 +105,12 @@ class Trajectory:
         return len(self.polynomials)
 
     def loadcsv(self, filename):
-        data = np.loadtxt(filename, delimiter=",", skiprows=1, usecols=range(33))
+        data = np.loadtxt(filename, delimiter=',', skiprows=1, usecols=range(33))
         self.polynomials = [Polynomial4D(row[0], row[1:9],
                                          row[9:17], row[17:25], row[25:33]) for row in data]
         self.duration = np.sum(data[:, 0])
 
-    def eval(self, t):
+    def eval(self, t):  # noqa: A003
         assert t >= 0
         assert t <= self.duration
 

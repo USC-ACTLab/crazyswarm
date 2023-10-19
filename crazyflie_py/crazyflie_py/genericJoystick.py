@@ -1,5 +1,6 @@
 import copy
 # import pyglet
+
 from . import keyboard
 
 # class JoyStickHandler:
@@ -21,6 +22,7 @@ from . import keyboard
 
 
 class Joystick:
+
     def __init__(self, timeHelper):
         # joysticks = pyglet.input.get_joysticks()
         # joystick = joysticks[0]
@@ -35,14 +37,14 @@ class Joystick:
             self.js = linuxjsdev.Joystick()
             devices = self.js.devices()
             if len(devices) == 0:
-                print("Warning: No joystick found!")
+                print('Warning: No joystick found!')
             else:
-                ids = [dev["id"] for dev in devices]
+                ids = [dev['id'] for dev in devices]
                 # For backwards compatibility, always choose device 0 if available.
-                self.joyID = 0 if 0 in ids else devices[0]["id"]
+                self.joyID = 0 if 0 in ids else devices[0]['id']
                 self.js.open(self.joyID)
         except ImportError:
-            print("Warning: Joystick only supported on Linux.")
+            print('Warning: Joystick only supported on Linux.')
 
     # def on_joybutton_press(joystick, button):
         # print(button)

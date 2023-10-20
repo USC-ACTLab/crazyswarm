@@ -1,8 +1,11 @@
 import numpy as np
 
+
 class State:
-    """Class that stores the state of a UAV as used in the simulator interface"""
-    def __init__(self, pos = np.zeros(3), vel = np.zeros(3), quat = np.array([1,0,0,0]), omega = np.zeros(3)):
+    """Class that stores the state of a UAV as used in the simulator interface."""
+
+    def __init__(self, pos=np.zeros(3), vel=np.zeros(3),
+                 quat=np.array([1, 0, 0, 0]), omega=np.zeros(3)):
         # internally use one numpy array
         self._state = np.empty(13)
         self.pos = pos
@@ -12,7 +15,7 @@ class State:
 
     @property
     def pos(self):
-        """position [m; world frame]"""
+        """Position [m; world frame]."""
         return self._state[0:3]
 
     @pos.setter
@@ -21,7 +24,7 @@ class State:
 
     @property
     def vel(self):
-        """velocity [m/s; world frame]"""
+        """Velocity [m/s; world frame]."""
         return self._state[3:6]
 
     @vel.setter
@@ -30,7 +33,7 @@ class State:
 
     @property
     def quat(self):
-        """quaternion [qw, qx, qy, qz; body -> world]"""
+        """Quaternion [qw, qx, qy, qz; body -> world]."""
         return self._state[6:10]
 
     @quat.setter
@@ -39,7 +42,7 @@ class State:
 
     @property
     def omega(self):
-        """angular velocity [rad/s; body frame]"""
+        """Angular velocity [rad/s; body frame]."""
         return self._state[10:13]
 
     @omega.setter
@@ -47,11 +50,13 @@ class State:
         self._state[10:13] = value
 
     def __repr__(self) -> str:
-        return "State pos={}, vel={}, quat={}, omega={}".format(self.pos, self.vel, self.quat, self.omega)
+        return 'State pos={}, vel={}, quat={}, omega={}'.format(
+            self.pos, self.vel, self.quat, self.omega)
 
 
 class Action:
-    """Class that stores the action of a UAV as used in the simulator interface"""
+    """Class that stores the action of a UAV as used in the simulator interface."""
+
     def __init__(self, rpm):
         # internally use one numpy array
         self._action = np.empty(4)
@@ -59,7 +64,7 @@ class Action:
 
     @property
     def rpm(self):
-        """rotation per second [rpm]"""
+        """Rotation per second [rpm]."""
         return self._action
 
     @rpm.setter
@@ -67,4 +72,4 @@ class Action:
         self._action = value
 
     def __repr__(self) -> str:
-        return "Action rpm={}".format(self.rpm)
+        return 'Action rpm={}'.format(self.rpm)

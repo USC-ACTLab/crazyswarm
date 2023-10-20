@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from rclpy.node import Node
-from rosgraph_msgs.msg import Clock
 from rclpy.time import Time
-from ..sim_data_types import State, Action
+from rosgraph_msgs.msg import Clock
+
+from ..sim_data_types import Action, State
 
 
 class Backend:
-    """Tracks the desired state perfectly (no physics simulation)"""
+    """Tracks the desired state perfectly (no physics simulation)."""
 
     def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node
@@ -33,4 +34,3 @@ class Backend:
 
     def shutdown(self):
         pass
-

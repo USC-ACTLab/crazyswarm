@@ -9,23 +9,6 @@ on:
 # Based on example provided at https://github.com/ros-tooling/setup-ros
 
 jobs:
-  # build: # Docker is not supported on macOS and Windows.
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [macOS-latest, windows-latest]
-  #       ros_distribution:
-  #         - galactic
-  #   steps:
-  #     - uses: ros-tooling/setup-ros@v0.2
-  #       with:
-  #         required-ros-distributions: ${{ matrix.ros_distribution }}
-  #     - name: build and test
-  #       uses: ros-tooling/action-ros-ci@v0.2
-  #       with:
-  #         package-name: crazyswarm
-  #         target-ros2-distro: ${{ matrix.ros_distribution }}
-
   build_docker: # On Linux, use docker
     runs-on: ubuntu-latest
     strategy:
@@ -50,7 +33,7 @@ jobs:
       image: ${{ matrix.docker_image }}
     steps:
       - name: setup ROS environment
-        uses: ros-tooling/setup-ros@v0.4
+        uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: ${{ matrix.ros_distribution }}
 

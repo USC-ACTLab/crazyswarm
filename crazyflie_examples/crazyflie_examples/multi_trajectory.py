@@ -1,21 +1,22 @@
 #!/usr/bin/env python
 
-import numpy as np
 from pathlib import Path
 
-from crazyflie_py import *
+from crazyflie_py import Crazyswarm
 from crazyflie_py.uav_trajectory import Trajectory
+import numpy as np
+
 
 def main():
     swarm = Crazyswarm()
     timeHelper = swarm.timeHelper
     allcfs = swarm.allcfs
     trajs = []
-    n = 2 # number of distinct trajectories
+    n = 2  # number of distinct trajectories
 
     for i in range(n):
         traj = Trajectory()
-        traj.loadcsv(Path(__file__).parent / f"data/multi_trajectory/traj{i}.csv")
+        traj.loadcsv(Path(__file__).parent / f'data/multi_trajectory/traj{i}.csv')
         trajs.append(traj)
 
     TRIALS = 1
@@ -38,5 +39,5 @@ def main():
         timeHelper.sleep(3.0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

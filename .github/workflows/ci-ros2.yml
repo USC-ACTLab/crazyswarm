@@ -42,14 +42,21 @@ jobs:
           sudo apt update
           sudo apt install -y libusb-1.0-0-dev
 
+      - name: install pip dependencies
+          # TODO: would be better to follow https://answers.ros.org/question/370666/how-to-declare-an-external-python-dependency-in-ros2/
+          # but this requires some upstream changes
+        run: |
+          pip install rowan
+
       - uses: actions/checkout@v2
       - name: build and test ROS 2
         uses: ros-tooling/action-ros-ci@v0.3
         with:
-          # TODO: removed crazyflie_interfaces since it causes some test failures
           package-name: |
             crazyflie
             crazyflie_examples
+            crazyflie_interfaces
+            crazyflie_py
             crazyflie_sim
           target-ros2-distro: ${{ matrix.ros_distribution }}
           vcs-repo-file-url: rosinstall

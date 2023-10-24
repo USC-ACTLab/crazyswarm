@@ -91,3 +91,14 @@ To close the logblocks again, run:
 
     ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'topic_test'}"
     ros2 service call /cf2/remove_logging crazyflie_interfaces/srv/RemoveLogging "{topic_name: 'pose'}"
+
+Run Tests Locally
+-----------------
+
+This requires some updated pip packages for testing, see https://docs.ros.org/en/humble/Installation/Alternatives/Ubuntu-Development-Setup.html, otherwise the reported failures will be inconsistent with CI.
+
+Then execute:
+
+```
+colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure --packages-select crazyflie_py
+```

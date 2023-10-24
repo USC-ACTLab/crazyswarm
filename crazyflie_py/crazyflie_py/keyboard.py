@@ -1,9 +1,10 @@
-import sys
 import select
+import sys
 import termios
 
 
 class KeyPoller():
+
     def __enter__(self):
         # Save the terminal settings
         self.fd = sys.stdin.fileno()
@@ -16,11 +17,11 @@ class KeyPoller():
 
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback):  # noqa A002
         termios.tcsetattr(self.fd, termios.TCSAFLUSH, self.old_term)
 
     def poll(self):
-        dr,dw,de = select.select([sys.stdin], [], [], 0)
+        dr, dw, de = select.select([sys.stdin], [], [], 0)
         if not dr == []:
             return sys.stdin.read(1)
         return None

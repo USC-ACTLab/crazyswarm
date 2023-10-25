@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from rclpy.node import Node
-from rosgraph_msgs.msg import Clock
-from rclpy.time import Time
-from ..sim_data_types import State, Action
-
-
 import numpy as np
+from rclpy.node import Node
+from rclpy.time import Time
+from rosgraph_msgs.msg import Clock
 import rowan
 
+from ..sim_data_types import Action, State
+
+
 class Backend:
-    """Backend that uses newton-euler rigid-body dynamics implemented in numpy"""
+    """Backend that uses newton-euler rigid-body dynamics implemented in numpy."""
 
     def __init__(self, node: Node, names: list[str], states: list[State]):
         self.node = node
@@ -50,11 +50,11 @@ class Backend:
 
 
 class Quadrotor:
-    """Basic rigid body quadrotor model (no drag) using numpy and rowan"""
+    """Basic rigid body quadrotor model (no drag) using numpy and rowan."""
 
     def __init__(self, state):
         # parameters (Crazyflie 2.0 quadrotor)
-        self.mass = 0.034 # kg
+        self.mass = 0.034  # kg
         # self.J = np.array([
         # 	[16.56,0.83,0.71],
         # 	[0.83,16.66,1.8],
@@ -63,21 +63,21 @@ class Quadrotor:
         self.J = np.array([16.571710e-6, 16.655602e-6, 29.261652e-6])
 
         # Note: we assume here that our control is forces
-        arm_length = 0.046 # m
+        arm_length = 0.046  # m
         arm = 0.707106781 * arm_length
-        t2t = 0.006 # thrust-to-torque ratio
+        t2t = 0.006  # thrust-to-torque ratio
         self.B0 = np.array([
             [1, 1, 1, 1],
             [-arm, -arm, arm, arm],
             [-arm, arm, arm, -arm],
             [-t2t, t2t, -t2t, t2t]
             ])
-        self.g = 9.81 # not signed
+        self.g = 9.81  # not signed
 
-        if self.J.shape == (3,3):
-            self.inv_J = np.linalg.pinv(self.J) # full matrix -> pseudo inverse
+        if self.J.shape == (3, 3):
+            self.inv_J = np.linalg.pinv(self.J)  # full matrix -> pseudo inverse
         else:
-            self.inv_J = 1 / self.J # diagonal matrix -> division
+            self.inv_J = 1 / self.J  # diagonal matrix -> division
 
         self.state = state
 
@@ -95,23 +95,28 @@ class Quadrotor:
 
         # compute next state
         eta = np.dot(self.B0, force)
-        f_u = np.array([0,0,eta[0]])
-        tau_u = np.array([eta[1],eta[2],eta[3]])
+        f_u = np.array([0, 0, eta[0]])
+        tau_u = np.array([eta[1], eta[2], eta[3]])
 
-        # dynamics 
-        # dot{p} = v 
+        # dynamics
+        # dot{p} = v
         pos_next = self.state.pos + self.state.vel * dt
-        # mv = mg + R f_u 
-        vel_next = self.state.vel + (np.array([0,0,-self.g]) + rowan.rotate(self.state.quat,f_u) / self.mass) * dt
+        # mv = mg + R f_u
+        vel_next = self.state.vel + (
+            np.array([0, 0, -self.g]) +
+            rowan.rotate(self.state.quat, f_u) / self.mass) * dt
 
         # dot{R} = R S(w)
         # to integrate the dynamics, see
         # https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/, and
         # https://arxiv.org/pdf/1604.08139.pdf
-        q_next = rowan.normalize(rowan.calculus.integrate(self.state.quat, self.state.omega, dt))
+        q_next = rowan.normalize(
+            rowan.calculus.integrate(
+                self.state.quat, self.state.omega, dt))
 
-        # mJ = Jw x w + tau_u 
-        omega_next = self.state.omega + (self.inv_J * (np.cross(self.J * self.state.omega, self.state.omega) + tau_u)) * dt
+        # mJ = Jw x w + tau_u
+        omega_next = self.state.omega + (
+            self.inv_J * (np.cross(self.J * self.state.omega, self.state.omega) + tau_u)) * dt
 
         self.state.pos = pos_next
         self.state.vel = vel_next
@@ -121,5 +126,5 @@ class Quadrotor:
         # if we fall below the ground, set velocities to 0
         if self.state.pos[2] < 0:
             self.state.pos[2] = 0
-            self.state.vel = [0,0,0]
-            self.state.omega = [0,0,0]
+            self.state.vel = [0, 0, 0]
+            self.state.omega = [0, 0, 0]

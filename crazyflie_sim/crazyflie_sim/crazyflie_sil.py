@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
 
 """
-Crazyflie Software-In-The-Loop Wrapper that uses the firmware Python bindings
-
+Crazyflie Software-In-The-Loop Wrapper that uses the firmware Python bindings.
 
     2022 - Wolfgang Hönig (TU Berlin)
 """
 from __future__ import annotations
 
-import numpy as np
-
 import cffirmware as firm
+import numpy as np
 import rowan
+
 from . import sim_data_types
 
 
 class TrajectoryPolynomialPiece:
+
     def __init__(self, poly_x, poly_y, poly_z, poly_yaw, duration):
         self.poly_x = poly_x
         self.poly_y = poly_y
         self.poly_z = poly_z
         self.poly_yaw = poly_yaw
         self.duration = duration
+
 
 def copy_svec(v):
     return firm.mkvec(v.x, v.y, v.z)
@@ -36,9 +37,7 @@ class CrazyflieSIL:
     MODE_LOW_POSITION = 3
     MODE_LOW_VELOCITY = 4
 
-
     def __init__(self, name, initialPosition, controller_name, time_func):
-
         # Core.
         self.name = name
         self.groupMask = 0
@@ -49,7 +48,7 @@ class CrazyflieSIL:
         self.mode = CrazyflieSIL.MODE_IDLE
         self.planner = firm.planner()
         firm.plan_init(self.planner)
-        self.trajectories = dict()
+        self.trajectories = {}
 
         # previous state for HL commander
         self.cmdHl_pos = firm.mkvec(*initialPosition)
@@ -68,7 +67,7 @@ class CrazyflieSIL:
         self.state.velocity.y = 0
         self.state.velocity.z = 0
         self.state.attitude.roll = 0
-        self.state.attitude.pitch = -0 # WARNING: this is in the legacy coordinate system
+        self.state.attitude.pitch = -0  # WARNING: this is in the legacy coordinate system
         self.state.attitude.yaw = 0
 
         self.sensors = firm.sensorData_t()
@@ -84,54 +83,65 @@ class CrazyflieSIL:
         self.controller_name = controller_name
 
         # set up controller
-        if controller_name == "none":
+        if controller_name == 'none':
             self.controller = None
-        elif controller_name == "pid":
+        elif controller_name == 'pid':
             firm.controllerPidInit()
             self.controller = firm.controllerPid
-        elif controller_name == "mellinger":
+        elif controller_name == 'mellinger':
             self.mellinger_control = firm.controllerMellinger_t()
             firm.controllerMellingerInit(self.mellinger_control)
             self.controller = firm.controllerMellinger
-        elif controller_name == "brescianini":
+        elif controller_name == 'brescianini':
             firm.controllerBrescianiniInit()
             self.controller = firm.controllerBrescianini
         else:
-            raise ValueError("Unknown controller {}".format(controller_name))
+            raise ValueError('Unknown controller {}'.format(controller_name))
 
     def setGroupMask(self, groupMask):
         self.groupMask = groupMask
 
-    def takeoff(self, targetHeight, duration, groupMask = 0):
+    def takeoff(self, targetHeight, duration, groupMask=0):
         if self._isGroup(groupMask):
             self.mode = CrazyflieSIL.MODE_HIGH_POLY
             targetYaw = 0.0
-            firm.plan_takeoff(self.planner,
+            firm.plan_takeoff(
+                self.planner,
                 self.cmdHl_pos,
-                self.cmdHl_yaw, targetHeight, targetYaw, duration, self.time_func())
+                self.cmdHl_yaw,
+                targetHeight, targetYaw, duration, self.time_func())
 
-    def land(self, targetHeight, duration, groupMask = 0):
+    def land(self, targetHeight, duration, groupMask=0):
         if self._isGroup(groupMask):
             self.mode = CrazyflieSIL.MODE_HIGH_POLY
             targetYaw = 0.0
-            firm.plan_land(self.planner,
+            firm.plan_land(
+                self.planner,
                 self.cmdHl_pos,
-                self.cmdHl_yaw, targetHeight, targetYaw, duration, self.time_func())
+                self.cmdHl_yaw,
+                targetHeight, targetYaw, duration, self.time_func())
 
     # def stop(self, groupMask = 0):
     #     if self._isGroup(groupMask):
     #         self.mode = CrazyflieSIL.MODE_IDLE
     #         firm.plan_stop(self.planner)
 
-    def goTo(self, goal, yaw, duration, relative = False, groupMask = 0):
+    def goTo(self, goal, yaw, duration, relative=False, groupMask=0):
         if self._isGroup(groupMask):
             if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
                 # We need to update to the latest firmware that has go_to_from.
-                raise ValueError("goTo from low-level modes not yet supported.")
+                raise ValueError('goTo from low-level modes not yet supported.')
             self.mode = CrazyflieSIL.MODE_HIGH_POLY
-            firm.plan_go_to(self.planner, relative, firm.mkvec(*goal), yaw, duration, self.time_func())
+            firm.plan_go_to(
+                self.planner,
+                relative,
+                firm.mkvec(*goal),
+                yaw, duration, self.time_func())
 
-    def uploadTrajectory(self, trajectoryId: int, pieceOffset: int, pieces: list[TrajectoryPolynomialPiece]):
+    def uploadTrajectory(self,
+                         trajectoryId: int,
+                         pieceOffset: int,
+                         pieces: list[TrajectoryPolynomialPiece]):
         traj = firm.piecewise_traj()
         traj.t_begin = 0
         traj.timescale = 1.0
@@ -148,7 +158,12 @@ class CrazyflieSIL:
                 firm.poly4d_set(fwpiece, 3, coef, piece.poly_yaw[coef])
         self.trajectories[trajectoryId] = traj
 
-    def startTrajectory(self, trajectoryId: int, timescale: float = 1.0, reverse: bool = False, relative: bool = True, groupMask: int = 0):
+    def startTrajectory(self,
+                        trajectoryId: int,
+                        timescale: float = 1.0,
+                        reverse: bool = False,
+                        relative: bool = True,
+                        groupMask: int = 0):
         if self._isGroup(groupMask):
             self.mode = CrazyflieSIL.MODE_HIGH_POLY
             traj = self.trajectories[trajectoryId]
@@ -185,7 +200,7 @@ class CrazyflieSIL:
         self.setpoint.acceleration.x = acc[0]
         self.setpoint.acceleration.y = acc[1]
         self.setpoint.acceleration.z = acc[2]
-                
+
         self.cmdHl_pos = copy_svec(self.setpoint.position)
         self.cmdHl_vel = copy_svec(self.setpoint.velocity)
         self.cmdHl_yaw = yaw
@@ -282,18 +297,24 @@ class CrazyflieSIL:
             return None
 
         if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
-            return sim_data_types.Action([0,0,0,0])
+            return sim_data_types.Action([0, 0, 0, 0])
 
         time_in_seconds = self.time_func()
         # ticks is essentially the time in milliseconds as an integer
         tick = int(time_in_seconds * 1000)
-        if self.controller_name != "mellinger":
+        if self.controller_name != 'mellinger':
             self.controller(self.control, self.setpoint, self.sensors, self.state, tick)
         else:
-            self.controller(self.mellinger_control, self.control, self.setpoint, self.sensors, self.state, tick)
+            self.controller(
+                self.mellinger_control,
+                self.control,
+                self.setpoint,
+                self.sensors,
+                self.state,
+                tick)
         return self._fwcontrol_to_sim_data_types_action()
 
-    # "private" methods
+    # 'private' methods
     def _isGroup(self, groupMask):
         return groupMask == 0 or (self.groupMask & groupMask) > 0
 
@@ -313,23 +334,29 @@ class CrazyflieSIL:
 
         def pwm_to_force(pwm):
             # polyfit using data and scripts from https://github.com/IMRCLab/crazyflie-system-id
-            p = [ 1.71479058e-09,  8.80284482e-05, -2.21152097e-01]
+            p = [1.71479058e-09,  8.80284482e-05, -2.21152097e-01]
             force_in_grams = np.polyval(p, pwm)
             force_in_newton = force_in_grams * 9.81 / 1000.0
             return np.maximum(force_in_newton, 0)
 
-        return sim_data_types.Action([pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
-            pwm_to_rpm(self.motors_thrust_pwm.motors.m2),
-            pwm_to_rpm(self.motors_thrust_pwm.motors.m3),
-            pwm_to_rpm(self.motors_thrust_pwm.motors.m4)])
-
+        return sim_data_types.Action(
+            [pwm_to_rpm(self.motors_thrust_pwm.motors.m1),
+             pwm_to_rpm(self.motors_thrust_pwm.motors.m2),
+             pwm_to_rpm(self.motors_thrust_pwm.motors.m3),
+             pwm_to_rpm(self.motors_thrust_pwm.motors.m4)])
 
     @staticmethod
     def _fwsetpoint_to_sim_data_types_state(fwsetpoint):
         pos = np.array([fwsetpoint.position.x, fwsetpoint.position.y, fwsetpoint.position.z])
         vel = np.array([fwsetpoint.velocity.x, fwsetpoint.velocity.y, fwsetpoint.velocity.z])
-        acc = np.array([fwsetpoint.acceleration.x, fwsetpoint.acceleration.y, fwsetpoint.acceleration.z])
-        omega = np.radians(np.array([fwsetpoint.attitudeRate.roll, fwsetpoint.attitudeRate.pitch, fwsetpoint.attitudeRate.yaw]))
+        acc = np.array([
+            fwsetpoint.acceleration.x,
+            fwsetpoint.acceleration.y,
+            fwsetpoint.acceleration.z])
+        omega = np.radians(np.array([
+            fwsetpoint.attitudeRate.roll,
+            fwsetpoint.attitudeRate.pitch,
+            fwsetpoint.attitudeRate.yaw]))
 
         if fwsetpoint.mode.quat == firm.modeDisable:
             # compute rotation based on differential flatness

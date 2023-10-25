@@ -1,8 +1,10 @@
 import os
-import yaml
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
+import yaml
+
 
 def generate_launch_description():
     # load crazyflies
@@ -29,8 +31,8 @@ def generate_launch_description():
             executable='vel_mux.py',
             name='vel_mux',
             output='screen',
-            parameters=[{"hover_height": 0.3},
-                        {"incoming_twist_topic": "/cmd_vel"},
-                        {"robot_prefix": "/cf1"}]
+            parameters=[{'hover_height': 0.3},
+                        {'incoming_twist_topic': '/cmd_vel'},
+                        {'robot_prefix': '/cf1'}]
         ),
     ])

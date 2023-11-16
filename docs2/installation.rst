@@ -64,8 +64,7 @@ First Installation
 
 6. Update the crazyflies
 
-   If this is the first time handling crazyflies it is always good to start with `Bitcraze's getting started guide  <https://www.bitcraze.io/documentation/tutorials/getting-started-with-crazyflie-2-x/
->`_.
+   If this is the first time handling crazyflies it is always good to start with `Bitcraze's getting started guide  <https://www.bitcraze.io/documentation/tutorials/getting-started-with-crazyflie-2-x/>`_.
 
    You can update each crazyflie firmware to the latest release via `these instructions of the Bitcraze Crazyflie client <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-upgrade>`_ .
 

@@ -296,7 +296,7 @@ class CrazyflieSIL:
         if self.controller is None:
             return None
 
-        if self.mode != CrazyflieSIL.MODE_HIGH_POLY:
+        if self.mode == CrazyflieSIL.MODE_IDLE:
             return sim_data_types.Action([0, 0, 0, 0])
 
         time_in_seconds = self.time_func()

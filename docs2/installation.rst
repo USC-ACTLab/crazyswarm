@@ -56,7 +56,11 @@ First Installation
     .. note::
        symlink-install allows you to edit Python and config files without running `colcon build` every time.
 
-5. Set up software-in-the-loop simulation (optional)
+5. Set up USB permissions for crazyradio
+
+   For the crazyradio, you need to setup usb rules in order to communicate with the Crazyflie. Find the instructions for that here `in Bitcraze's USB permission guide for Linux <https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/installation/usb_permissions/>`_.
+   
+6. Set up software-in-the-loop simulation (optional)
 
     This currently requires cloning the Crazyflie firmware and building the Python bindings manually. In a separate folder (not part of your ROS 2 workspace!), 
 

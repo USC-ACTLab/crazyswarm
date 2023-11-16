@@ -67,11 +67,11 @@ def generate_launch_description():
                 os.path.join(bringup_launch_dir, 'bringup_launch.py')),
             launch_arguments={
                 'slam': 'False',
-                'use_sim_time': 'false',
+                'use_sim_time': 'False',
                 'map': cf_examples_dir + '/data/' + map_name + '.yaml',
-                'params_file': os.path.join(cf_examples_dir, 'nav2_params.yaml'),
-                'autostart': 'true',
-                'use_composition': 'true',
+                'params_file': os.path.join(cf_examples_dir, 'config/nav2_params.yaml'),
+                'autostart': 'True',
+                'use_composition': 'True',
                 'transform_publish_period': '0.02'
                 }.items()
         ),

@@ -95,6 +95,7 @@ install(TARGETS
   console
   log
   setParam
+  downloadUSDLogfile
   #
   teleop
   crazyflie_server

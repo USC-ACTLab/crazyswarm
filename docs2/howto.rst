@@ -103,6 +103,8 @@ Then execute:
 
     colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure --packages-select crazyflie_py
 
+.. _Collision Avoidance:
+
 Collision Avoidance
 -------------------
 
@@ -132,4 +134,4 @@ Generate Trajectories
 
 Crazyswarm2 supports polynomial trajectories (8th order). These can be generated from waypoints, waypoint/time pairs, or optimization. Useful tools are available at https://github.com/whoenig/uav_trajectories, including scripts to visualize the resulting trajectories.
 
-For the multi-robot case, there is no easy to-use library, yet. One can use collision avoidance (see HowTo) or preplan trajectories using https://github.com/IMRCLab/db-CBS or https://github.com/mjdebord/smoothener/tree/cylinders. 
+For the multi-robot case, there is no easy to-use library, yet. One can use collision avoidance (see :ref:`Collision Avoidance`) or preplan trajectories using https://github.com/IMRCLab/db-CBS or https://github.com/mjdebord/smoothener/tree/cylinders. 

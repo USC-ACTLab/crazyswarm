@@ -1,7 +1,9 @@
-name: Docs deploy
+name: Docs
 
 on:
   push:
+    branches: [ main ]
+  pull_request:
     branches: [ main ]
 
 jobs:
@@ -33,6 +35,7 @@ jobs:
         touch docs2/_build/html/.nojekyll
 
     - name: Deploy
+      if: github.ref == 'refs/heads/main'
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: docs2/_build/html # The folder the action should deploy.

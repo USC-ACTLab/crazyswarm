@@ -31,8 +31,8 @@ def generate_launch_description():
             executable='vel_mux.py',
             name='vel_mux',
             output='screen',
-            parameters=[{'hover_height': 0.3},
-                        {'incoming_twist_topic': '/cmd_vel'},
-                        {'robot_prefix': '/cf1'}]
+            parameters=[{"hover_height": 0.3},
+                        {"incoming_twist_topic": "/cmd_vel"},
+                        {"robot_prefix": "/cf231"}]
         ),
     ])

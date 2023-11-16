@@ -12,7 +12,7 @@ import rclpy
 from rclpy.node import Node
 
 from geometry_msgs.msg import Twist
-from crazyflie_interfaces.srv import Takeoff, Land
+from crazyflie_interfaces.srv import Takeoff, Land, NotifySetpointsStop
 from crazyflie_interfaces.msg import Hover
 import time
 
@@ -39,6 +39,7 @@ class VelMux(Node):
         self.takeoff_client = self.create_client(Takeoff, robot_prefix + '/takeoff')
         self.publisher_hover = self.create_publisher(Hover, robot_prefix + '/cmd_hover', 10)
         self.land_client = self.create_client(Land, robot_prefix + '/land')
+        self.notify_client = self.create_client(NotifySetpointsStop, robot_prefix + '/notify_setpoints_stop')
         self.cf_has_taken_off = False
 
         self.takeoff_client.wait_for_service()
@@ -72,6 +73,8 @@ class VelMux(Node):
                 msg.z_distance = self.hover_height
                 self.publisher_hover.publish(msg)
             else:
+                req = NotifySetpointsStop.Request()
+                self.notify_client.call_async(req)
                 req = Land.Request()
                 req.height = 0.1
                 req.duration = rclpy.duration.Duration(seconds=2.0).to_msg()
@@ -79,7 +82,6 @@ class VelMux(Node):
                 time.sleep(2.0)        
                 self.cf_has_taken_off = False
                 self.received_first_cmd_vel = False
-
 
 def main(args=None):
     rclpy.init(args=args)

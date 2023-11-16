@@ -141,7 +141,11 @@ public:
     subscription_cmd_position_ = node->create_subscription<crazyflie_interfaces::msg::Position>(name + "/cmd_position", rclcpp::SystemDefaultsQoS(), std::bind(&CrazyflieROS::cmd_position_changed, this, _1), sub_opt_cf_cmd);
 
     // spinning timer
-    spin_timer_ = node->create_wall_timer(std::chrono::milliseconds(100), std::bind(&CrazyflieROS::spin_once, this), callback_group_cf_srv);
+    // used to process all incoming radio messages
+    spin_timer_ =
+      node->create_wall_timer(
+      std::chrono::milliseconds(1),
+      std::bind(&CrazyflieROS::spin_once, this), callback_group_cf_srv);
 
 
     auto start = std::chrono::system_clock::now();
@@ -367,7 +371,8 @@ public:
 
   void spin_once()
   {
-    cf_.spin_once();
+    // process all packets from the receive queue
+    cf_.processAllPackets();
   }
 
   std::string broadcastUri() const

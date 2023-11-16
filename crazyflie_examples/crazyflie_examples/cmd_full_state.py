@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import numpy as np
 from pathlib import Path
 
-from crazyflie_py import *
+from crazyflie_py import Crazyswarm
 from crazyflie_py.uav_trajectory import Trajectory
+import numpy as np
 
 
 def executeTrajectory(timeHelper, cf, trajpath, rate=100, offset=np.zeros(3)):
@@ -39,12 +39,15 @@ def main():
     cf.takeoff(targetHeight=Z, duration=Z+1.0)
     timeHelper.sleep(Z+2.0)
 
-    executeTrajectory(timeHelper, cf, Path(__file__).parent / "data/figure8.csv", rate, offset=np.array([0, 0, 0.5]))
+    executeTrajectory(timeHelper, cf,
+                      Path(__file__).parent / 'data/figure8.csv',
+                      rate,
+                      offset=np.array([0, 0, 0.5]))
 
     cf.notifySetpointsStop()
     cf.land(targetHeight=0.03, duration=Z+1.0)
     timeHelper.sleep(Z+2.0)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

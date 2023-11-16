@@ -8,8 +8,8 @@ This page will explain the overview of the crazyflie ROS 2 nodes:
 .. image:: images/overview_nodes.jpg
 
 
-Explanation per node
---------------------
+Explanation per package
+-----------------------
 
 In the `source code of the Crazyswarm2 (Crazyflie ROS 2) project <https://github.com/IMRCLab/crazyswarm2>`_, there are several packages that we will explain here:
 
@@ -17,17 +17,19 @@ In the `source code of the Crazyswarm2 (Crazyflie ROS 2) project <https://github
 - **crazyflie/**: The package that contains the crazyflie server nodes and the crazyflies.yaml.
 - **crazyflie_py/**: The package that contains the python library that wraps around the ROS 2 services and topics that connects with the crazyflie server nodes.
 - **crazyflie_examples/**:  The package that contains examples of using the crazyflie ROS 2 package. See :ref:`tutorials`.
-- **crazyflie_interfaces/**: The package that contain all msgs and srvs for the crazyflie ROS 2 project.
+- **crazyflie_interfaces/**: The package that contains all msgs and srvs for the crazyflie ROS 2 project.
+- **crazyflie_sim/**: The package that contains our simulator.
 
 Crazyflie server
 ----------------
 
 The crazyflie server node connects multiple `Crazyflies <https://www.bitcraze.io/products/crazyflie-2-1/>`_ with on or more `Crazyradio PA dongles <https://www.bitcraze.io/products/crazyradio-pa/>`_.
 
-It has two backends that you can choose from:
+It has three backends that you can choose from:
 
 - **cpp**: This is based on the `crazyflie-link-cpp <https://github.com/bitcraze/crazyflie-link-cpp>`_ on the lowest layer.
 - **cflib**: This is based on the `crazyflie-lib-python <https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/>`_ up until the logging, parameter, and command sending handling.
+- **sim**: Our simulator behaves like a regular backend, offering ROS 2 topics and services, see below for more details on the simulation.
 
 It handles several low level communication aspects with the Crazyflies:
 
@@ -47,8 +49,7 @@ Simulation
 
 The simulator uses the Crazyflie firmware as a software-in-the-loop (SIL). It provides the same ROS interface as the server and therefore can be used with C++ or Python user code.
 
-Currently, the desired setpoint is visualized in rviz (see :ref:`usage`). However, the code is prepared to support physics-based simulation in the future as well.
-
+Currently, the desired setpoint is visualized in rviz (see :ref:`usage`) or a simple physics-based simulator can be used.
 
 Support functionality with backends
 -----------------------------------

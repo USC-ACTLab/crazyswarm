@@ -9,74 +9,54 @@ on:
 # Based on example provided at https://github.com/ros-tooling/setup-ros
 
 jobs:
-  # build: # Docker is not supported on macOS and Windows.
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [macOS-latest, windows-latest]
-  #       ros_distribution:
-  #         - galactic
-  #   steps:
-  #     - uses: ros-tooling/setup-ros@v0.2
-  #       with:
-  #         required-ros-distributions: ${{ matrix.ros_distribution }}
-  #     - name: build and test
-  #       uses: ros-tooling/action-ros-ci@v0.2
-  #       with:
-  #         package-name: crazyswarm
-  #         target-ros2-distro: ${{ matrix.ros_distribution }}
-
   build_docker: # On Linux, use docker
     runs-on: ubuntu-latest
     strategy:
       matrix:
         ros_distribution:
-          - galactic
           - humble
+          - iron
 
         # Define the Docker image(s) associated with each ROS distribution.
         include:
-          # Galactic Geochelone (May 2021 - November 2022)
-          - docker_image: ubuntu:focal
-            ros_distribution: galactic
-            ros_version: 2
-
           # Humble Hawksbill (May 2022 - May 2027)
           - docker_image: ubuntu:jammy
             ros_distribution: humble
+            ros_version: 2
+
+          # Iron Irwini (May 2023 - Nov 2024)
+          - docker_image: ubuntu:jammy
+            ros_distribution: iron
             ros_version: 2
 
     container:
       image: ${{ matrix.docker_image }}
     steps:
       - name: setup ROS environment
-        uses: ros-tooling/setup-ros@v0.4
+        uses: ros-tooling/setup-ros@v0.7
         with:
           required-ros-distributions: ${{ matrix.ros_distribution }}
-
-      # There is a bug in vcstools, where submodules are not pulled recursively
-      # See https://github.com/dirk-thomas/vcstool/issues/205
-      # This is fixed in master, but not in the latest release
-      # Pull the latest version here
-      - name: install dependencies
-        run: |
-          sudo apt -y remove python3-vcstool
-          sudo pip3 install git+https://github.com/dirk-thomas/vcstool.git@7d1329f296cef4b767bf7ba0bf53a29dd3d3019c
-          vcs --version
 
       - name: install dependencies
         run: |
           sudo apt update
           sudo apt install -y libusb-1.0-0-dev
 
+      - name: install pip dependencies
+          # TODO: would be better to follow https://answers.ros.org/question/370666/how-to-declare-an-external-python-dependency-in-ros2/
+          # but this requires some upstream changes
+        run: |
+          pip install rowan
+
       - uses: actions/checkout@v2
       - name: build and test ROS 2
-        uses: ros-tooling/action-ros-ci@v0.2
+        uses: ros-tooling/action-ros-ci@v0.3
         with:
-          # TODO: removed crazyflie_interfaces since it causes some test failures
           package-name: |
             crazyflie
             crazyflie_examples
+            crazyflie_interfaces
+            crazyflie_py
             crazyflie_sim
           target-ros2-distro: ${{ matrix.ros_distribution }}
           vcs-repo-file-url: rosinstall

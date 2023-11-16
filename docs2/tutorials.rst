@@ -19,7 +19,7 @@ We have an example of the telop_twist_keyboard package working together with the
 First, make sure that the crazyflies.yaml has the right URI and if you are using the `Flow deck <https://www.bitcraze.io/products/flow-deck-v2/>`_ or `any other position system available <https://www.bitcraze.io/documentation/system/positioning//>`_ to the crazyflie.  
 set the controller to 1 (PID). 
 
-And if you  have not already, install the teleop package for the keyboard. (replace DISTRO with humble or galactic):
+And if you  have not already, install the teleop package for the keyboard. (replace DISTRO with humble or iron):
 
 .. code-block:: bash
 
@@ -106,7 +106,7 @@ Assuming you have installed ROS 2 and Crazyswarm2 according to the instructions 
 
 .. code-block:: bash
 
-    sudo apt-get install ros-galactic-slam-toolbox
+    sudo apt-get install ros-DISTRO-slam-toolbox
 
 Go to crazyflie/config/crazyflie.yaml, change the URI of the crazyflie to the one yours has and put the crazyflies you don't use on 'enabled: false':
 
@@ -229,7 +229,7 @@ Now, open up a  rviv2 window in a seperate terminal with :
 
 .. code-block:: bash
 
-    source /opt/ros/galactic/setup.bash
+    source /opt/ros/DISTRO/setup.bash
     rviz2
 
 Add the following displays and panels to RVIZ:
@@ -251,7 +251,7 @@ While still connected to the crazyflie with the server, open another terminal an
 
 .. code-block:: bash
 
-    source /opt/ros/galactic/setup.bash
+    source /opt/ros/DISTRO/setup.bash
     ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
 and make the crazyflie take off with the 't' key on your keyboard. Now fly around the room to make a map of it.
@@ -291,7 +291,7 @@ Next, install the Navigation2 Bringup package:
 
 .. code-block:: bash
 
-  sudo apt-get install ros-galactic-nav2-bringup
+  sudo apt-get install ros-DISTRO-nav2-bringup
 
 Looking at the Launch file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -785,7 +785,15 @@ class CrazyflieServer(Node):
         return response
 
     def _notify_setpoints_stop_callback(self, request, response, uri="all"):
-        self.get_logger().info("Notify setpoint stop not yet implemented")
+
+        self.get_logger().info(f"{uri}: Received notify setpoint stop")
+
+        if uri == "all":
+            for link_uri in self.uris:
+                self.swarm._cfs[link_uri].cf.commander.send_notify_setpoint_stop()              
+        else:
+            self.swarm._cfs[uri].cf.commander.send_notify_setpoint_stop()
+
         return response
 
     def _upload_trajectory_callback(self, request, response, uri="all"):

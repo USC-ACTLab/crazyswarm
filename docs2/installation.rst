@@ -56,7 +56,21 @@ First Installation
     .. note::
        symlink-install allows you to edit Python and config files without running `colcon build` every time.
 
-5. Set up software-in-the-loop simulation (optional)
+5. Set up Crazyradio
+
+   For the crazyradio, you need to setup usb rules in order to communicate with the Crazyflie. Find the instructions for that here `in Bitcraze's USB permission guide for Linux <https://www.bitcraze.io/documentation/repository/crazyflie-lib-python/master/installation/usb_permissions/>`_.
+
+   You will also need to update the crazyradio firmware to the latest development branch to be able to use all features. For Crazyradio PA (1), `follow these instructions <https://www.bitcraze.io/documentation/repository/crazyradio-firmware/master/building/building_flashing/>`_. For Crazyradio 2, follow `these instuctions to build the firmware <https://www.bitcraze.io/documentation/repository/crazyradio-firmware/master/building/building_flashing/>`_ and `these instuctions to flash it <https://www.bitcraze.io/documentation/repository/crazyradio2-firmware/main/building-and-flashing/flash//>`_.
+
+6. Update the crazyflies
+
+   If this is the first time handling crazyflies it is always good to start with `Bitcraze's getting started guide  <https://www.bitcraze.io/documentation/tutorials/getting-started-with-crazyflie-2-x/>`_.
+
+   You can update each crazyflie firmware to the latest release via `these instructions of the Bitcraze Crazyflie client <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-upgrade>`_ .
+
+   While you are at it, make sure that each crazyflie have an unique radio address which you can change in `the client via these instructions <https://www.bitcraze.io/documentation/repository/crazyflie-clients-python/master/userguides/userguide_client/#firmware-configuration>`_ .
+
+7. Set up software-in-the-loop simulation (optional)
 
     This currently requires cloning the Crazyflie firmware and building the Python bindings manually. In a separate folder (not part of your ROS 2 workspace!), 
 

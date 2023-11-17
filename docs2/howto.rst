@@ -99,6 +99,39 @@ This requires some updated pip packages for testing, see https://docs.ros.org/en
 
 Then execute:
 
-```
-colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure --packages-select crazyflie_py
-```
+.. code-block:: bash
+
+    colcon test --event-handlers=console_cohesion+ --return-code-on-test-failure --packages-select crazyflie_py
+
+.. _Collision Avoidance:
+
+Collision Avoidance
+-------------------
+
+The official firmware has support for collision avoidance using the Buffered Voronoi Cell algorithm.
+It requires the use of a motion capture system (so that the positions of other drones are known) and can be enabled
+in the `crazyflies.yaml`:
+
+.. code-block:: yaml
+
+    all:
+        firmware_params:
+            colAv:
+                enable: 1
+
+or inside a Python script via:
+
+.. code-block:: python
+
+    swarm = Crazyswarm()
+    allcfs = swarm.allcfs
+    allcfs.setParam("colAv.enable", 1)
+
+Note that the algorithm might require tuning of its hyperparameters. Documention can be found at https://github.com/bitcraze/crazyflie-firmware/blob/dbb9df1137f11d4e7e3771c56d25a7137b5b69cc/src/modules/src/collision_avoidance.c#L348-L428.
+
+Generate Trajectories
+---------------------
+
+Crazyswarm2 supports polynomial trajectories (8th order). These can be generated from waypoints, waypoint/time pairs, or optimization. Useful tools are available at https://github.com/whoenig/uav_trajectories, including scripts to visualize the resulting trajectories.
+
+For the multi-robot case, there is no easy to-use library, yet. One can use collision avoidance (see :ref:`Collision Avoidance`) or preplan trajectories using https://github.com/IMRCLab/db-CBS or https://github.com/mjdebord/smoothener/tree/cylinders. 

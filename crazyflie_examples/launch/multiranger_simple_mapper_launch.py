@@ -18,6 +18,8 @@ def generate_launch_description():
 
     server_params = crazyflies
 
+    crazyflie_name = '/cf231'
+
     return LaunchDescription([
         Node(
             package='crazyflie',
@@ -33,12 +35,14 @@ def generate_launch_description():
             output='screen',
             parameters=[{'hover_height': 0.3},
                         {'incoming_twist_topic': '/cmd_vel'},
-                        {'robot_prefix': '/cf1'}]
+                        {'robot_prefix': crazyflie_name}]
         ),
         Node(
             package='crazyflie',
             executable='simple_mapper.py',
             name='simple_mapper',
-            output='screen'
+            output='screen',
+            parameters=[
+                        {'robot_prefix': crazyflie_name}]
         ),
     ])

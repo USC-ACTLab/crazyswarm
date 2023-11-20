@@ -30,8 +30,11 @@ MAP_RES = 0.1
 class SimpleMapper(Node):
     def __init__(self):
         super().__init__('simple_mapper')
-        self.odom_subscriber = self.create_subscription(Odometry, '/cf231/odom', self.odom_subcribe_callback, 10)
-        self.ranges_subscriber = self.create_subscription(LaserScan, '/cf231/scan', self.scan_subsribe_callback, 10)
+        self.declare_parameter('robot_prefix', '/cf231')
+        robot_prefix  = self.get_parameter('robot_prefix').value
+
+        self.odom_subscriber = self.create_subscription(Odometry, robot_prefix + '/odom', self.odom_subcribe_callback, 10)
+        self.ranges_subscriber = self.create_subscription(LaserScan, robot_prefix + '/scan', self.scan_subsribe_callback, 10)
         self.position =  [0.0, 0.0, 0.0]
         self.angles =  [0.0, 0.0, 0.0]
         self.ranges = [0.0, 0.0, 0.0, 0.0]
@@ -50,10 +53,10 @@ class SimpleMapper(Node):
         self.position_update = False
 
         self.map = [-1] * int(GLOBAL_SIZE_X / MAP_RES) * int(GLOBAL_SIZE_Y / MAP_RES)
-        self.map_publisher = self.create_publisher(OccupancyGrid, '/map',
+        self.map_publisher = self.create_publisher(OccupancyGrid, robot_prefix + '/map',
             qos_profile=QoSProfile( depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, history=HistoryPolicy.KEEP_LAST,))
 
-        self.get_logger().info(f"Simple mapper set for crazyflie"+
+        self.get_logger().info(f"Simple mapper set for crazyflie "+ robot_prefix +
                                f" using the odom and scan topic")
         
     def odom_subcribe_callback(self, msg):

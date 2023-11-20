@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """ This simple mapper is loosely based on both the bitcraze cflib point cloud example 
  https://github.com/bitcraze/crazyflie-lib-python/blob/master/examples/multiranger/multiranger_pointcloud.py
  and the webots epuck simple mapper example:
@@ -28,8 +30,8 @@ MAP_RES = 0.1
 class SimpleMapper(Node):
     def __init__(self):
         super().__init__('simple_mapper')
-        self.odom_subscriber = self.create_subscription(Odometry, '/odom', self.odom_subcribe_callback, 10)
-        self.ranges_subscriber = self.create_subscription(LaserScan, '/scan', self.scan_subsribe_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, '/cf231/odom', self.odom_subcribe_callback, 10)
+        self.ranges_subscriber = self.create_subscription(LaserScan, '/cf231/scan', self.scan_subsribe_callback, 10)
         self.position =  [0.0, 0.0, 0.0]
         self.angles =  [0.0, 0.0, 0.0]
         self.ranges = [0.0, 0.0, 0.0, 0.0]
@@ -51,6 +53,9 @@ class SimpleMapper(Node):
         self.map_publisher = self.create_publisher(OccupancyGrid, '/map',
             qos_profile=QoSProfile( depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, history=HistoryPolicy.KEEP_LAST,))
 
+        self.get_logger().info(f"Simple mapper set for crazyflie"+
+                               f" using the odom and scan topic")
+        
     def odom_subcribe_callback(self, msg):
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y

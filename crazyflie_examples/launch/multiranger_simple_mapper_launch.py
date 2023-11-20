@@ -35,10 +35,10 @@ def generate_launch_description():
                         {'incoming_twist_topic': '/cmd_vel'},
                         {'robot_prefix': '/cf1'}]
         ),
-        #Node(
-        #    package='crazyflie_examples',
-        #    executable='simple_mapper.py',
-        #    name='simple mapper',
-        #    output='screen'
-        #),
+        Node(
+            package='crazyflie',
+            executable='simple_mapper.py',
+            name='simple_mapper',
+            output='screen'
+        ),
     ])

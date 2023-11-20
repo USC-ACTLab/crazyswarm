@@ -32,10 +32,4 @@ if(BUILD_TESTING)
   endforeach()
 endif()
 
-# Install Python executables
-install(PROGRAMS
-  scripts/simple_mapper.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 ament_package()

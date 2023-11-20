@@ -20,6 +20,8 @@ import cflib.crtp
 from cflib.crazyflie.swarm import CachedCfFactory
 from cflib.crazyflie.swarm import Swarm
 from cflib.crazyflie.log import LogConfig
+from cflib.crazyflie.mem import MemoryElement
+from cflib.crazyflie.mem import Poly4D
 
 from crazyflie_interfaces.srv import Takeoff, Land, GoTo, RemoveLogging, AddLogging
 from crazyflie_interfaces.srv import UploadTrajectory, StartTrajectory, NotifySetpointsStop
@@ -797,11 +799,75 @@ class CrazyflieServer(Node):
         return response
 
     def _upload_trajectory_callback(self, request, response, uri="all"):
-        self.get_logger().info("Notify trajectory not yet implemented")
+        
+        id = request.trajectory_id
+        offset = request.piece_offset
+        size = request.pieces.size()
+        total_duration = 0
+        self.get_logger().info("upload_trajectory(id=%d,offset=%d, size=%d)"% (
+                id,
+                offset,
+                size,
+            ))
+
+        trajectory = []
+        for i in range(size):
+            piece = request.pieces[i]
+            px = piece.poly_x
+            py = piece.poly_y
+            pz = piece.poly_z
+            pyaw = piece.poly_yaw
+            duration = request.duration.sec
+            trajectory.append(Poly4D(duration, px, py, pz, pyaw ))
+            total_duration = total_duration + duration
+        
+        if uri == "all":
+            upload_success_all = True
+            for link_uri in self.uris:
+                trajectory_mem = self.swarm._cfs[link_uri].cf.mem.get_mems(MemoryElement.TYPE_TRAJ)[id]
+                trajectory_mem.trajectory = trajectory
+                upload_result = trajectory_mem.write_data_sync()
+                if not upload_result:
+                    self.get_logger().info(f"{link_uri}: Upload failed")
+                    upload_success_all = False
+                else:    
+                    self.swarm._cfs[link_uri].cf.high_level_commander.define_trajectory(id, offset, len(trajectory))
+            if upload_success_all is False:
+                response.success = False
+                return response
+        else:
+            trajectory_mem = self.swarm._cfs[uri].cf.mem.get_mems(MemoryElement.TYPE_TRAJ)[id]
+            trajectory_mem.trajectory = trajectory
+            upload_result = trajectory_mem.write_data_sync()
+            if not upload_result:
+                self.get_logger().info(f"{uri}: Upload failed")
+                response.success = False
+                return response
+            self.swarm._cfs[uri].cf.high_level_commander.define_trajectory(id, offset, len(trajectory))
+
         return response
     
     def _start_trajectory_callback(self, request, response, uri="all"):
-        self.get_logger().info("Start trajectory not yet implemented")
+        
+        id = request.trajectory_id
+        ts = request.timescale
+        rel = request.relative
+        rev = request.reversed
+        gm = request.group_mask
+
+        self.get_logger().info("start_trajectory(id=%d,timescale=%f,relative=%d, reversed=%d, group_mask=%d)"% (
+                id,
+                ts,
+                rel,
+                rev,
+                gm
+            ))
+        if uri == "all":
+            for link_uri in self.uris:
+                self.swarm._cfs[link_uri].cf.commander.start_trajectory(id, ts, rel, rev, gm)              
+        else:
+            self.swarm._cfs[uri].cf.commander.start_trajectory(id, ts, rel, rev, gm)              
+
         return response
     
     def _poses_changed(self, msg):

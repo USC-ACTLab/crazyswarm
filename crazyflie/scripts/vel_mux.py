@@ -20,7 +20,7 @@ class VelMux(Node):
     def __init__(self):
         super().__init__('vel_mux')
         self.declare_parameter('hover_height', 0.5)
-        self.declare_parameter('robot_prefix', '/cf231')
+        self.declare_parameter('robot_prefix', '/cf')
         self.declare_parameter('incoming_twist_topic', '/cmd_vel')
 
         self.hover_height  = self.get_parameter('hover_height').value

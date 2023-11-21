@@ -817,7 +817,7 @@ class CrazyflieServer(Node):
             py = Poly4D.Poly(piece.poly_y)
             pz = Poly4D.Poly(piece.poly_z)
             pyaw = Poly4D.Poly(piece.poly_yaw)
-            duration = piece.duration.sec
+            duration = float(piece.duration.sec) + float(piece.duration.nanosec)/1e9
             trajectory.append(Poly4D(duration, px, py, pz, pyaw ))
             total_duration = total_duration + duration
         

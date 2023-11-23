@@ -18,8 +18,6 @@ def generate_launch_description():
 
     server_params = crazyflies
 
-    crazyflie_name = '/cf231'
-
     return LaunchDescription([
         Node(
             package='crazyflie',

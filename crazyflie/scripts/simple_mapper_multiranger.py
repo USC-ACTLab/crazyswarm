@@ -33,8 +33,8 @@ class SimpleMapperMultiranger(Node):
         self.declare_parameter('robot_prefix', '/cf231')
         robot_prefix  = self.get_parameter('robot_prefix').value
 
-        self.odom_subscriber = self.create_subscription(Odometry, robot_prefix + '/odom', self.odom_subcribe_callback, 10)
-        self.ranges_subscriber = self.create_subscription(LaserScan, robot_prefix + '/scan', self.scan_subsribe_callback, 10)
+        self.odom_subscriber = self.create_subscription(Odometry, robot_prefix + '/odom', self.odom_subscribe_callback, 10)
+        self.ranges_subscriber = self.create_subscription(LaserScan, robot_prefix + '/scan', self.scan_subscribe_callback, 10)
         self.position =  [0.0, 0.0, 0.0]
         self.angles =  [0.0, 0.0, 0.0]
         self.ranges = [0.0, 0.0, 0.0, 0.0]
@@ -59,7 +59,7 @@ class SimpleMapperMultiranger(Node):
         self.get_logger().info(f"Simple mapper set for crazyflie "+ robot_prefix +
                                f" using the odom and scan topic")
         
-    def odom_subcribe_callback(self, msg):
+    def odom_subscribe_callback(self, msg):
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
         self.position[2] = msg.pose.pose.position.z
@@ -70,7 +70,7 @@ class SimpleMapperMultiranger(Node):
         self.angles[2] = euler[2]
         self.position_update = True
 
-    def scan_subsribe_callback(self, msg):
+    def scan_subscribe_callback(self, msg):
         self.ranges = msg.ranges
         self.range_max = msg.range_max
         data = self.rotate_and_create_points()

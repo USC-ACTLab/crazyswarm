@@ -39,8 +39,8 @@ def generate_launch_description():
         ),
         Node(
             package='crazyflie',
-            executable='simple_mapper.py',
-            name='simple_mapper',
+            executable='simple_mapper_multiranger.py',
+            name='simple_mapper_multiranger',
             output='screen',
             parameters=[
                         {'robot_prefix': crazyflie_name}]

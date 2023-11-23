@@ -27,9 +27,9 @@ GLOBAL_SIZE_X = 20.0
 GLOBAL_SIZE_Y = 20.0
 MAP_RES = 0.1
 
-class SimpleMapper(Node):
+class SimpleMapperMultiranger(Node):
     def __init__(self):
-        super().__init__('simple_mapper')
+        super().__init__('simple_mapper_multiranger')
         self.declare_parameter('robot_prefix', '/cf231')
         robot_prefix  = self.get_parameter('robot_prefix').value
 
@@ -163,8 +163,8 @@ class SimpleMapper(Node):
 def main(args=None):
 
     rclpy.init(args=args)
-    simple_mapper = SimpleMapper()
-    rclpy.spin(simple_mapper)
+    simple_mapper_multiranger = SimpleMapperMultiranger()
+    rclpy.spin(simple_mapper_multiranger)
     rclpy.destroy_node()
     rclpy.shutdown()
 

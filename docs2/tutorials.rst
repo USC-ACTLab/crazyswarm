@@ -116,11 +116,13 @@ and make sure that the pid controller and kalman filter is enabled:
 If you are using a different name for your crazyflie, make sure to change the following in the example launch file (multiranger_simple_mapper_launch.py):
 
 .. code-block:: bash
+
     crazyflie_name = '/cf231'
 
 Then start the simple mapper example launch file:
 
 .. code-block:: bash
+
     ros2 launch crazyflie_examples multiranger_simple_mapper_launch.py
 
 And watch the mapping happening in rviz2 while controlling the crazyflie with the teleop node (see the sections above).

@@ -27,16 +27,19 @@ GLOBAL_SIZE_X = 20.0
 GLOBAL_SIZE_Y = 20.0
 MAP_RES = 0.1
 
+
 class SimpleMapperMultiranger(Node):
     def __init__(self):
         super().__init__('simple_mapper_multiranger')
         self.declare_parameter('robot_prefix', '/cf231')
-        robot_prefix  = self.get_parameter('robot_prefix').value
+        robot_prefix = self.get_parameter('robot_prefix').value
 
-        self.odom_subscriber = self.create_subscription(Odometry, robot_prefix + '/odom', self.odom_subscribe_callback, 10)
-        self.ranges_subscriber = self.create_subscription(LaserScan, robot_prefix + '/scan', self.scan_subscribe_callback, 10)
-        self.position =  [0.0, 0.0, 0.0]
-        self.angles =  [0.0, 0.0, 0.0]
+        self.odom_subscriber = self.create_subscription(
+            Odometry, robot_prefix + '/odom', self.odom_subscribe_callback, 10)
+        self.ranges_subscriber = self.create_subscription(
+            LaserScan, robot_prefix + '/scan', self.scan_subscribe_callback, 10)
+        self.position = [0.0, 0.0, 0.0]
+        self.angles = [0.0, 0.0, 0.0]
         self.ranges = [0.0, 0.0, 0.0, 0.0]
         self.range_max = 3.5
 
@@ -52,13 +55,14 @@ class SimpleMapperMultiranger(Node):
 
         self.position_update = False
 
-        self.map = [-1] * int(GLOBAL_SIZE_X / MAP_RES) * int(GLOBAL_SIZE_Y / MAP_RES)
+        self.map = [-1] * int(GLOBAL_SIZE_X / MAP_RES) * \
+            int(GLOBAL_SIZE_Y / MAP_RES)
         self.map_publisher = self.create_publisher(OccupancyGrid, robot_prefix + '/map',
-            qos_profile=QoSProfile( depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, history=HistoryPolicy.KEEP_LAST,))
+                                                   qos_profile=QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL, history=HistoryPolicy.KEEP_LAST,))
 
-        self.get_logger().info(f"Simple mapper set for crazyflie "+ robot_prefix +
+        self.get_logger().info(f"Simple mapper set for crazyflie " + robot_prefix +
                                f" using the odom and scan topic")
-        
+
     def odom_subscribe_callback(self, msg):
         self.position[0] = msg.pose.pose.position.x
         self.position[1] = msg.pose.pose.position.y
@@ -81,15 +85,17 @@ class SimpleMapperMultiranger(Node):
         if self.position_update is False:
             return
         for i in range(len(data)):
-            point_x = int((data[i][0] - GLOBAL_SIZE_X / 2.0)/ MAP_RES )
-            point_y = int((data[i][1] - GLOBAL_SIZE_Y / 2.0)/ MAP_RES )
+            point_x = int((data[i][0] - GLOBAL_SIZE_X / 2.0) / MAP_RES)
+            point_y = int((data[i][1] - GLOBAL_SIZE_Y / 2.0) / MAP_RES)
             points_x.append(point_x)
             points_y.append(point_y)
-            position_x_map =  int((self.position[0] - GLOBAL_SIZE_X / 2.0)/ MAP_RES )
-            position_y_map =  int((self.position[1] - GLOBAL_SIZE_Y / 2.0)/ MAP_RES )
+            position_x_map = int(
+                (self.position[0] - GLOBAL_SIZE_X / 2.0) / MAP_RES)
+            position_y_map = int(
+                (self.position[1] - GLOBAL_SIZE_Y / 2.0) / MAP_RES)
             for line_x, line_y in bresenham(position_x_map, position_y_map, point_x, point_y):
-                self.map[line_y * int(GLOBAL_SIZE_X / MAP_RES) +  line_x] = 0
-            self.map[point_y * int(GLOBAL_SIZE_X / MAP_RES) +  point_x] = 100
+                self.map[line_y * int(GLOBAL_SIZE_X / MAP_RES) + line_x] = 0
+            self.map[point_y * int(GLOBAL_SIZE_X / MAP_RES) + point_x] = 100
 
         msg = OccupancyGrid()
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -132,33 +138,34 @@ class SimpleMapperMultiranger(Node):
         return data
 
     def rot(self, roll, pitch, yaw, origin, point):
-            cosr = math.cos((roll))
-            cosp = math.cos((pitch))
-            cosy = math.cos((yaw))
+        cosr = math.cos((roll))
+        cosp = math.cos((pitch))
+        cosy = math.cos((yaw))
 
-            sinr = math.sin((roll))
-            sinp = math.sin((pitch))
-            siny = math.sin((yaw))
+        sinr = math.sin((roll))
+        sinp = math.sin((pitch))
+        siny = math.sin((yaw))
 
-            roty = np.array([[cosy, -siny, 0],
-                            [siny, cosy, 0],
-                            [0, 0,    1]])
+        roty = np.array([[cosy, -siny, 0],
+                        [siny, cosy, 0],
+                        [0, 0,    1]])
 
-            rotp = np.array([[cosp, 0, sinp],
-                            [0, 1, 0],
-                            [-sinp, 0, cosp]])
+        rotp = np.array([[cosp, 0, sinp],
+                        [0, 1, 0],
+                        [-sinp, 0, cosp]])
 
-            rotr = np.array([[1, 0,   0],
-                            [0, cosr, -sinr],
-                            [0, sinr,  cosr]])
+        rotr = np.array([[1, 0,   0],
+                        [0, cosr, -sinr],
+                        [0, sinr,  cosr]])
 
-            rotFirst = np.dot(rotr, rotp)
+        rotFirst = np.dot(rotr, rotp)
 
-            rot = np.array(np.dot(rotFirst, roty))
+        rot = np.array(np.dot(rotFirst, roty))
 
-            tmp = np.subtract(point, origin)
-            tmp2 = np.dot(rot, tmp)
-            return np.add(tmp2, origin)
+        tmp = np.subtract(point, origin)
+        tmp2 = np.dot(rot, tmp)
+        return np.add(tmp2, origin)
+
 
 def main(args=None):
 

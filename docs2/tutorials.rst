@@ -89,6 +89,46 @@ Here you can see an example of 5 crazyflies with the Pose default topic enabled,
         <iframe src="https://www.youtube.com/embed/w99hLldcSp4" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
+Mapping with simple mapper
+--------------------------
+
+If you have a crazyflie with a multiranger and flowdeck, you can try out some simple mapping.
+
+Make sure that the scan and odometry logging is enabled in crazyflies.yaml:
+
+.. code-block:: bash
+
+  firmware_logging:
+    enabled: true
+    default_topics:
+      odom:
+        frequency: 10 # Hz
+      scan:
+        frequency: 10 # Hz
+
+and make sure that the pid controller and kalman filter is enabled:
+
+.. code-block:: bash
+
+  firmware_params:
+    stabilizer:
+      estimator: 2 # 1: complementary, 2: kalman
+      controller: 1 # 1: PID, 2: mellinger
+
+If you are using a different name for your crazyflie, make sure to change the following in the example launch file (multiranger_simple_mapper_launch.py):
+
+.. code-block:: bash
+
+    crazyflie_name = '/cf231'
+
+Then start the simple mapper example launch file:
+
+.. code-block:: bash
+
+    ros2 launch crazyflie_examples multiranger_simple_mapper_launch.py
+
+And watch the mapping happening in rviz2 while controlling the crazyflie with the teleop node (see the sections above).
+
 Mapping with the SLAM toolbox
 -----------------------------
 

@@ -108,6 +108,7 @@ install(PROGRAMS
   scripts/chooser.py
   scripts/vel_mux.py
   scripts/cfmult.py
+  scripts/simple_mapper_multiranger.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -1,0 +1,68 @@
+name: System Tests
+
+on:
+  push:
+    branches: [ "feature_systemtests" ]
+  # manual trigger
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Create workspace
+        id: step1
+        run: |
+          cd ros2_ws/src || mkdir -p ros2_ws/src
+      - name: Checkout motion capture package
+        id: step2
+        run: |
+          cd ros2_ws/src
+          ls motion_capture_tracking || git clone --branch ros2 --recursive https://github.com/IMRCLab/motion_capture_tracking.git
+      - name: Checkout Crazyswarm2
+        id: step3
+        uses: actions/checkout@v4
+        with:
+          path: ros2_ws/src/crazyswarm2
+          submodules: 'recursive'
+      - name: Build workspace
+        id: step4
+        run: |
+          source /opt/ros/humble/setup.bash
+          cd ros2_ws
+          colcon build --symlink-install
+
+      - name: Flight test
+        id: step5
+        run: |
+          cd ros2_ws
+          source /opt/ros/humble/setup.bash
+          . install/local_setup.bash
+          export ROS_LOCALHOST_ONLY=1
+          python3 src/crazyswarm2/systemtests/run_test.py
+
+      - name: Upload files
+        id: step6
+        uses: actions/upload-artifact@v3
+        with:
+          name: pdf_bagfiles_and_logs
+          path: |
+            ros2_ws/bagfiles
+            ros2_ws/results
+            ~/.ros/log
+
+
+
+      
+
+      # - name: build and test ROS 2
+      #   uses: ros-tooling/action-ros-ci@v0.3
+      #   with:
+      #     package-name: |
+      #       crazyflie
+      #       crazyflie_examples
+      #       crazyflie_interfaces
+      #       crazyflie_py
+      #       crazyflie_sim
+      #     target-ros2-distro: humble
+      #     vcs-repo-file-url: rosinstall

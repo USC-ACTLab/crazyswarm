@@ -18,7 +18,7 @@ def clean_process(process:Popen):
     if process.poll() == None:
         print(f"cleaning {group_id}")
         os.killpg(group_id, signal.SIGTERM)
-        time.sleep(0.01)
+        time.sleep(0.001) #necessary delay for next step to work correctly
         if process.poll() == None:
             print(f"Process group {group_id} didn't terminate correctly")
 

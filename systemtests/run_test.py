@@ -1,6 +1,6 @@
 #!/usr/bin/env python3   
 #!/usr/bin/env python3   
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, TimeoutExpired
 import time
 import os
 import signal
@@ -12,25 +12,18 @@ import shutil
 import atexit
 
 
-class Waiter:
-    '''A helper class which sleeps the amount of seconds it is instanciated with. If the user interrupts with ^C during the waiting time (zB if the drone crashes), it will stop sleeping and continue
-        to the end of the program where all child processes are terminated correctly. All subsequent Waiter() calls will be ignored'''
-    wait=True
-
-    def __init__(self, seconds):
-        if seconds > 0 :
-            self.sleep(seconds)
-    
-    def sleep(self, seconds):
-        start=time.time()
-        while Waiter.wait and time.time()<(start+seconds):
-            try:
-                time.sleep(1)
-            except KeyboardInterrupt:
-                Waiter.wait = False
+def clean_process(process:Popen):
+    '''Kills process and its children on exit if they aren't already terminated (called with atexit)'''
+    group_id = os.getpgid(process.pid) 
+    if process.poll() == None:
+        print(f"cleaning {group_id}")
+        os.killpg(group_id, signal.SIGTERM)
+        time.sleep(0.01)
+        if process.poll() == None:
+            print(f"Process group {group_id} didn't terminate correctly")
 
 def record_start_and_terminate(testname:str, testduration:int, bagfolder:str):
-    '''Helper function that starts recording the /tf topic in a rosbag, starts the test, waits, closes the rosbag and terminate all processes
+    '''Starts recording the /tf topic in a rosbag, starts the test, waits, closes the rosbag and terminate all processes
         NB the testname must be the name of the crayzflie_examples executable (ie the CLI grammar "ros2 run crazyflie_examples testname" must be valid)'''
     index = bagfolder.find("bag_")
     bagname = bagfolder[index:]
@@ -41,16 +34,23 @@ def record_start_and_terminate(testname:str, testduration:int, bagfolder:str):
     command = f"{src} && ros2 bag record -s mcap -o {testname}_{bagname} /tf"
     record_bag =  Popen(command, shell=True, cwd=bagfolder, stderr=PIPE, stdout=True, 
                         start_new_session=True, text=True, executable="/bin/bash") 
+    atexit.register(clean_process, record_bag)
 
     command = f"{src} && ros2 run crazyflie_examples {testname}"
     start_flight_test = Popen(command, shell=True, stderr=True, stdout=True, 
                               start_new_session=True, text=True, executable="/bin/bash")
+    atexit.register(clean_process, start_flight_test)
     
+    try:
+        start_flight_test.wait(timeout=testduration)  #wait x seconds for the crazyflie to fly the test
 
-    Waiter(testduration)  #wait x seconds for the crazyflie to fly the test
+    except TimeoutExpired:      #when finished waiting
+        os.killpg(os.getpgid(start_flight_test.pid), signal.SIGTERM)  #kill flight test and all of its child processes
+        os.killpg(os.getpgid(record_bag.pid), signal.SIGTERM) #kill rosbag 
 
-    os.killpg(os.getpgid(start_flight_test.pid), signal.SIGTERM)  #kill flight test and all of its child processes
-    os.killpg(os.getpgid(record_bag.pid), signal.SIGTERM) #kill rosbag 
+    except KeyboardInterrupt:   #if drone crashes, user can ^C to skip the waiting
+        os.killpg(os.getpgid(start_flight_test.pid), signal.SIGTERM)  #kill flight test and all of its child processes
+        os.killpg(os.getpgid(record_bag.pid), signal.SIGTERM) #kill rosbag 
 
     #if something went wrong with the bash command lines in Popen, print the error
     if record_bag.stderr != None:
@@ -61,7 +61,7 @@ def record_start_and_terminate(testname:str, testduration:int, bagfolder:str):
 
 
 def translate_and_plot(testname:str, bagfolder:str):
-    '''Helper function that translates rosbag .mcap format to .csv, then uses that csv to plot a pdf '''
+    '''Translates rosbag .mcap format to .csv, then uses that csv to plot a pdf '''
     index = bagfolder.find("bag_")
     bagname = bagfolder[index:]
     # NB : the mcap filename is almost the same as the folder name but has _0 at the end
@@ -83,7 +83,7 @@ def translate_and_plot(testname:str, bagfolder:str):
 
 if __name__ == "__main__":
 
-    path = Path(__file__)           #Path(__file__) should be "/home/github/actions-runner/_work/crazyswarm2/crazyswarm2/ros2_ws/src/crazyswarm2/systemtests/newsub.py" ; path.parents[0]=.../systemstests
+    path = Path(__file__)           #Path(__file__) in this case "/home/github/actions-runner/_work/crazyswarm2/crazyswarm2/ros2_ws/src/crazyswarm2/systemtests/newsub.py" ; path.parents[0]=.../systemstests
     
     #delete results, logs and bags of previous experiments
     shutil.rmtree(path.parents[3].joinpath("bagfiles"))
@@ -102,12 +102,12 @@ if __name__ == "__main__":
     command = f"{src} && ros2 launch crazyflie launch.py"
     launch_crazyswarm = Popen(command, shell=True, stderr=True, stdout=True, text=True,
                               start_new_session=True, executable="/bin/bash") 
+    atexit.register(clean_process, launch_crazyswarm)
      
     time.sleep(1)
-    print("f8")
     record_start_and_terminate("figure8", 20, bagfolder)
-    print("multi")
     record_start_and_terminate("multi_trajectory", 80, bagfolder)
+
 
     os.killpg(os.getpgid(launch_crazyswarm.pid), signal.SIGTERM)   #kill crazyswarm and all of its child processes
 

@@ -104,10 +104,13 @@ if __name__ == "__main__":
 
     path = Path(__file__)           #Path(__file__) in this case "/home/github/actions-runner/_work/crazyswarm2/crazyswarm2/ros2_ws/src/crazyswarm2/systemtests/newsub.py" ; path.parents[0]=.../systemstests
     
-    #delete results, logs and bags of previous experiments
-    shutil.rmtree(path.parents[3].joinpath("bagfiles"))
-    shutil.rmtree(path.parents[3].joinpath("results"))
-    shutil.rmtree(Path.home() / ".ros/log")
+    #delete results, logs and bags of previous experiments if they exist
+    if(Path(path.parents[3].joinpath("bagfiles")).exists()):
+        shutil.rmtree(path.parents[3].joinpath("bagfiles"))
+    if(Path(path.parents[3].joinpath("results")).exists()):
+        shutil.rmtree(path.parents[3].joinpath("results"))  
+    if(Path(Path.home() / ".ros/log").exists()):
+        shutil.rmtree(Path.home() / ".ros/log")
 
 
     #create the folder where we will record the different bags and the folder where the results pdf will be saved
@@ -124,7 +127,9 @@ if __name__ == "__main__":
     atexit.register(clean_process, launch_crazyswarm)
      
     time.sleep(1)
+    print("f8")
     record_start_and_terminate("figure8", 20, bagfolder)
+    print("multitrajectory")
     record_start_and_terminate("multi_trajectory", 80, bagfolder)
 
 

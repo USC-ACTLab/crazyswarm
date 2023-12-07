@@ -12,45 +12,64 @@ import shutil
 import atexit
 
 
-def clean_process(process:Popen):
-    '''Kills process and its children on exit if they aren't already terminated (called with atexit)'''
-    group_id = os.getpgid(process.pid) 
+def clean_process(process:Popen) -> int :
+    '''Kills process and its children on exit if they aren't already terminated (called with atexit). Returns 0 on success, 1 on failure''' 
     if process.poll() == None:
-        print(f"cleaning {group_id}")
+        group_id = os.getpgid(process.pid)
+        print(f"cleaning process {group_id}")
         os.killpg(group_id, signal.SIGTERM)
-        time.sleep(0.001) #necessary delay for next step to work correctly
-        if process.poll() == None:
-            print(f"Process group {group_id} didn't terminate correctly")
+        time.sleep(0.01) #necessary delay before first poll
+        i=0
+        while i < 10 and process.poll() == None:  #in case the process termination is lazy and takes some time, we wait up to 0.5 sec per process
+            if process.poll() != None:
+                print("yaY")
+                return 0  #if we have a returncode-> it terminated
+            time.sleep(0.05) #if not wait a bit longer
+        if(i == 9):
+            print(f"Process group {process} with groupID {group_id} didn't terminate correctly")
+            return 1  #after 0.5s we stop waiting and consider it did not terminate correctly
+        return 0
+    else:
+        print(process.returncode)
+        return 0 #process already terminated
 
-def record_start_and_terminate(testname:str, testduration:int, bagfolder:str):
-    '''Starts recording the /tf topic in a rosbag, starts the test, waits, closes the rosbag and terminate all processes
+def record_start_and_terminate(testname:str, max_wait:int, bagfolder:str):
+    '''Starts recording the /tf topic in a rosbag, starts the test, waits, closes the rosbag and terminate all processes. max_wait is the max amount of time you want to wait 
+        before forcefully terminating the test flight script (in case it never finishes correctly).
         NB the testname must be the name of the crayzflie_examples executable (ie the CLI grammar "ros2 run crazyflie_examples testname" must be valid)'''
     index = bagfolder.find("bag_")
     bagname = bagfolder[index:]
 
     
     src = "source " + bagfolder[:index-9] + "install/setup.bash" # -> "source /home/github/actions-runner/_work/crazyswarm2/crazyswarm2/ros2_ws/install/setup.bash"
-    
-    command = f"{src} && ros2 bag record -s mcap -o {testname}_{bagname} /tf"
-    record_bag =  Popen(command, shell=True, cwd=bagfolder, stderr=PIPE, stdout=True, 
-                        start_new_session=True, text=True, executable="/bin/bash") 
-    atexit.register(clean_process, record_bag)
-
-    command = f"{src} && ros2 run crazyflie_examples {testname}"
-    start_flight_test = Popen(command, shell=True, stderr=True, stdout=True, 
-                              start_new_session=True, text=True, executable="/bin/bash")
-    atexit.register(clean_process, start_flight_test)
-    
     try:
-        start_flight_test.wait(timeout=testduration)  #wait x seconds for the crazyflie to fly the test
+        command = f"{src} && ros2 bag record -s mcap -o {testname}_{bagname} /tf"
+        record_bag =  Popen(command, shell=True, cwd=bagfolder, stderr=PIPE, stdout=True, 
+                            start_new_session=True, text=True, executable="/bin/bash") 
+        atexit.register(clean_process, record_bag)
 
-    except TimeoutExpired:      #when finished waiting
-        os.killpg(os.getpgid(start_flight_test.pid), signal.SIGTERM)  #kill flight test and all of its child processes
-        os.killpg(os.getpgid(record_bag.pid), signal.SIGTERM) #kill rosbag 
+        command = f"{src} && ros2 run crazyflie_examples {testname}"
+        start_flight_test = Popen(command, shell=True, stderr=True, stdout=True, 
+                                start_new_session=True, text=True, executable="/bin/bash")
+        atexit.register(clean_process, start_flight_test)
+
+
+    # if start_flight_test.returncode == 0:               #if the flight test script finishes before max_wait, we still want to 
+    #     raise TimeoutExpired(command, max_wait)
+        start_flight_test.wait(timeout=max_wait)  #raise Timeoutexpired after max_wait seconds if start_flight_test didn't finish by itself
+        clean_process(start_flight_test)          
+        clean_process(record_bag)
+        print("normal finish")
+
+    except TimeoutExpired:      #if max_wait is exceeded
+        clean_process(start_flight_test)          
+        clean_process(record_bag)
+        print("timeout finish")
 
     except KeyboardInterrupt:   #if drone crashes, user can ^C to skip the waiting
-        os.killpg(os.getpgid(start_flight_test.pid), signal.SIGTERM)  #kill flight test and all of its child processes
-        os.killpg(os.getpgid(record_bag.pid), signal.SIGTERM) #kill rosbag 
+        clean_process(start_flight_test)          
+        clean_process(record_bag)
+        print("keyboard interrupt finish")
 
     #if something went wrong with the bash command lines in Popen, print the error
     if record_bag.stderr != None:
@@ -109,7 +128,7 @@ if __name__ == "__main__":
     record_start_and_terminate("multi_trajectory", 80, bagfolder)
 
 
-    os.killpg(os.getpgid(launch_crazyswarm.pid), signal.SIGTERM)   #kill crazyswarm and all of its child processes
+    clean_process(launch_crazyswarm)   #kill crazyswarm and all of its child processes
 
 
     #test done, now we create the results pdf 

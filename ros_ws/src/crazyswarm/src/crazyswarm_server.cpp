@@ -1456,7 +1456,7 @@ public:
     cfg["hostname"] = hostname;
     if (nl.hasParam("motion_capture_interface_ip")) {
       std::string interface_ip;
-      nl.param<std::string>("motion_capture_interface_ip", interface_ip);
+      nl.getParam("motion_capture_interface_ip", interface_ip);
       cfg["interface_ip"] = interface_ip;
     }
 
